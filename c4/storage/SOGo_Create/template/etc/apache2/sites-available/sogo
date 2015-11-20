@@ -1,0 +1,64 @@
+LDAPTrustedGlobalCert CA_BASE64 /etc/ssl/certs/ca-certificates.crt
+
+<VirtualHost *:80>
+    ServerAdmin webmaster@[-DOMAIN-]
+    ServerName webmail.[-DOMAIN-]
+    ServerAlias webmail.[-DOMAIN-]
+
+    DocumentRoot /var/lib/freebusy
+
+    <Directory />
+        Options FollowSymLinks
+	AllowOverride None
+    </Directory>
+
+    <Directory /var/lib/freebusy>
+        Options FollowSymLinks
+	AllowOverride None
+	Order allow,deny
+	allow from all
+    </Directory>
+
+    <Location "/SOGo/so">
+	AuthType Kerberos
+	AuthName "SOGo"
+	KrbAuthRealms [-REALM-]
+	Krb5Keytab /etc/apache2/apache2.keytab
+	KrbMethodNegotiate on
+	KrbMethodK5Passwd on
+	Require valid-user
+    </Location>
+
+    <Location "/SOGo/dav">
+	AuthType Basic
+	AuthName "Webmail"
+	AuthBasicProvider file ldap
+	AuthUserFile /etc/apache2/sogo.passwd
+	AuthzLDAPAuthoritative off
+	AuthLDAPBindDN "cn=sogo,ou=applications,ou=system,[-LDAP_BASE_DN-]"
+	AuthLDAPBindPassword "[-LDAP_PASSWORD_SOGO-]"
+	AuthLDAPUrl ldaps://aphrodite.[-DOMAIN-]:636/ou=people,[-LDAP_BASE_DN-]
+	require valid-user
+    </Location>
+
+    RewriteEngine On
+    RewriteCond %{LA-U:REMOTE_USER} (.+)@(.+)
+    RewriteRule . - [E=RU:%1]
+    RequestHeader set "x-webobjects-remote-user" %{RU}e env=RU
+
+    RewriteEngine On
+    # RewriteCond %{HTTP_HOST}   !^webmail\.[-DOMAIN_ESCAPED-] [NC]
+    # RewriteCond %{HTTP_HOST}   !^$
+    # RewriteRule ^/(.*)         http://webmail.[-DOMAIN-]/$1 [L,R]
+    RewriteRule ^/$            /SOGo/so/ [R]
+
+    # Make the apache proxy work at the superuser defined third level domain.
+    # SOGo doesn't work properly if the HOST is not set to the X-FORWARDED-SERVER header
+    SetEnvIf X-Forwarded-Host (.+) MY_NEW_HOST=$1
+    RequestHeader set Host "%{MY_NEW_HOST}e" env=MY_NEW_HOST
+
+    # Possible values include: debug, info, notice, warn, error, crit, alert, emerg.
+    LogLevel warn
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log combined
+</VirtualHost>

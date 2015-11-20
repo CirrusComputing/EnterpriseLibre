@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c4:boot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:c4="http://www.eseri.com/C4" xsi:schemaLocation="http://lucid-mirror.wan.virtualorgs.net/schema/C4/Boot.xsd">
+	<name>OpenERP</name>
+	<host>trident</host>
+	<deploy>
+		<arg>system_anchor_domain</arg>
+		<arg>manager_username</arg>
+		<arg>status</arg>
+		<arg>usertype</arg>
+		<arg>username</arg>
+		<arg>email_prefix</arg>
+		<arg>firstname</arg>
+		<arg>lastname</arg>
+		<arg>cloud_domain</arg>
+		<arg>alias_domain</arg>
+		<arg>password</arg>
+		<arg>timezone</arg>
+	</deploy>
+	<certificates>
+	</certificates>
+	<passwords>
+		<password host="athena" entity="Krb5Admin" name="KRB5_PASSWORD_ADMIN"><always/></password>
+		<password host="pgsql" entity="openerp" name="DB_PASSWORD_OPENERP" ><required>OpenERP</required></password>
+		<password host="aphrodite" entity="openerp" name="LDAP_PASSWORD_OPENERP" ><required>OpenERP</required></password>
+		<password host="openerp" entity="master" type="user" name="MASTER_PASSWORD_OPENERP" ><required>OpenERP</required></password>
+	</passwords>
+	<kerberos_keys>
+	</kerberos_keys>
+	<deployment_files>
+	</deployment_files>
+	<package>
+		<always/>
+	</package>
+</c4:boot>

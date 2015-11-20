@@ -1,0 +1,178 @@
+#!/bin/sh
+#
+# Startup script for Nuxeo - v1.1
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+#
+# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+# Source LSB function library.
+[ -f /lib/lsb/init-functions ] && . /lib/lsb/init-functions
+
+#---------------------------------------------
+# Begin Java and Jboss trivial Confgiuration params
+#---------------------------------------------
+JBOSS_HOME=/var/lib/nuxeo
+JBOSS_USER="nuxeo"
+JBOSS_CONFIGURATION="default"
+JBOSS_SHELL="/bin/sh"
+JBOSS_SHUTDOWN_OPTIONS="-S"
+JAVA_HOME=/usr/lib/jvm/java-6-sun
+JAVACMD="$JAVA_HOME/bin/java"
+JAVA_OPTS="-Djava.library.path=/usr/lib/openoffice/program -Duser.timezone=[-TIMEZONE-] -Xms64m -Xmx256m"
+JAVAC_JAR="$JAVA_HOME/lib/tools.jar"
+#---------------------------------------------
+# End Java and Jboss trivial Confgiuration params
+#---------------------------------------------
+
+# Set some essential variables
+JBOSS_BINDIR="$JBOSS_HOME/bin"
+LOCKFILE=/var/lock/nuxeo
+PIDFILE=/var/run/nuxeo.pid
+LOGFOLDER=$JBOSS_HOME/server/$JBOSS_CONFIGURATION/log
+LOGFILE=${LOGFOLDER}/nuxeo.log
+SERVERLOGFILE=${LOGFOLDER}/server.log
+
+# Functions
+start ()
+{
+	if [ ! -f $LOCKFILE ]; then
+		# Check that JBOSS_USER exists
+		id $JBOSS_USER > /dev/null 2>&1
+		if [ $? -ne 0 -o -z "$JBOSS_USER" ]; then
+			echo "User $JBOSS_USER does not exist..."
+			RETVAL=1
+			return $RETVAL
+		fi
+
+		echo "Starting Nuxeo: "
+
+		touch $LOCKFILE
+
+		# Reset log to make sure we don't read old start message
+		[ -e $LOGFILE ] && rm $LOGFILE
+		[ -d $LOGFOLDER ] || su -s $JBOSS_SHELL -c "mkdir -p $LOGFOLDER" $JBOSS_USER
+		su -s $JBOSS_SHELL -c "touch $LOGFILE" $JBOSS_USER
+
+		export JAVA_HOME JAVACMD JAVA_OPTS JBOSS_CONFIGURATION JAVAC_JAR 
+
+		cd $JBOSS_BINDIR
+		su -s $JBOSS_SHELL -c "$JBOSS_BINDIR/run.sh -b 0.0.0.0 > $LOGFILE 2>&1" $JBOSS_USER &
+
+		# Wait for Nuxeo to start, max 4 minutes
+		TIME=0
+		TIMEOUT=240
+		RETVAL=1
+		while [ $TIME -lt $TIMEOUT -a $RETVAL -eq 1 ]; do
+			sleep 10
+			TIME=`expr $TIME + 10`
+			grep -q MicroKernel $SERVERLOGFILE 2>&1 > /dev/null 2>&1
+			[ $? -eq 0 ] && RETVAL=0
+		done
+
+		if [ -f /lib/lsb/init-functions ]; then
+			[ $RETVAL -eq 0 ] && log_success_msg "Nuxeo startup" || ( log_failure_msg "Nuxeo startup" && rm -f $LOCKFILE )
+			echo ""
+		else
+			[ $RETVAL -eq 0 ] && echo "Nuxeo startup succeeded" || ( echo "Nuxeo startup failed" && rm -f $LOCKFILE )
+		fi
+	else
+		echo "lockfile for Nuxeo already exists..."
+		RETVAL=0
+	fi
+	return $RETVAL
+}
+
+stop ()
+{
+	echo -n "Shutting down Nuxeo: "
+
+	# Don't stop it if it's not running..
+	status > /dev/null 2>&1
+	if [ $? -eq 3 ]; then
+		if [ -f /lib/lsb/init-functions ]; then
+			log_success_msg "Nuxeo shutdown"
+			echo ""
+		else
+			echo "Nuxeo shutdown succeeded"
+		fi
+		return 0
+	fi
+
+	export JAVA_HOME JAVACMD JAVA_OPTS JBOSS_CONFIGURATION JAVAC_JAR 
+
+	su -s $JBOSS_SHELL -c "$JBOSS_BINDIR/shutdown.sh $JBOSS_SHUTDOWN_OPTIONS --" $JBOSS_USER
+
+	# Wait for Nuxeo to stop, max 3 minutes
+	TIME=0
+	TIMEOUT=180
+	RETVAL=1
+	while [ $TIME -lt $TIMEOUT -a $RETVAL -eq 1 ]; do
+		sleep 5
+		TIME=`expr $TIME + 5`
+		pslist=$( ps -af | grep java | grep $JBOSS_USER | awk '{print $2}' | tr '\n' ' ' | sed -e s/\ $// )
+		[ -z "$pslist" ]
+		[ $? -eq 0 ] && RETVAL=0
+	done
+
+	if [ -f /lib/lsb/init-functions ]; then
+		[ $RETVAL -eq 0 ] && ( log_success_msg "Nuxeo shutdown" && rm -f $LOCKFILE ) || log_failure_msg "Nuxeo shutdown"
+		echo ""
+	else
+		[ $RETVAL -eq 0 ] && ( echo "Nuxeo shutdown succeeded" && rm -f $LOCKFILE ) || echo "Nuxeo shutdown failed"
+	fi
+	return $RETVAL
+}
+
+status ()
+{
+	pslist=$( ps -af | grep java | grep $JBOSS_USER | awk '{print $2}' | tr '\n' ' ' | sed -e s/\ $// )
+	if [ -n "$pslist" ]; then
+		echo "Nuxeo (pid $pslist) is running"
+		return 0
+	fi
+	if [ -f $PIDFILE ]; then
+		echo "Nuxeo dead but pid file exists"
+		return 1
+	fi
+	if [ -f $LOCKFILE ]; then
+		echo "Nuxeo dead but subsys locked"
+		return 2
+	fi
+	echo "Nuxeo is stopped"
+	return 3
+}
+
+# See how we were called.
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	status)
+		status
+		RETVAL=$?
+		;;
+	restart|reload|force-reload)
+		stop
+		start
+		;;
+	coldrestart)
+		if [ -f $LOCKFILE ]; then
+		    restart
+		fi
+		;;
+	*)
+		echo "Usage: $0 {start|stop|status|restart|reload|force-reload|coldrestart}"
+		exit 1
+esac
+
+exit $RETVAL

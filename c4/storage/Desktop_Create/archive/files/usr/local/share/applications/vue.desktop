@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Visual Information Management
+Categories=Project Management
+Exec=java -jar /usr/bin/vue
+Icon=vue
+StartupNotify=false
+Terminal=false
+Type=Application
+Comment=Visual Understanding Environment Application

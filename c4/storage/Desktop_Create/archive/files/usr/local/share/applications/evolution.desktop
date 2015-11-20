@@ -1,0 +1,30 @@
+[Desktop Entry]
+Name=Email & Calendars 
+GenericName=Groupware Suite
+X-GNOME-FullName=Email & Calendars
+Comment=Manage your email, contacts and schedule
+Exec=evolution
+Icon=evolution
+Terminal=false
+Type=Application
+Categories=GNOME;GTK;Office;Email;Calendar;ContactManagement;X-Red-Hat-Base;
+StartupNotify=true
+X-GNOME-Bugzilla-Bugzilla=GNOME
+X-GNOME-Bugzilla-Product=Evolution
+X-GNOME-Bugzilla-Component=BugBuddyBugs
+X-GNOME-Bugzilla-Version=2.28.x
+X-GNOME-Bugzilla-OtherBinaries=evolution-data-server-2.28;evolution-exchange-storage;evolution-alarm-notify;
+X-Ubuntu-Gettext-Domain=evolution-2.28
+
+X-Ayatana-Desktop-Shortcuts=Compose;Contacts
+
+[Compose Shortcut Group]
+Name=Compose New Message
+Exec=evolution mailto:
+OnlyShowIn=Messaging Menu
+
+[Contacts Shortcut Group]
+Name=Contacts
+Exec=evolution -c contacts
+OnlyShowIn=Messaging Menu
+

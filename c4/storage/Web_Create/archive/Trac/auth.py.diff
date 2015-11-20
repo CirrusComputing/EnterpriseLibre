@@ -1,0 +1,13 @@
+--- orig/auth.py	2010-03-09 17:49:00.000000000 -0500
++++ auth.py	2010-07-04 23:05:26.000000000 -0400
+@@ -85,8 +85,8 @@
+     def get_navigation_items(self, req):
+         if req.authname and req.authname != 'anonymous':
+             yield ('metanav', 'login', 'logged in as %s' % req.authname)
+-            yield ('metanav', 'logout',
+-                   tag.a('Logout', href=req.href.logout()))
++            #yield ('metanav', 'logout',
++                   #tag.a('Logout', href=req.href.logout()))
+         else:
+             yield ('metanav', 'login',
+                    tag.a('Login', href=req.href.login()))

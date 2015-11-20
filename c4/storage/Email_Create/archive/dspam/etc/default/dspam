@@ -1,0 +1,11 @@
+# Variables for dspam.
+#
+# Do not start dspam.
+START=yes
+
+# User that runs dspam.
+USER=dspam
+
+# Options for dspam.
+#OPTIONS="--debug"
+

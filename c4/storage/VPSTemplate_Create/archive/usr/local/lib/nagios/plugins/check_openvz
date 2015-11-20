@@ -1,0 +1,368 @@
+#!/usr/bin/perl -w
+# nagios: +epn
+# vim: ts=4 sw=4 sts=4 noet ai si
+
+use strict;
+
+use Nagios::Plugin;
+use Nagios::Plugin::Functions qw(%STATUS_TEXT);
+use Fcntl qw(:mode);
+
+use constant FILE_BEANCOUNTERS	=> 'sudo /usr/local/sbin/vz_beancounters';
+
+my %critical_msgs;
+my %warning_msgs;
+
+my $max_resource_name_len = 0;
+my $np = Nagios::Plugin->new(
+	usage => "Usage: check_openvz [-w <warning>] [-c <critical>] [-t <timeout>] [-r] [-v]\n".
+			 "       check_openvz -h | --help\n".
+			 "       check_openvz -V | --version",
+	version => "Version 0.9.0",
+	blurb => "This Nagios plugin monitors the user_beancounters of an OpenVZ container\n",
+	license => "Copyright 2008, Robert Nelson\nEmail: robertn at the-nelsons dot org\n\n".
+                "2010 - Modified by Karoly Molnar\nEmail: kmolnar at eseri dot com\n\n".
+		"This program is free software: you can redistribute it and/or modify it under\n".
+		"the terms of the GNU General Public License as published by the Free Software\n".
+		"Foundation, either version 2 of the License, or (at your option) any later \n".
+		"version.\n\n".
+		"This program is distributed in the hope that it will be useful, but WITHOUT\n".
+		"ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS\n".
+		"FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more\n".
+		"details.\n\n".
+		"You should have received a copy of the GNU General Public License along with\n".
+		"this program.  If not, see <http://www.gnu.org/licenses/>.\n".
+		"===============================================================================\n",
+	extra => ""
+	);
+
+$np->add_arg(
+	"warning|w=i",
+	"Threshold percentage for warnings (default: %s)",
+	90
+	);
+
+$np->add_arg(
+	"critical|c=i",
+	"Threshold percentage for critical errors (default: %s)",
+	100
+	);
+
+$np->add_arg(
+	"reset|r",
+	"Reset saved counters",
+	0
+	);
+
+sub read_local_data($$) {
+	my ($np, $filename) = @_;
+
+	open(FILEDATA,"$filename |") or $np->nagios_die("Open of $filename failed - $!");
+
+	my @file_data = <FILEDATA>;
+
+	close(FILEDATA);
+
+	return @file_data;
+}
+
+sub check_limits($) {
+	my $np = $_[0];
+
+	my %beancounters;
+
+	my $vid;
+	my $code;
+	my $resource;
+	my $held;
+	my $maxheld;
+	my $barrier;
+	my $limit;
+	my $failcnt;
+
+	my @overlimit_resources;
+
+	my @limit_data;
+	
+	@limit_data = read_local_data($np, FILE_BEANCOUNTERS);
+
+	foreach (@limit_data) {
+		my %vmachine;
+		if (/^\D*(\d+):/) {
+			$vid = $1;
+			$beancounters{$vid} = \%vmachine;
+		}
+		if (/^[\W\d]+([a-z]+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/) {
+			$resource = $1;
+			$held = $2;
+			$maxheld = $3;
+			$barrier = $4;
+			$limit = $5;
+			$failcnt = $6;
+			$beancounters{$vid}{$resource} = [$held, $maxheld, $barrier, $limit, $failcnt];
+
+			my $name_length = length($resource);
+			$max_resource_name_len = $name_length
+				if ($name_length > $max_resource_name_len);
+
+			if ($barrier != 0) {
+				my $warning = int ($barrier * ($np->opts->warning / 100));
+				my $critical = int ($barrier * ($np->opts->critical / 100));
+
+				if ($resource ne "oomguarpages") {
+					$code = $np->check_threshold(
+						check => $held,
+						warning => "@".$warning.":".($critical > 0 ? $critical - 1 : 0),
+						critical => "@".$critical.":");
+				} else {
+					$code = $np->check_threshold(
+						check => $held,
+						warning => "~:",
+						critical => "~:");
+				}
+
+				push @overlimit_resources, [$code, $vid, $resource, $held, $barrier, $limit]
+					unless $code == OK;
+			}
+		}
+	}
+
+	foreach (@overlimit_resources) {
+		($code, $vid, $resource, $held, $barrier, $limit) = @$_;
+		add_message($code, $vid, $resource.' ' x ($max_resource_name_len - length($resource) + 1).
+			"Threshold exceeded (held=$held, barrier=$barrier, limit=$limit)");
+	}
+
+	return %beancounters;
+}
+
+sub check_failcounts($\%) {
+	my ($np, $beancounters_ref) = @_;
+
+	my $result = 0;
+	my $vid;
+	my $resource;
+	my $held;
+	my $maxheld;
+	my $barrier;
+	my $limit;
+	my $failcnt;
+	my %previous_counts;
+	my %beancounters = %$beancounters_ref;
+
+	my $lastcounts_file;
+	my @file_stat;
+	
+	$lastcounts_file = "/tmp/openvz_failcounts";
+
+	# read and parse old data
+	my $file_opened_read = open(LASTCOUNTS, "<$lastcounts_file");
+
+	if ($file_opened_read) {
+		# Make sure this is really a file and it was created by us.
+		@file_stat = lstat($lastcounts_file);
+
+		$np->nagios_die("$lastcounts_file: Isn't a regular file - possible hack attempt?")
+			unless (($file_stat[2] & S_IFMT) == S_IFREG);
+
+		$np->nagios_die("$lastcounts_file: Not created by this plug-in - possible hack attempt?")
+			unless ($file_stat[4] == $>);
+	}
+
+	if ($file_opened_read) {
+		while (<LASTCOUNTS>) {
+			my %vmachine;
+			if (/^(\d+)\s+([a-z]+)\s+(\d+)\s+(\d+)\s+(\d+)$/) {
+				$vid = $1;
+				$resource = $2;
+				$barrier = $3;
+				$limit = $4;
+				$failcnt = $5;
+				if (!defined($previous_counts{$vid})) {
+					$previous_counts{$vid} = \%vmachine;
+				}
+				$previous_counts{$vid}{$resource} = [0, 0, $barrier, $limit, $failcnt];
+			}
+		}
+		close(LASTCOUNTS);
+	}
+
+	my $file_opened_write = open(LASTCOUNTS, ">$lastcounts_file");
+
+	if ($file_opened_write) {
+		# Make sure this is really a file and it was created by us.
+		@file_stat = lstat($lastcounts_file);
+
+		$np->nagios_die("$lastcounts_file: Isn't a regular file - possible hack attempt?")
+			unless (($file_stat[2] & S_IFMT) == S_IFREG);
+
+		$np->nagios_die("$lastcounts_file: Not created by this plug-in - possible hack attempt?")
+			unless ($file_stat[4] == $>);
+		chmod(0600, $lastcounts_file);
+	} else {
+		print("$lastcounts_file: Couldn't open for write - $!\n");
+	}
+
+	foreach $vid (sort {$a <=> $b} keys %beancounters) {
+		foreach $resource (sort keys %{$beancounters{$vid}}) {
+			my $previous_barrier = 0;
+			my $previous_limit = 0;
+			my $previous_failcnt = 0;
+			if (defined($previous_counts{$vid})) {
+				$previous_barrier = $previous_counts{$vid}{$resource}[2];
+				if (!defined($previous_barrier)) {
+					$previous_barrier = 0;
+				}
+				$previous_limit = $previous_counts{$vid}{$resource}[3];
+				if (!defined($previous_limit)) {
+					$previous_limit = 0;
+				}
+				$previous_failcnt = $previous_counts{$vid}{$resource}[4];
+				if (!defined($previous_failcnt)) {
+					$previous_failcnt = 0;
+				}
+			}
+
+			$barrier = $beancounters{$vid}{$resource}[2];
+			$limit = $beancounters{$vid}{$resource}[3];
+			$failcnt = $beancounters{$vid}{$resource}[4];
+
+			if ( ($limit != $previous_limit) || ($barrier != $previous_barrier ) || $np->opts->reset ) {
+				$previous_failcnt = $failcnt;
+			}
+
+			if ($failcnt > $previous_failcnt) {
+				$held = $beancounters{$vid}{$resource}[0];
+				$maxheld = $beancounters{$vid}{$resource}[1];
+
+				add_message(CRITICAL, $vid, $resource.' ' x ($max_resource_name_len - length($resource) + 1).
+					"Failures increased from $previous_failcnt to $failcnt (held=$held, maxheld=$maxheld, barrier=$barrier, limit=$limit)");
+			}
+
+			if ($file_opened_write) {
+				print LASTCOUNTS "$vid\t$resource\t$barrier\t$limit\t$previous_failcnt\n";
+			}
+		}
+	}
+
+	if ($file_opened_write) {
+		close(LASTCOUNTS);
+	}
+}
+
+sub add_message($$$) {
+	my ($code, $veid, $message) = @_;
+
+	my $msg_list;
+
+	if ($code == CRITICAL) {
+		$msg_list = \%critical_msgs;
+	} else {
+		$msg_list = \%warning_msgs;
+	}
+
+	push @{$msg_list->{$veid}}, $message;
+}
+
+sub output_messages() {
+	my $critical_list = "";
+	my $warning_list = "";
+	my $critical_veid_count = 0;
+	my $critical_msg_count = 0;
+	my $warning_veid_count = 0;
+	my $warning_msg_count = 0;
+
+	foreach my $veid (sort { $a <=> $b } (keys %{{%critical_msgs, %warning_msgs}})) {
+		my $msg_list;
+		my $msg_count;
+		my $msg;
+
+		$msg_list = $critical_msgs{$veid};
+		if (defined($msg_list)) {
+			$msg_count = scalar @$msg_list;
+			if ($msg_count > 0) {
+				$critical_veid_count++;
+				$critical_msg_count += $msg_count;
+
+				foreach $msg (@$msg_list) {
+					$critical_list .= "CRITICAL - $veid: $msg\n";
+				}
+			}
+		}
+
+		$msg_list = $warning_msgs{$veid};
+		if (defined($msg_list)) {
+			$msg_count = scalar @$msg_list;
+			if ($msg_count > 0) {
+				$warning_veid_count++;
+				$warning_msg_count += $msg_count;
+
+				foreach $msg (@$msg_list) {
+					$warning_list .= "WARNING  - $veid: $msg\n";
+				}
+			}
+		}
+	}
+
+	my $warning_status_msg = "";
+	my $critical_status_msg = "";
+	my $return_code = OK;
+
+	if ($warning_msg_count > 0) {
+		$warning_status_msg = "Warning: $warning_msg_count";
+		$return_code = WARNING;
+	}
+	if ($critical_msg_count > 0) {
+		$critical_status_msg = "Critical: $critical_msg_count";
+		$return_code = CRITICAL;
+	}
+
+	my $status_msg;
+
+	if ($return_code == OK) {
+		$status_msg = "Ok\n";
+	} else {
+		$status_msg = $critical_status_msg;
+		if ($warning_msg_count > 0 && $critical_msg_count > 0) {
+			$status_msg .= ", ";
+		}
+		$status_msg .= $warning_status_msg."\n";
+		$status_msg .= $critical_list;
+		$status_msg .= $warning_list;
+	}
+
+	return ($return_code, $status_msg);
+}
+
+$np->getopts;
+
+$np->nagios_die("Warning percentage must be between 1 and 100")
+	unless $np->opts->warning > 0 && $np->opts->warning <= 100;
+
+$np->nagios_die("Critical percentage must be between 1 and 100")
+	unless $np->opts->critical > 0 && $np->opts->critical <= 100;
+
+$np->nagios_die("Warning percentage must be less than critical percentage")
+	unless $np->opts->warning < $np->opts->critical;
+
+my %beancounters = check_limits($np);
+
+check_failcounts($np, %beancounters);
+
+my ($code, $messages) = output_messages();
+
+#
+# We can't use nagios_exit in embedded perl because it outputs all the lines using 1 print.
+# p1.pl then truncates it to 255 characters.  So we'll do the same thing as nagios_exit but
+# output using multiple calls to print.
+#
+#$np->nagios_exit($code, $messages);
+
+my @messages = split('\n', $messages);
+
+print($np->shortname()." $STATUS_TEXT{$code} - ".$messages[0]."\n");
+foreach (@messages[1 .. $#messages]) {
+	print("$_\n");
+}
+
+exit($code);

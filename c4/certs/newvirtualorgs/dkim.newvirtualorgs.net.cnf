@@ -1,0 +1,15 @@
+#
+# dkim.newvirtualorgs.net.cnf
+#
+
+[ req ]
+prompt                  = no
+distinguished_name      = dkim.newvirtualorgs.net
+
+[ dkim.newvirtualorgs.net ]
+commonName              = dkim.newvirtualorgs.net
+stateOrProvinceName     = ON
+countryName             = CA
+emailAddress            = hostmaster@newvirtualorgs.net
+organizationName        = newvirtualorgs
+organizationalUnitName  = IT Department

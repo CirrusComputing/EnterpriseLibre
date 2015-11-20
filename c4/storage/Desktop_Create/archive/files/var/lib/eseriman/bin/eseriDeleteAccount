@@ -1,0 +1,102 @@
+#!/bin/bash
+#
+# Delete user account - v0.9
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+#
+# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+# TODO: LDAP entry is not touched. What should happen with it?
+
+# Include eseri functions
+. ${0%/*}/eseriCommon
+
+# Mark start point in log file
+eseriStartLog "Delete account"
+
+# Check for proper number of parameters
+if [ $# -ne 1 ]; then
+    echo "Usage: $SCRIPT_NAME Username"
+    exit 1
+fi
+
+# Check the format of the input parameters
+checkparam "Username" $1
+
+ESERI_USERNAME=$1
+
+# Log to eseri.log via syslog
+/usr/local/share/eseri/EseriLog "$ESERI_USERNAME - Account deletion"
+
+# Variables
+LDAP_BASE=`awk '$1 ~ "BASE" {print $2}' /etc/ldap/ldap.conf 2>>$LOG_FILE`
+LDIF_NUXEOGROUP_DELETE_TEMPLATE=$TEMPLATE_LDAP_FOLDER/nuxeogroup-delete.ldif.template
+LDIF_NUXEOGROUP_DELETE_FILE=/tmp/eseri.$RANDOM.nuxeogroup-delete.ldif
+LDIF_CHATGROUP_DELETE_TEMPLATE=$TEMPLATE_LDAP_FOLDER/chatgroup-delete.ldif.template
+LDIF_CHATGROUP_DELETE_FILE=/tmp/eseri.$RANDOM.chatgroup-delete.ldif
+
+# Delete Kerberos principal
+KADMIN_OUT=$(kadmin -k -t $KEYTAB -p $KRB_IDENT -q "delprinc -force $ESERI_USERNAME" 2>&1)
+echo $KADMIN_OUT >>$LOG_FILE
+
+# Check for errors
+KADMIN_RETV=$(echo $KADMIN_OUT | grep -E 'Principal ".*" deleted\.' | wc -l)
+[ $KADMIN_RETV -ne 1 ] && exit 2
+
+# Backup & remove user files
+sudo $BIN_FOLDER/eseriDeleteHomeFolder $ESERI_USERNAME "$USER_HOME_BASE/$ESERI_USERNAME" >>$LOG_FILE 2>&1 || exit $?
+
+# Kerberos init
+kinit -k -t $KEYTAB $KRB_IDENT >>$LOG_FILE 2>&1 || exit $?
+
+# Delete from Directory
+LDAP_RESULT=$(ldapsearch -LLL "(uid=$ESERI_USERNAME)" sn givenName 2>/dev/null)
+DN=$(echo "$LDAP_RESULT" | grep "^dn:" | awk '{print $2}')
+if [ "$DN" == "uid=$ESERI_USERNAME,ou=people,$LDAP_BASE" ]; then
+	ESERI_GIVENNAME=$(echo "$LDAP_RESULT" | grep "^givenName:" | awk '{print $2}')
+	ESERI_SURENAME=$(echo "$LDAP_RESULT" | grep "^sn:" | awk '{print $2}')
+
+	$BIN_FOLDER/eseriDirectory.py -d -f "$ESERI_GIVENNAME" -l "$ESERI_SURENAME" >>$LOG_FILE 2>&1
+fi
+
+# Delete from Nuxeo - Create LDIF file from template
+sed "
+s/\[-LDAP_BASE-\]/$LDAP_BASE/g
+s/\[-USERNAME-\]/$ESERI_USERNAME/g
+s/\[-NUXEO_GROUP-\]/members/g" < $LDIF_NUXEOGROUP_DELETE_TEMPLATE > $LDIF_NUXEOGROUP_DELETE_FILE 2>>$LOG_FILE
+cat $LDIF_NUXEOGROUP_DELETE_FILE >>$LOG_FILE
+
+# Execute the LDIF
+ldapmodify -f $LDIF_NUXEOGROUP_DELETE_FILE >>$LOG_FILE 2>&1
+
+# Remove the LDIF
+rm $LDIF_NUXEOGROUP_DELETE_FILE >>$LOG_FILE 2>&1
+
+# Delete from Chat - Create LDIF file from template
+sed "
+s/\[-LDAP_BASE-\]/$LDAP_BASE/g
+s/\[-USERNAME-\]/$ESERI_USERNAME/g" < $LDIF_CHATGROUP_DELETE_TEMPLATE > $LDIF_CHATGROUP_DELETE_FILE 2>>$LOG_FILE
+echo $? >>$LOG_FILE
+cat $LDIF_CHATGROUP_DELETE_FILE >>$LOG_FILE
+
+# Execute the LDIF
+ldapmodify -f $LDIF_CHATGROUP_DELETE_FILE >>$LOG_FILE 2>&1
+
+# Remove the LDIF
+rm $LDIF_CHATGROUP_DELETE_FILE >>$LOG_FILE 2>&1
+
+# Delete user from LDAP
+ldapdelete "uid=$ESERI_USERNAME,ou=people,$LDAP_BASE" >>$LOG_FILE 2>&1 || exit $?
+
+# Delete group from LDAP
+ldapdelete "cn=$ESERI_USERNAME,ou=group,$LDAP_BASE" >>$LOG_FILE 2>&1 || exit $?
+
+# Kerberos deinit
+kdestroy >>$LOG_FILE 2>&1
+
+exit 0

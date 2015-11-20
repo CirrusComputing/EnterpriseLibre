@@ -1,0 +1,22 @@
+<VirtualHost [-WAN_IP-]:80>
+    ServerAdmin webmaster@[-DOMAIN-]
+    ServerName desktop.[-DOMAIN-]
+    ServerAlias desktop.[-DOMAIN-]
+
+    # Configure reverse proxy.
+    ProxyRequests On
+    ProxyVia on
+    AllowCONNECT 80
+    
+    <Proxy *>
+        Order deny,allow
+        Allow from all
+    </Proxy>
+
+    # Possible values include: debug, info, notice, warn, error, crit, alert, emerg.
+    LogLevel warn
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log combined
+    ServerSignature Off
+</VirtualHost>
+

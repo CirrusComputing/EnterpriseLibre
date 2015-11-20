@@ -1,0 +1,31 @@
+#
+# User Firstname and Lastname change v1.1
+#
+# Created by Rick Leir <rleir@cirruscomputing.com>
+# Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2014 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+dn: uid=[-USERNAME-],ou=people,[-LDAP_BASE-]
+changetype: modify
+replace: sn
+sn: [-LASTNAME-]
+-
+replace: givenName
+givenName: [-FIRSTNAME-]
+-
+replace: cn
+cn: [-FIRSTNAME-] [-LASTNAME-]
+-
+replace: displayName
+displayName: [-FIRSTNAME-] [-LASTNAME-]
+-
+replace: gecos
+gecos: [-FIRSTNAME-] [-LASTNAME-]
+-

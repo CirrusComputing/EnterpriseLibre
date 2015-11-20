@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Document Management
+Comment=Sharing, archiving, search, workflow
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=firefox "http://nuxeo.[-DOMAIN-]/"
+Terminal=false
+StartupNotify=true
+Icon=nuxeo

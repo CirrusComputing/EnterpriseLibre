@@ -1,0 +1,15 @@
+<html>
+ <body>
+  <p>Dear [% administrator_first_name %] [% administrator_last_name %],</p>
+  <p>The Cirrus Open desktop for [% first_name %] [% last_name %] has been created and a welcome email was sent to [% external_email %].</p>
+  <p>For your information the desktop login credentials are as follows:</p>
+  <ul>
+   <li>Email Address: [% email_prefix %]@[% domain %]</li>
+   <li>Password: [% password %]</li>
+  </ul>
+  <p>Enjoy!<br />
+The Cirrus Open Team</p>
+---
+  <p>You received this email because you just subscribed to a Cirrus Open cloud. If this email reached you in error for any reason, please let us know immediately.</p>
+ </body>
+</html>

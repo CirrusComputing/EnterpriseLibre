@@ -1,0 +1,6 @@
+# OpenERP entry
+dn: cn=openerp,ou=applications,ou=system,[-LDAP_BASE_DN-]
+objectClass: top
+objectClass: eseriApplicationEntity
+cn: openerp
+userPassword: [-LDAP_SSHA_PASSWORD_OPENERP-]

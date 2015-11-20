@@ -1,0 +1,15 @@
+#
+# ssl.newvirtualorgs.net.cnf
+#
+
+[ req ]
+prompt                  = no
+distinguished_name      = ssl.newvirtualorgs.net
+
+[ ssl.newvirtualorgs.net ]
+commonName              = ssl.newvirtualorgs.net
+stateOrProvinceName     = ON
+countryName             = CA
+emailAddress            = hostmaster@newvirtualorgs.net
+organizationName        = newvirtualorgs
+organizationalUnitName  = IT Department

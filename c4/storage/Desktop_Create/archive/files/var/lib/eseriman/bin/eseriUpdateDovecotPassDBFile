@@ -1,0 +1,46 @@
+#!/bin/bash
+#
+# Update Dovecot PassDB file for ACTIVE email only users v1.0
+#
+# Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2014 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+# Include eseri functions
+. ${0%/*}/eseriCommon
+
+# Mark start point in log file
+eseriStartLog "Change Dovecot PassDB file"
+
+# Check for proper number of parameters
+if [ $# -ne "4" ]; then
+    echo "Usage: $SCRIPT_NAME Username Password Type Status"
+    exit 1
+fi
+
+# Check the format of the input parameters
+checkparam "Username" $1
+checkparam "Password" $2
+checkparam "Type" $3
+checkparam "Status" $4
+
+ESERI_USERNAME=$1
+ESERI_PASSWORD=$2
+ESERI_UTYPE=$3
+ESERI_STATUS=$4
+
+acquire_ssh_fingerprint "hera.$(hostname -d)"
+# Remove old username and sha password if exists.
+ssh root@$FULL_HOSTNAME "sed -i \"/$ESERI_USERNAME:.*/d\" /etc/dovecot/passwd.emailonlyusers"
+# If it's a emailonly user, then put in a line for the user.
+if [ $ESERI_UTYPE == 'email_only' ] && [ $ESERI_STATUS == 'ACTIVE' ]; then
+    ssh root@$FULL_HOSTNAME "echo \"$ESERI_USERNAME:\$(dovecotpw -p $ESERI_PASSWORD -s SHA -u $ESERI_USERNAME)\" >> /etc/dovecot/passwd.emailonlyusers"
+fi
+
+exit 0

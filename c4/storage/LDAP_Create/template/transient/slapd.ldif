@@ -1,0 +1,185 @@
+dn: [-LDAP_BASE_DN-]
+objectClass: top
+objectClass: dcObject
+objectClass: organization
+o: [-DOMAIN-]
+dc: [-LDAP_FIRST_DC-]
+
+# Organization Unit: System
+dn: ou=system,[-LDAP_BASE_DN-]
+objectClass: top
+objectClass: organizationalUnit
+ou: system
+
+# LastUid entry
+dn: cn=lastUid,ou=system,[-LDAP_BASE_DN-]
+objectClass: top
+objectClass: eseriLastUid
+cn: lastUid
+uidNumber: 5000
+
+# Organization Unit: Applications
+dn: ou=applications,ou=system,[-LDAP_BASE_DN-]
+objectClass: top
+objectClass: organizationalUnit
+ou: applications
+
+# Libnss entry
+dn: cn=libnss,ou=applications,ou=system,[-LDAP_BASE_DN-]
+objectClass: top
+objectClass: eseriApplicationEntity
+cn: libnss
+userPassword: [-LDAP_SSHA_PASSWORD_LIBNSS-]
+
+# Postfix entry
+dn: cn=postfix,ou=applications,ou=system,[-LDAP_BASE_DN-][-DELETE_UNLESS_Email-]
+objectClass: top[-DELETE_UNLESS_Email-]
+objectClass: eseriApplicationEntity[-DELETE_UNLESS_Email-]
+cn: postfix[-DELETE_UNLESS_Email-]
+userPassword: [-LDAP_SSHA_PASSWORD_POSTFIX-][-DELETE_UNLESS_Email-]
+
+# Dovecot entry
+dn: cn=dovecot,ou=applications,ou=system,[-LDAP_BASE_DN-][-DELETE_UNLESS_Email-]
+objectClass: top[-DELETE_UNLESS_Email-]
+objectClass: eseriApplicationEntity[-DELETE_UNLESS_Email-]
+cn: dovecot[-DELETE_UNLESS_Email-]
+userPassword: [-LDAP_SSHA_PASSWORD_DOVECOT-][-DELETE_UNLESS_Email-]
+
+# Nuxeo5 entry
+dn: cn=nuxeo5,ou=applications,ou=system,[-LDAP_BASE_DN-][-DELETE_UNLESS_Nuxeo-]
+objectClass: top[-DELETE_UNLESS_Nuxeo-]
+objectClass: eseriApplicationEntity[-DELETE_UNLESS_Nuxeo-]
+cn: nuxeo5[-DELETE_UNLESS_Nuxeo-]
+userPassword: [-LDAP_SSHA_PASSWORD_NUXEO5-][-DELETE_UNLESS_Nuxeo-]
+
+# Webhuddle entry
+dn: cn=webhuddle,ou=applications,ou=system,[-LDAP_BASE_DN-][-DELETE_UNLESS_WebConferencing-]
+objectClass: top[-DELETE_UNLESS_WebConferencing-]
+objectClass: eseriApplicationEntity[-DELETE_UNLESS_WebConferencing-]
+cn: webhuddle[-DELETE_UNLESS_WebConferencing-]
+userPassword: [-LDAP_SSHA_PASSWORD_WEBHUDDLE-][-DELETE_UNLESS_WebConferencing-]
+
+# Mediawiki entry
+dn: cn=mediawiki,ou=applications,ou=system,[-LDAP_BASE_DN-][-DELETE_UNLESS_Wiki-]
+objectClass: top[-DELETE_UNLESS_Wiki-]
+objectClass: eseriApplicationEntity[-DELETE_UNLESS_Wiki-]
+cn: mediawiki[-DELETE_UNLESS_Wiki-]
+userPassword: [-LDAP_SSHA_PASSWORD_MEDIAWIKI-][-DELETE_UNLESS_Wiki-]
+
+# Vtiger entry
+dn: cn=vtiger,ou=applications,ou=system,[-LDAP_BASE_DN-][-DELETE_UNLESS_Vtiger-]
+objectClass: top[-DELETE_UNLESS_Vtiger-]
+objectClass: eseriApplicationEntity[-DELETE_UNLESS_Vtiger-]
+cn: vtiger[-DELETE_UNLESS_Vtiger-]
+userPassword: [-LDAP_SSHA_PASSWORD_VTIGER-][-DELETE_UNLESS_Vtiger-]
+
+# Timesheet entry
+dn: cn=timesheet,ou=applications,ou=system,[-LDAP_BASE_DN-][-DELETE_UNLESS_Timesheet-]
+objectClass: top[-DELETE_UNLESS_Timesheet-]
+objectClass: eseriApplicationEntity[-DELETE_UNLESS_Timesheet-]
+cn: timesheet[-DELETE_UNLESS_Timesheet-]
+userPassword: [-LDAP_SSHA_PASSWORD_TIMESHEET-][-DELETE_UNLESS_Timesheet-]
+
+# XMPP entry
+dn: cn=xmpp,ou=applications,ou=system,[-LDAP_BASE_DN-][-DELETE_UNLESS_InstantMessaging-]
+objectClass: top[-DELETE_UNLESS_InstantMessaging-]
+objectClass: eseriApplicationEntity[-DELETE_UNLESS_InstantMessaging-]
+objectClass: uidObject[-DELETE_UNLESS_InstantMessaging-]
+cn: xmpp[-DELETE_UNLESS_InstantMessaging-]
+uid: xmpp[-DELETE_UNLESS_InstantMessaging-]
+userPassword: [-LDAP_SSHA_PASSWORD_XMPP-][-DELETE_UNLESS_InstantMessaging-]
+
+# SOGo entry
+dn: cn=sogo,ou=applications,ou=system,[-LDAP_BASE_DN-][-DELETE_UNLESS_SOGo-]
+objectClass: top[-DELETE_UNLESS_SOGo-]
+objectClass: eseriApplicationEntity[-DELETE_UNLESS_SOGo-]
+objectClass: uidObject[-DELETE_UNLESS_SOGo-]
+cn: sogo[-DELETE_UNLESS_SOGo-]
+uid: sogo[-DELETE_UNLESS_SOGo-]
+userPassword: [-LDAP_SSHA_PASSWORD_SOGO-][-DELETE_UNLESS_SOGo-]
+
+# Redmine entry
+dn: cn=redmine,ou=applications,ou=system,[-LDAP_BASE_DN-][-DELETE_UNLESS_Redmine-]
+objectClass: top[-DELETE_UNLESS_Redmine-]
+objectClass: eseriApplicationEntity[-DELETE_UNLESS_Redmine-]
+cn: redmine[-DELETE_UNLESS_Redmine-]
+userPassword: [-LDAP_SSHA_PASSWORD_REDMINE-][-DELETE_UNLESS_Redmine-]
+
+# PHPScheduleIt entry
+dn: cn=phpscheduleit,ou=applications,ou=system,[-LDAP_BASE_DN-][-DELETE_UNLESS_PHPScheduleIt-]
+objectClass: top[-DELETE_UNLESS_PHPScheduleIt-]
+objectClass: eseriApplicationEntity[-DELETE_UNLESS_PHPScheduleIt-]
+cn: phpscheduleit[-DELETE_UNLESS_PHPScheduleIt-]
+userPassword: [-LDAP_SSHA_PASSWORD_PHPSCHEDULEIT-][-DELETE_UNLESS_PHPScheduleIt-]
+
+# Organization Unit: Mailroute
+dn: ou=mailroute,ou=system,[-LDAP_BASE_DN-]
+objectClass: top
+objectClass: organizationalUnit
+ou: mailroute
+
+# Default email addresses
+dn: cn=forward0,ou=mailroute,ou=system,[-LDAP_BASE_DN-]
+objectClass: top
+objectClass: eseriMailForwardOnly
+cn: forward0
+eseriMailAlternateAddress: hostmaster@[-DOMAIN-]
+eseriMailAlternateAddress: postmaster@[-DOMAIN-]
+eseriMailAlternateAddress: abuse@[-DOMAIN-]
+eseriMailAlternateAddress: root@[-DOMAIN-]
+eseriMailAlternateAddress: webmaster@[-DOMAIN-]
+eseriMailForwardingAddress: sysadmin@lists.team.eseri.net
+displayName: RFC emails to Eseri system administrator
+
+# Organization Unit: NuxeoGroups
+dn: ou=nuxeogroups,[-LDAP_BASE_DN-][-DELETE_UNLESS_Nuxeo-]
+objectClass: top[-DELETE_UNLESS_Nuxeo-]
+objectClass: organizationalUnit[-DELETE_UNLESS_Nuxeo-]
+ou: nuxeogroups[-DELETE_UNLESS_Nuxeo-]
+
+# Nuxeo Administrators entry
+dn: cn=administrators,ou=nuxeogroups,[-LDAP_BASE_DN-][-DELETE_UNLESS_Nuxeo-]
+objectClass: top[-DELETE_UNLESS_Nuxeo-]
+objectClass: groupOfUniqueNames[-DELETE_UNLESS_Nuxeo-]
+description: Group of users that have the Everything permissions by default[-DELETE_UNLESS_Nuxeo-]
+cn: administrators[-DELETE_UNLESS_Nuxeo-]
+uniqueMember: uid=[-IT_MAN_USER-],ou=people,[-LDAP_BASE_DN-][-DELETE_UNLESS_Nuxeo-]
+
+# Nuxeo Members entry
+dn: cn=members,ou=nuxeogroups,[-LDAP_BASE_DN-][-DELETE_UNLESS_Nuxeo-]
+objectClass: top[-DELETE_UNLESS_Nuxeo-]
+objectClass: groupOfUniqueNames[-DELETE_UNLESS_Nuxeo-]
+description: Group of users that have the Read permissions by default[-DELETE_UNLESS_Nuxeo-]
+cn: members[-DELETE_UNLESS_Nuxeo-]
+uniqueMember: cn=emptyRef[-DELETE_UNLESS_Nuxeo-]
+
+# Chat Groups entry
+dn: ou=chatgroups,[-LDAP_BASE_DN-][-DELETE_UNLESS_InstantMessaging-]
+objectClass: top[-DELETE_UNLESS_InstantMessaging-]
+objectClass: organizationalUnit[-DELETE_UNLESS_InstantMessaging-]
+ou: chatgroups[-DELETE_UNLESS_InstantMessaging-]
+
+# All Users Chat Group entry
+dn: cn=allusers,ou=chatgroups,[-LDAP_BASE_DN-][-DELETE_UNLESS_InstantMessaging-]
+objectClass: top[-DELETE_UNLESS_InstantMessaging-]
+objectClass: groupOfNames[-DELETE_UNLESS_InstantMessaging-]
+cn: allusers[-DELETE_UNLESS_InstantMessaging-]
+description: All chat users[-DELETE_UNLESS_InstantMessaging-]
+member: cn=emptyRef[-DELETE_UNLESS_InstantMessaging-]
+
+# Organization Unit: People
+dn: ou=people,[-LDAP_BASE_DN-]
+objectClass: organizationalUnit
+ou: people
+
+# Organization Unit: Group
+dn: ou=group,[-LDAP_BASE_DN-]
+objectClass: organizationalUnit
+ou: group
+
+# Group for mail only users
+dn: cn=mailonly,ou=group,[-LDAP_BASE_DN-]
+objectClass: top
+objectClass: posixGroup
+cn: mailonly
+gidNumber: 4999

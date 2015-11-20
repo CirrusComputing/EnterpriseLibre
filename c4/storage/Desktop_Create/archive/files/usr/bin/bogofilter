@@ -1,0 +1,54 @@
+#!/bin/bash
+#
+# Hook for spam training - v1.0
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+#
+# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+# Debug options: uncomment 1 of the 2 following lines
+DEBUG_OUTPUT=/dev/null
+#DEBUG_OUTPUT=/var/log/dspam.log
+# careful! the above line causes trouble unless the logfile is writeable by users
+
+WHAT="Just+Bogo"
+MYDATE="`date --rfc-3339=seconds`"
+
+if [ "$1" == "-s" ]; then
+	CLASS="spam"
+else
+	CLASS="innocent"
+fi
+
+# Read stdin to variable
+EMAIL=$(cat /dev/stdin)
+
+# Call dspam if there's signature in the email
+# Note: this same header appears in Evo view source as X-dspam-signature
+DSPAM_SIGNATURE=$(echo "$EMAIL" | awk '!NF{exit 0};/^X-DSPAM-Signature:/ {print $2}')
+ 
+#ALL_X_HDRS=$(echo "$EMAIL" | awk '!NF{exit 0};/^X-/ {print ; }')
+
+# if length of string is non-zero
+if [ -n "$DSPAM_SIGNATURE" ]; then
+
+	echo "$EMAIL" | sudo /usr/local/share/CirrusOpen/CirrusOpenDSPAMTrain "$CLASS"
+	WHAT="Dspam+Bogo"
+fi
+
+echo "$DSPAM_SIGNATURE $MYDATE training: $WHAT to: $CLASS cmd: $@" >> $DEBUG_OUTPUT
+# in the above, the signature can be 2 sigs separated by a newline, which looks funny in the debug output
+
+#echo "$ALL_X_HDRS" >> $DEBUG_OUTPUT
+
+# Call the original bogofilter
+#echo "$EMAIL" | /usr/bin/bogofilter.bin "$@"
+#exit $?
+
+# exit this way so all our mail does not get flagged as spam
+exit 1

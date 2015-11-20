@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Web Conferencing
+Comment=Share desktop and presentations over the net
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=firefox "https://webmeeting.[-DOMAIN-]/"
+Terminal=false
+StartupNotify=true
+Icon=webhuddle

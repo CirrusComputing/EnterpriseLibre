@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+# C3Server Init Script - v1.0
+#
+# Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
+# All Rights Reserved 
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+DESC="Desktop personalization service"
+SCRIPTNAME=`basename $0`
+
+. /lib/lsb/init-functions
+
+PIDFILE=/var/run/${SCRIPTNAME}.pid
+
+case "$1" in
+    start)
+        log_daemon_msg "Starting $DESC" "$NAME"
+        su c3 -c "cd /home/c3/bin/ && export DISPLAY=:1 && export PATH=$PATH:/usr/local/NX/bin && perl /home/c3/bin/xml_rpc_service.pl &" >> /var/log/c3/c3.log 2>&1
+	START_RESULT=$?
+	[ $START_RESULT -eq 0 ] && ps -aef | grep /home/c3/bin/xml_rpc_service.pl | grep perl | grep -v DISPLAY | awk '{ print $2 }' >$PIDFILE
+        log_end_msg $START_RESULT
+        ;;
+    stop)
+        log_daemon_msg "Stopping $DESC" "$NAME"
+	if [ -e $PIDFILE ]; then
+		 kill `cat $PIDFILE`
+		rm $PIDFILE
+	fi
+        log_end_msg $?
+        ;;
+    restart)
+	$0 stop
+	$0 start
+	;;
+    *)
+        echo "Usage: ${SCRIPTNAME} {start|stop}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
+

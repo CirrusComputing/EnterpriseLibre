@@ -1,0 +1,71 @@
+<html>
+ <body>
+  <p>Dear Superuser,</p>
+  
+  <p>Welcome to your cloud desktop!  As described below, the Superuser can manage your cloud domain and email, and has "admin" rights in the multi-user collaboration applications.  You can also delegate admin rights to others if you wish.</p>
+  
+  <p>This email contains important passwords for the collaboration applications, and has been emailed only to your Superuser desktop.  Therefore, please keep this information where you will be able to find it easily later.</p>
+
+  <p><u><b>Cloud Manager</b></u></p>
+
+  <p>In addition to regular functions like changing their password, the Superuser has extra cloud management capability under "Start / Favorites / Cirrus Open Cloud Manager".</p>
+
+  <p>One of the first things the Superuser often does with their Cloud Manager is change the domain name of their cloud, from the placeholder assigned by Cirrus, to a domain name used by their team.  You can also configure your email to use an existing email server if you have one, instantly adding your cloud to your existing systems.  If you wish you can keep your Cirrus email servers, or switch to them later, to simplify your systems and reduce costs.</p>
+
+  <p>You can also use the Cloud Manager to add new users to your cloud, and send them their own pre-configured and ready to go cloud desktops.  You can also archive and later restore users and their desktops whenever required.  The can change a variety of user settings, such as notification email addresses, and use of two-factor authentication.</p>
+
+  <p>More information about the Cloud Manager can be found in the Cirrus Open Wiki <a href="http://wiki.cirrusopen.org/index.php/Cloud_Manager">here</a>.</p>
+[% IF sqlledger %]
+  <p><u><b>Accounting (SQL-Ledger)</b></u></p>
+
+  <p>Your accounting application is highly secure, with only the admin and suser accounts having access to any data or functionality when your cloud is first created.  In the SQL-Ledger site, you can log into the Superuser account with the username "suser" and your original Superuser desktop password, and you will have access to all the features.  A regular account has restricted access by default. To control the access to the features for all accounts, you can log into the admin account with the username "admin" and the password "[%sqlledger_password%]".   Then, from the HR reports screen, you can choose an individual account and grant it more rights to access and view information.</p>
+[% END %]
+[% IF vtiger %]
+  <p><u><b>Customer Relationship Management (vTiger)</b></u></p>
+
+  <p>The settings for the CRM application are accessed through the gear icon at the top right of the page.  From the settings the Superuser can control a wide range of options, including user rights and access control, email and other templates, configure roles, control what modules can be accessed by different groups, create custom fields, and configure workflows and reports.</p>
+[% END %]
+[% IF nuxeo %]
+  <p><u><b>Document Management (Nuxeo)</b></u></p>
+
+  <p>The Superuser can create workspaces and folders, and, from the "Users & groups" link at the top of the page, can create user groups and set access permissions.  You can then assign different access rights for different users and groups on various folders and files using the tabs "Manage / Access rights", for example to provide access to a folder only to users in the group "projectabc".</p>
+[% END %]
+[% IF orangehrm %]
+  <p><u><b>Human Resources (OrangeHRM)</b></u></p>
+
+  <p>From the "Admin" link at the top left of the page, the Superuser can add users and define user groups, update organization information, define jobs, pay grades, qualifications, skills, create new employees and users, and access all reports.  For historical reasons the HR application does not yet have single sign on, so only the Superuser has access at cloud creation, using the username "admin" and the password "[%orangehrm_password%]".</p>
+[% END %]
+[% IF trac %]
+  <p><u><b>Issue Tracking (Trac)</b></u></p>
+
+  <p>From the "Admin" link at the top right of the page, the Superuser can change the default permissions, timeline, milestones, list of priorities, resolution types, ticket types, and other settings.</p>
+[% END %]
+[% IF mailman %]
+  <p><u><b>Mailing Lists (Mailman)</b></u></p>
+
+  <p>The creator of a mailing list is usually the admin for that list and can manage the configuration, such as whether it is an auto-responder, whether users can reply to the list, whether it keeps search archives, and other options.  Anyone can create a mailing list, however you will need to give them the List Creator Password of "[%mailman_create_password%]", so they can enter it when creating the list.</p> The creator of a list will receive an Administrator password for that list in an email. In addition, the Superuser can manage all lists using the main Administrator password of "[%mailman_password%]".
+[% END %]
+[% IF timesheet %]
+  <p><u><b>Timesheet (Timesheet NG)</b></u></p>
+
+  <p>Using "Configuration" and other links at the top of the page, the Superuser can manage users, create projects and tasks, specify which team members that can charge time to which tasks, define access control, access all the reports, and make related configurations.  The Admin rights in the Timesheet app are often delegated to other managers as needed.</p>
+[% END %]
+[% IF wiki %]
+  <p><u><b>Wiki (MediaWiki)</b></u></p>
+
+  <p>The Superuser has access to an expanded set of pages and functions under the link "Special pages", found on the left side of each page, that enable configurations like user rights management.  The Superuser can block users, although this is usually not an issue with your cloud protected Wiki, since only your organization members can access it.</p>
+[% END %]
+[% IF openerp %]
+  <p><u><b>OpenERP (Enterprise Resource Planning)</b></u></p>
+
+  </p>You can manage your OpenERP databases (Create, Duplicate, Drop, Backup, Restore) using the master password of "[%openerp_master_password%]".</p>
+[% END %]
+
+  <p>Enjoy your cloud to the fullest!  If you have any questions at or need any assistance at all, please don't hesitate to contact us through our website support page and we will be glad to help.</p>
+
+  <p>Best regards,</p>
+  <p>Cirrus Open</p>
+---
+  <p>You received this email because you just subscribed to a Cirrus Open cloud. If this email reached you in error for any reason, please let us know immediately.</p>
+ </body>
+</html>

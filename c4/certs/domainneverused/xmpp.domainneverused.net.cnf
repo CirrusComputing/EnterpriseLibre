@@ -1,0 +1,15 @@
+#
+# xmpp.domainneverused.net.cnf
+#
+
+[ req ]
+prompt                  = no
+distinguished_name      = xmpp.domainneverused.net
+
+[ xmpp.domainneverused.net ]
+commonName              = xmpp.domainneverused.net
+stateOrProvinceName     = ON
+countryName             = CA
+emailAddress            = hostmaster@domainneverused.net
+organizationName        = domainneverused
+organizationalUnitName  = IT Department

@@ -1,0 +1,12 @@
+Dear [% first_name %] [% last_name %],
+
+Your Notify Address has been changed. 
+
+For your information the details are as follows:
+
+    Notify Address: [% real_email %]
+
+Enjoy!
+The Cirrus Open Team
+---
+You received this email because you just changed the settings of your Cirrus Open user account. If this email reached you in error for any reason, please let us know immediately.

@@ -1,0 +1,39 @@
+#!/bin/bash
+#
+# eseriConfigureNagiosProcsLimit - v1.0
+#
+# This script is responsible for setting the nagios limit for total processes.
+#
+# Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2015 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+# Sleep in the start so that the USER_SESSIONS value can be upto date.
+sleep 10
+
+NAGIOS_CONFIG_FOLDER=/etc/nagios
+NAGIOS_LOCAL_CONFIG_FILE=$NAGIOS_CONFIG_FOLDER/nrpe_local.cfg
+DEFAULT_PROCS_WARN=100
+DEFAULT_PROCS_CRIT=125
+PROCS_PER_USER=60
+USER_SESSIONS=$(/usr/NX/bin/nxserver --list | sed -n '/^---.*/,/^[ ]*$/{/^---.*/d;/^[ ]*$/d;p;}' | wc -l)
+
+# If number of user sessions <= 1, then update the nagios local config file with default values.
+if [ $USER_SESSIONS -le 1 ]; then
+    PROCS_WARN=$DEFAULT_PROCS_WARN
+    PROCS_CRIT=$DEFAULT_PROCS_CRIT
+else
+    PROCS_WARN=$(($PROCS_PER_USER * $USER_SESSIONS))
+    PROCS_CRIT=$(($PROCS_WARN + 50))
+fi
+
+sed -i "/check_total_procs/s|-w.*-c.*|-w $PROCS_WARN -c $PROCS_CRIT|" $NAGIOS_LOCAL_CONFIG_FILE
+/etc/init.d/nagios-nrpe-server reload
+
+exit 0

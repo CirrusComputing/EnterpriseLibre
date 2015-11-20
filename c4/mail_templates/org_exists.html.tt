@@ -1,0 +1,9 @@
+<html>
+<body>
+<p>Dear Admin,</p>
+<p>A customer tried to create the following organization with an Email Domain (or corresponding Network Name) that is used by another organization. Please clean the existing organization first before running C4.</p>
+<p>Organization's Formal Name: [%=firstname%] </p>
+<p>Email Domain: [%=lastname%] </p>
+<p>Network Name: [%=lastname%] </p>
+</body>
+</html>

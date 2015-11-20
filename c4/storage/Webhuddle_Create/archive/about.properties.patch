@@ -1,0 +1,163 @@
+--- orig/about.properties	2009-09-28 21:43:22.000000000 -0400
++++ new/about.properties	2010-02-09 11:25:42.000000000 -0500
+@@ -11,89 +11,54 @@
+ 
+ 
+ about.text= \
+-<H4><B>How to get started with {8}</B></H4> \
+-<P>Designed with the end-user in mind&mdash;as well as the realities of corporate \
+-information technology resources&mdash;{8} is easy to use and \
+-flexible in delivery and installation. To create a meeting today, \
+-simply click the log in button, create a profile, and follow the \
+-instructions for uploading content and conducting your {8} virtual \
+-meeting. During the beta period, there is no charge to use the {8} service.</P> \
++<H4><B>How to get started with WebHuddle</B></H4> \
++<P>WebHuddle is easy to use. To create a meeting, Login through the link above \
++if you have not already done so, click Begin Meeting, enter a \
++Meeting Name and Password, and email the resulting conference link \
++to the attendees.</P> \
+ <H5><B>Frequently Asked Questions</B></H5> \
+-<P><B>What are the main benefits of using {8}?</B></P> \
++<P><B>What are the main benefits of using WebHuddle?</B></P> \
+ <UL> \
+     <LI><P><B>Simple </B> \
+     The client runs in your web browser, through firewalls and proxies, and requires no \
+-    installation. The user interface is intuitive and requires \
++    installation other than a normal Java plugin. The user interface is intuitive and requires \
+     little or no training. <a href="{0}">Learn more</a> \
+     </P> \
+-    <LI><P><B>Secure </B> \
+-    The industry-standard HTTPS protocol secures all network \
+-    communication. <a href="{1}">Learn more</a></P> \
+-    <LI><P><B>Small </B> \
+-    The client applet weighs in at only 75 to 175 kilobytes, depending \
+-    on platform and features used. <a href="{2}">Learn more</a></P> \
+     <LI><P><B>Standard </B> \
+-    {8} works on Java-enabled Linux, Windows, Unix, and Mac \
+-    operating systems. {8} uses the same protocol as web browsers, \
+-    HTTPS, so your IT department doesn&rsquo;t need to get involved. <a href="{3}">Learn more</a></P> \
++    WebHuddle works on Java-enabled Linux, Windows, Unix, and Mac \
++    operating systems. WebHuddle uses the same protocol as web browsers, \
++    HTTPS, so IT departments don't need to get involved.</P> \
+     <LI><P><B>Open Source </B> \
+     Leverage the many benefits of open source software, \
+-    including value, transparency, and flexibility.  If you find {8} useful you may \
+-    <a href="{4}" target="_new"> \
+-    download it</a> and freely install it on your own hardware.</P> \
++    including value, transparency, and flexibility.  If others wish to use it \
++    they may <a href="http://www.webhuddle.com" target="_new"> \
++    download it</a> and freely install it on their own hardware.</P> \
+ </UL> \
+ <P><B>What are the client requirements?</B></P> \
+-<P>{8} works in most web browsers enabled with Java. \
+-<a href="{5}">Click here</a> to test if your browser \
+-supports Java.  All versions of Microsoft&rsquo;s Java \
++<P>WebHuddle works in most web browsers enabled with Java - \
++make sure the browser has Java enabled if your attendees have problems. \
++All versions of Microsoft's Java \
+ since 1.1 and Sun and IBM&rsquo;s Java 1.4 and up \
+-are supported.  At least a 400Mhz processor and 128 MB of RAM are \
+-recommended.</P> \
++are supported.  Only a 400Mhz processor and 128 MB of RAM are \
++needed, so almost any machine will work.</P> \
+ <P><B>What are the network requirements?</B> \
+-</P> \
+-<P>For the client, a DSL, cable modem or faster connection yields the best \
+-performance, but a dial-up modem is sufficient.  Note that uploading \
+-a large PowerPoint presentation over a dial-up connection can be slow, \
+-taking about 3 to 5 minutes per megabyte. Unlike some other \
+-web conferencing solutions, {8} has a <a href="{6}">server-centric \
+-architecture</a> which means the meeting host&rsquo;s bandwidth requirement does not increase \
+-in direct proportion to the meeting size.</P> \
+-<P><B>Does {8} offer training for first-time users?</B></P> \
+-<P>Click <a href="{7}" target="_new">here</a> to see tutorials on how to use \
+-{8}.</P> \
+-<P><B>How secure is {8}?</B></P> \
+-<P>Designed to fill a gap in the market&rsquo;s current offerings, {8} is \
+-highly secure. All network communication travels via an \
+-encrypted protocol known as HTTPS.  This is the same protocol that is \
++<P>A faster connection is better, \
++but even a dial-up modem is sufficient.</P> \
++<P><B>How secure is WebHuddle?</B></P> \
++<P>WebHuddle is \
++highly secure. All network communication travels via the standard \
++encrypted browser protocol known as HTTPS.  This is the same protocol that is \
+ used the world over for applications that demand absolute security, \
+-such as online banking. Instead of using an untested, home-grown \
+-protocol, {8} relies on the industry standard that has proven \
+-itself in hundreds of millions of transactions.  Technically \
+-speaking, HTTPS is HTTP on top of SSL (Secure Sockets Layer).  HTTPS \
+-virtually guarantees the identity of the server, and the privacy and integrity \
+-of data sent over the network.  {8} sends all data -- including \
+-voice -- through secure sockets, not just chat or some subset of the \
+-content types.  With {8}, security is complete and built-in, \
+-not optional. <a href="{1}">Learn more</a></P> \
+-<P><B>How much does it cost?</B></P> \
+-<P>During the beta period, there is no charge to use the {8} service. \
+-As well, {8} is open source software, so if you find it useful you can \
+-<a href="{4}" target="_new">download and install</a> it on your own hardware. \
+-Any questions and feedback (positive or negative) help improve {8} and are appreciated.</P> \
++such as online banking. HTTPS \
++virtually guarantees the correct identity of the server, and the privacy and integrity \
++of data sent over the network. \
++With WebHuddle, security is complete and built-in.</P> \
+ <P><B>What type of content may I upload for my meeting?</B></P> \
+ <P>You may upload any combination of Microsoft Powerpoint files, \
+ Open Office Impress files, \
+ individual GIF or JPEG images, and ZIP files containing GIF or JPEG \
+-images.  Note that Powerpoint animations are not visible when \
+-displayed in {8}.</P> \
+-<P><B>Why are Powerpoint animations not displayed?</B></P> \
+-<P>{8} strives to be simple, small, and efficient on multiple \
+-platforms, including Linux, Windows, Solaris and Mac.  Preserving \
+-Powerpoint animations would require the installation of the Powerpoint \
+-viewer on each client or the creation of such a viewer on platforms \
+-where it is not available.  Both options would be contrary to {8}&rsquo;s \
+-goals of simplicity and efficiency.  However, using desktop sharing, \
+-you can preserve some animation effects, such as builds.</P> \
++images.  Note that Powerpoint slides but not animations are visible when \
++displayed in WebHuddle.</P> \
+ <P><B>How does desktop sharing work?</B></P> \
+ <P>To let other participants see your desktop or applications, the moderator \
+ clicks the "Desktop Sharing" icon on the top right, then the "Start Desktop Sharing" \
+@@ -102,27 +67,23 @@
+ rectangle will appear in the main content area. \
+ Drag the application you wish to share onto the green rectangle.  Other participants \
+ will now see whatever you have dragged on top of that rectangle.  If you want instead \
+-to share part of your desktop, just minimize the {8} client and the region where the \
+-green rectangle was previously will be shared.  Currently, {8} does not support \
++to share part of your desktop, just minimize the WebHuddle client and the region where the \
++green rectangle was previously will be shared.  Currently, WebHuddle does not support \
+ remote control via desktop sharing. \
+ </P> \
+-<P><B>How does voice-over-IP work?</B></P> \
+-<P>Voice-over-IP is an optional feature especially suited to larger meetings and \
+-meetings you wish to record.  One person may speak at a time and the \
+-moderator controls the virtual microphone.  The speaking person must have \
+-a working microphone installed on their computer.  Participants need a \
+-working headset or loudspeakers to hear voice-over-IP.  To use VOIP, \
+-the host enables the option when starting the meeting.  Once in \
+-the meeting, the moderator selects a user from the roster and presses the microphone \
+-button.  That user is now "on air" and others will hear them speak if \
+-their microphone is set up properly.</P> \
++<P><B>How is voice handled?</B></P> \
++<P>Voice-over-IP capability is largely integrated with WebHuddle, \
++and will be added to your application at a future time. For now, \
++you need to use a third-party voice conference solution, \
++such as Skype which can support up to 10 users in a conference, \
++or other solution.</P> \
+ <P><B>How do meeting recording and playback work?</B></P> \
+-<P>Meetings may optionally be recorded.  In order to record the audio portion \
+-of a meeting, select the "Record Meeting" option and also the \
+-voice-over-IP option.  All meeting content will be captured for a playback \
++<P>Meetings may optionally be recorded - \
++select the "Record Meeting" option. \
++All meeting content will be captured for a playback \
+ experience virtually identical to the live experience.  In other words, \
+-the audio, slide changes, text chat, questions, annotations, application \
++the slide changes, text chat, questions, annotations, application \
+ sharing and any other content will be rendered as they were during the \
+-original meeting.  {8} requires no separate media player for \
++original meeting.  WebHuddle requires no separate media player for \
+ playback -- it happens in the same client as the live meeting.</P> \
+ <P></P> \

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Wiki
+Comment=Collaboration web sites
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=firefox "http://wiki.[-DOMAIN-]/"
+Terminal=false
+StartupNotify=true
+Icon=wiki

@@ -1,0 +1,65 @@
+#
+# Eseri LDAP schema - v1.2
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+#
+# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+attributetype ( 1.3.6.1.4.1.32824.1.2.1.1
+        NAME 'eseriMailAlternateAddress'
+        DESC 'Secondary (alias) mailaddresses for the same user'
+        EQUALITY caseIgnoreIA5Match
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+
+attributetype ( 1.3.6.1.4.1.32824.1.2.1.2
+        NAME 'eseriMailQuota'
+        DESC 'The amount of space the user can use until all further messages get bounced.'
+        EQUALITY integerMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+        SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.32824.1.2.1.3
+        NAME 'eseriMailForwardingAddress'
+        DESC 'Address(es) to forward all incoming messages to.'
+        EQUALITY caseIgnoreIA5Match
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+
+attributetype ( 1.3.6.1.4.1.32824.1.2.1.4
+        NAME 'eseriMailSenderAddress'
+        DESC 'Secondary (alias) mailaddresses that the user can send from'
+        EQUALITY caseIgnoreIA5Match
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+
+objectclass ( 1.3.6.1.4.1.32824.1.2.2.1
+        NAME 'eseriLastUid'
+        DESC 'The Last Uid that is being used in the directory'
+        SUP top STRUCTURAL
+        MUST ( cn )
+        MAY ( uidNumber ) )
+
+objectclass ( 1.3.6.1.4.1.32824.1.2.2.2
+        NAME 'eseriApplicationEntity'
+        DESC 'An application entity'
+        SUP top STRUCTURAL
+        MUST ( cn )
+        MAY ( userPassword $ description ) )
+
+objectclass ( 1.3.6.1.4.1.32824.1.2.2.3
+        NAME 'eseriMailUser'
+        DESC 'Eseri User'
+        SUP inetOrgPerson
+        MUST ( mail )
+        MAY ( eseriMailQuota $ eseriMailAlternateAddress $ eseriMailForwardingAddress $ eseriMailSenderAddress ) )
+
+objectclass ( 1.3.6.1.4.1.32824.1.2.2.4
+        NAME 'eseriMailForwardOnly'
+        DESC 'Forward the incoming mail'
+        SUP top STRUCTURAL
+        MUST ( cn $ eseriMailAlternateAddress $ eseriMailForwardingAddress )
+        MAY ( displayName ) )

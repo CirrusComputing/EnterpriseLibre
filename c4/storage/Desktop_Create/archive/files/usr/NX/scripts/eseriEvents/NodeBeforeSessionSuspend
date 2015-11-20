@@ -1,0 +1,20 @@
+#! /bin/bash
+#
+# NX and Kerberos V integration
+#
+# This script is responsible for removing the cron tasks - v1.0
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+#
+# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+# Remove periodic run of syncevolution
+crontab -r
+
+exit 0

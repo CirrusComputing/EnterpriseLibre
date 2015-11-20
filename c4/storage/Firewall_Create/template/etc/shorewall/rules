@@ -1,0 +1,84 @@
+#
+# Shorewall version 4 - Rules File
+#
+# For information on the settings in this file, type "man shorewall-rules"
+#
+# The manpage is also online at
+# http://www.shorewall.net/manpages/shorewall-rules.html
+#
+#ACTION			SOURCE			DEST			PROTO	DEST	SOURCE	ORIGINAL	RATE		USER/	MARK
+#										PORT	PORT(S)	DEST		LIMIT		GROUP
+############################################################################################################################################
+# Internet
+############################################################################################################################################
+#
+#		Accepted connections from the Internet to Local				net -> loc
+#
+Ping/ACCEPT		net			$FW:[-WAN_IP-]
+ACCEPT          	net             	$FW:[-WAN_IP-]  	tcp     80					# Apache2 HTTP Proxy
+ACCEPT          	net             	$FW:[-WAN_IP-]  	tcp     443					# Apache2 HTTPS Proxy
+DNAT			net			loc:[-NETWORK-].50	tcp	22	-	[-WAN_IP-]		# NX Alternate Port
+DNAT			net			loc:[-NETWORK-].31	tcp	993	-	[-WAN_IP-]		# IMAP - Do not edit line (for FirewallProxyConfig)
+DNAT			net			loc:[-NETWORK-].31	tcp	465	-	[-WAN_IP-]		# SMTP - Do not edit line (for FirewallProxyConfig)
+DNAT			net			loc:[-NETWORK-].31	tcp	25	-	[-WAN_IP-]		# SMTP
+DNAT			net			loc:[-NETWORK-].2 	tcp,udp	53	-	[-WAN_IP-]		# Main DNS
+############################################################################################################################################
+# Firewall
+############################################################################################################################################
+#
+#		Accepted connections from the Firewall to Local				$FW -> loc
+#
+Ping/ACCEPT		$FW:[-NETWORK-].3 	loc
+DNS/ACCEPT		$FW:[-NETWORK-].3 	loc:[-NETWORK-].2 							# DNS
+DNAT            	$FW:[-NETWORK-].3 	loc:[-NETWORK-].50:22	tcp	80	-	[-NETWORK-].50		# Apache2 Tunnel Proxy for NX Desktop
+ACCEPT                  $FW:[-NETWORK-].3       loc:[-NETWORK-].31      tcp     80                                      # Mailman
+ACCEPT			$FW:[-NETWORK-].3 	loc:[-NETWORK-].32	tcp	80					# Poseidon apps
+ACCEPT          	$FW:[-NETWORK-].3 	loc:[-NETWORK-].37	tcp	80					# SOGo
+ACCEPT			$FW:[-NETWORK-].3 	loc:[-NETWORK-].39	tcp	80					# Trident apps
+############################################################################################################################################
+# CirrusOpen
+############################################################################################################################################
+Ping/ACCEPT             co                      loc
+Ping/ACCEPT		co			$FW
+#
+#		Accepted connections from CirrusOpen to Local				co -> loc
+#
+DNS/ACCEPT		co:10.101.1.2		loc:[-NETWORK-].2
+SMTP/ACCEPT		co:10.101.1.31		loc:[-NETWORK-].31
+IMAP/ACCEPT		co:10.101.1.4		loc:[-NETWORK-].31							# C3
+HTTP/ACCEPT     	co:10.101.1.4		loc:[-NETWORK-].50							# C3
+SSH/ACCEPT		co:10.101.1.4		loc									# C3, C4, C5
+ACCEPT			co:10.101.1.4		loc									# Nagios
+SSH/ACCEPT		co:10.101.1.50		loc									# System Cloud
+ACCEPT			co:10.101.1.4		loc			tcp,udp	10080					# Amanda Backup [-DELETE_UNLESS_Amanda-]
+#
+#		Accepted connections from the CirrusOpen to Firewall			co -> $FW
+#
+SSH/ACCEPT		co:10.101.1.4		$FW:[-NETWORK-].3 							# C4
+ACCEPT			co:10.101.1.4		$FW:[-NETWORK-].3 							# Nagios
+SSH/ACCEPT		co:10.101.1.50		$FW:[-NETWORK-].3 							# System Cloud
+############################################################################################################################################
+# Local
+############################################################################################################################################
+#
+#		Accepted connections from Local to the Firewall				loc -> $FW
+#
+Ping/ACCEPT		loc			$FW
+SSH/ACCEPT		loc:[-NETWORK-].50	$FW									# Amanda Chaos Backup Script [-DELETE_UNLESS_Amanda-]
+SSH/ACCEPT              loc:[-NETWORK-].4	$FW                                                                     # Duplicity Pre-Backup Script [-DELETE_UNLESS_Duplicity-]
+#
+#		Accepted connections from Local to CirrusOpen				loc -> co
+#
+DNS/ACCEPT		loc:[-NETWORK-].2 	co:10.101.1.2
+SMTP/ACCEPT		loc:[-NETWORK-].31	co:10.101.1.31
+PostgreSQL/ACCEPT	loc:[-NETWORK-].32	co:10.101.1.30
+ACCEPT			loc:[-NETWORK-].32	co:10.101.1.4		tcp	8081
+ACCEPT			loc			co:10.101.1.4		tcp,udp	10080					# Amanda Recover [-DELETE_UNLESS_Amanda-]
+ACCEPT                  loc:[-NETWORK-].4	co:10.101.1.4		tcp	22					# Duplicity Backup [-DELETE_UNLESS_Duplicity-]
+############################################################################################################################################
+# Capability rules - Do not edit line (for FirewallPortConfig)
+############################################################################################################################################
+# Syncthing rules - Do not edit line (for FirewallPortConfig)
+############################################################################################################################################
+DNAT			net			loc:[-NETWORK-].50	tcp	22000	-	[-WAN_IP-]		# Syncthing - Default
+############################################################################################################################################

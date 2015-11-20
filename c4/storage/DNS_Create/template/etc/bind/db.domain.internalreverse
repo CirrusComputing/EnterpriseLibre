@@ -1,0 +1,29 @@
+$TTL 2d
+$ORIGIN [-NETWORK_REVERSE-].in-addr.arpa.
+;
+@	IN	SOA	zeus.[-DOMAIN-]. hostmaster.[-SYSTEM_ANCHOR_DOMAIN-]. (
+			[-DEPLOY_TIME-]		; serial number (YYYYMMDD##)
+			1d			; refresh = 1 days (we are using notify, so this is just a backup)
+			15M			; update retry = 15 minutes
+			1W			; expiry = 1 week
+			1h			; minimum = 1 hour
+			)
+;
+@	IN	NS	zeus.[-DOMAIN-].
+;
+1	IN	PTR	router.[-DOMAIN-].
+2	IN	PTR	zeus.[-DOMAIN-].
+3	IN	PTR	hermes.[-DOMAIN-].
+4	IN	PTR	apollo.[-DOMAIN-]. [-DELETE_UNLESS_Duplicity-]
+10	IN	PTR	athena.[-DOMAIN-].
+11	IN	PTR	aphrodite.[-DOMAIN-].
+30	IN	PTR	hades.[-DOMAIN-].
+31	IN	PTR	hera.[-DOMAIN-]. [-DELETE_UNLESS_Email-]
+32	IN	PTR	poseidon.[-DOMAIN-].
+33	IN	PTR	cronus.[-DOMAIN-]. [-DELETE_UNLESS_Nuxeo-]
+34	IN	PTR	atlas.[-DOMAIN-]. [-DELETE_UNLESS_WebConferencing-]
+35	IN	PTR	erato.[-DOMAIN-]. [-DELETE_UNLESS_InstantMessaging-]
+36	IN	PTR	metis.[-DOMAIN-]. [-DELETE_UNLESS_Smartphone-]
+37	IN	PTR	gaia.[-DOMAIN-]. [-DELETE_UNLESS_SOGo-]
+39	IN	PTR	trident.[-DOMAIN-].
+50	IN	PTR	chaos.[-DOMAIN-]. [-DELETE_UNLESS_Desktop-]

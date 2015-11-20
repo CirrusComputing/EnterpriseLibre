@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+# Cron trigger for C5 - v1.1
+#
+# Created by Karoly Molnar <kmolnar@cirruscomputing.com>
+# Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
+# All Rights Reserved 
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+su - -c 'sudo /home/c5/bin/c5.sh' c5
+
+exit 0

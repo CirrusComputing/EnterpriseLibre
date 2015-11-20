@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Web Email & Calendars
+Comment=Mail, calendar and task settings
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=firefox "http://webmail.[-DOMAIN-]/"
+Terminal=false
+StartupNotify=true
+Icon=sogo

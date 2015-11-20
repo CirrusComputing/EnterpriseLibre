@@ -1,0 +1,12 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Name=Wiki
+Comment=Collaboration web sites
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=firefox "http://wiki.[-ALIAS_DOMAIN-]/index.php/User:[-USERNAME-]"
+Terminal=false
+Icon=wiki
+Name[en_CA]=Personal Wiki

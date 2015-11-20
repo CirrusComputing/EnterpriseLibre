@@ -1,0 +1,16 @@
+[Desktop Entry]
+Version=1.0
+Terminal=false
+Icon=libreoffice-draw
+Type=Application
+Categories=Office;Graphics;
+Exec=libreoffice -draw %U
+MimeType=application/vnd.oasis.opendocument.graphics;application/vnd.oasis.opendocument.graphics-template;application/vnd.sun.xml.draw;application/vnd.sun.xml.draw.template;application/vnd.stardivision.draw;
+Name=Drawings
+Name[pt_BR]=BrOffice Draw
+GenericName=Drawing Program
+GenericName[en]=Drawing Program
+Comment=Create and edit drawings, flow charts, and logos by using Draw.
+Comment[en]=Create and edit drawings, flow charts, and logos by using Draw.
+InitialPreference=5
+X-KDE-Protocols=file,http,smb,ftp,webdav

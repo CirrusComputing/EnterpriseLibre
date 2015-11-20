@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c4:boot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:c4="http://www.eseri.com/C4" xsi:schemaLocation="http://lucid-mirror.wan.virtualorgs.net/schema/C4/Boot.xsd">
+	<name>Kerberos</name>
+	<host>athena</host>
+	<deploy>
+	</deploy>
+	<certificates>
+	</certificates>
+	<passwords>
+		<password host="athena" entity="Krb5Master" name="KRB5_MASTER_PW" ><always/></password>
+		<password host="athena" entity="Krb5Admin" name="KRB5_ADMIN_PW" ><always/></password>
+		<password host="athena" entity="LDAP_Admin" name="LDAP_PASSWORD_ROOT" ><always/></password>
+	</passwords>
+	<kerberos_keys>
+	</kerberos_keys>
+	<deployment_files>
+	</deployment_files>
+	<package>
+		<always/>
+	</package>
+</c4:boot>

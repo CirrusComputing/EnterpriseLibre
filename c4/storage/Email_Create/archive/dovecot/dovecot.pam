@@ -1,0 +1,15 @@
+#%PAM-1.0
+
+#@include common-auth
+#@include common-account
+#@include common-session
+
+auth    sufficient      pam_unix.so nullok_secure
+auth    sufficient      pam_krb5.so minimum_uid=5000 use_first_pass ignore_root
+
+account sufficient      pam_krb5.so minimum_uid=5000 ignore_root
+account required        pam_unix.so
+
+session required        pam_unix.so
+session optional        pam_krb5.so minimum_uid=5000 ignore_root
+

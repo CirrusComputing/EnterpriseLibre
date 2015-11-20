@@ -1,0 +1,2 @@
+Cmnd_Alias ESERIMAN = /var/lib/eseriman/bin/eseriCreateHomeFolder, /var/lib/eseriman/bin/eseriSetUserMenu, /var/lib/eseriman/bin/eseriDeleteHomeFolder, /var/lib/eseriman/bin/eseriKillNXSession, /var/lib/eseriman/bin/eseriAddAlternateEmail, /var/lib/eseriman/bin/eseriCreatePamObcConf, /var/lib/eseriman/bin/eseriGeneratePostmasterReport, /var/lib/eseriman/bin/eseriUpdateDovecotPassDBFile
+eseriman ALL=NOPASSWD: ESERIMAN

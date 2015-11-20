@@ -1,0 +1,68 @@
+#!/bin/bash
+#
+# Create user home folder - v1.1
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+# Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+# Include eseri functions
+. ${0%/*}/eseriCommon
+
+# Mark start point in log file
+eseriStartLog "Create home folder"
+
+# We need to run as root
+if [[ $UID -ne 0 ]]; then
+    echo "$SCRIPT_NAME must be run as root"
+    exit 1
+fi
+
+# Check for proper number of parameters
+if [ $# -ne "2" ]; then
+    echo "Usage: $SCRIPT_NAME Username Home_folder"
+    exit 1
+fi
+
+# Check the format of the input parameters
+checkparam "Username" $1
+
+ESERI_USERNAME=$1
+ESERI_USER_HOME=$2
+
+# Check whether the home folder exists or not
+if [ -d "$ESERI_USER_HOME" ]; then
+    echo "Error: Home folder already exists" | tee >>$LOG_FILE
+    exit 1
+fi
+
+# Create home folder
+mkdir -p "$ESERI_USER_HOME" >>$LOG_FILE 2>&1
+mkdir -p "$ESERI_USER_HOME/.config/menus" >>$LOG_FILE 2>&1
+mkdir -p "$ESERI_USER_HOME/.gnomenu" >>$LOG_FILE 2>&1
+mkdir -p "$ESERI_USER_HOME/Desktop" >>$LOG_FILE 2>&1
+mkdir -p "$ESERI_USER_HOME/Documents" >>$LOG_FILE 2>&1
+mkdir -p "$ESERI_USER_HOME/Pictures" >>$LOG_FILE 2>&1
+mkdir -p "$ESERI_USER_HOME/PDF" >>$LOG_FILE 2>&1
+
+# Copy skeleton files and folders
+find /etc/skel -maxdepth 1 -mindepth 1 -exec cp -Rt "$ESERI_USER_HOME" '{}' \; >>$LOG_FILE 2>&1
+
+# Copy files
+sed -e "s|\[-HOME_FOLDER-\]|$ESERI_USER_HOME|g" <$TEMPLATE_DESKTOP_FOLDER/.gtk-bookmarks >"$ESERI_USER_HOME/.gtk-bookmarks" 2>>$LOG_FILE
+
+# Make sure that the user owns its files and the home folder is secure
+chown -R $ESERI_USERNAME:$ESERI_USERNAME "$ESERI_USER_HOME" >>$LOG_FILE 2>&1
+chmod 700 "$ESERI_USER_HOME" >>$LOG_FILE 2>&1
+chmod 700 "$ESERI_USER_HOME/.ssh" >>$LOG_FILE 2>&1
+chmod 600 "$ESERI_USER_HOME/.ssh/authorized_keys2" >>$LOG_FILE 2>&1
+
+# Add user to local group lpadmin to allow printer mounting
+adduser $ESERI_USERNAME lpadmin >>$LOG_FILE 2>&1

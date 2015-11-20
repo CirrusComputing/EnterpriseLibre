@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c4:boot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:c4="http://www.eseri.com/C4" xsi:schemaLocation="http://lucid-mirror.wan.virtualorgs.net/schema/C4/Boot.xsd">
+	<name>Web</name>
+	<host>poseidon</host>
+	<deploy>
+                <arg>system_anchor_domain</arg>
+		<arg>network</arg>
+		<arg>short_domain</arg>
+		<arg>manager_username</arg>
+		<arg>longname</arg>
+		<arg>sql_ledger_chart_of_accounts</arg>
+	</deploy>
+	<certificates>
+	</certificates>
+	<passwords>
+		<password host="mysql" entity="timesheet" name="DB_PASSWORD_TIMESHEET" ><required>Timesheet</required></password>
+		<password host="pgsql" entity="wikiuser" name="DB_PASSWORD_WIKI" ><required>Wiki</required></password>
+		<password host="aphrodite" entity="mediawiki" name="LDAP_PASSWORD_WIKI" ><required>Wiki</required></password>
+		<password host="mysql" entity="orangehrm" name="DB_PASSWORD_ORANGEHRM" ><required>OrangeHRM</required></password>
+		<password host="pgsql" entity="trac" name="DB_PASSWORD_TRAC" ><required>Trac</required></password>
+		<password host="mysql" entity="vtiger" name="DB_PASSWORD_VTIGER" ><required>Vtiger</required></password>
+		<password host="aphrodite" entity="vtiger" name="LDAP_PASSWORD_VTIGER" ><required>Vtiger</required></password>
+		<password host="pgsql" entity="sqlledger" name="DB_PASSWORD_SQL_LEDGER" ><required>SQLLedger</required></password>
+		<password host="sqlledger" entity="admin" type="user" name="SQL_LEDGER_PASSWORD_ADMIN"><required>SQLLedger</required></password>
+		<password host="aphrodite" entity="libnss" name="LDAP_PASSWORD_LIBNSS"><required>SQLLedger</required></password>
+	</passwords>
+	<kerberos_keys>
+		<service>apache2</service>
+	</kerberos_keys>
+	<deployment_files>
+	</deployment_files>
+	<package>
+		<always/>
+	</package>
+</c4:boot>

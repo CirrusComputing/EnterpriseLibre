@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Office >
+Comment=Libre Office Applications
+Icon=applications-office
+Type=Directory
+X-Ubuntu-Gettext-Domain=gnome-menus

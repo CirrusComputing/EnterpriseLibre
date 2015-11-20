@@ -1,0 +1,13 @@
+--- chrome.js	2014-01-16 11:17:37.000000000 -0500
++++ chrome.js.new	2014-01-16 17:35:10.000000000 -0500
+@@ -1398,7 +1398,9 @@
+             this.session.session_logout().done(function () {
+                 $(window).unbind('hashchange', self.on_hashchange);
+                 self.do_push_state({});
+-                window.location.reload();
++		//Instead of reloading, direct user to sso_login. If sso_authentication is enabled for user, he will be logged back in, else he'll see standard login screen - Nimesh Jethwa 01/16/2014
++                //window.location.reload();
++		window.location = window.location.protocol + '//' + window.location.host + '/web/webclient/sso_login';
+             });
+         }
+     },

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Resource Management
+Comment= An open source resource management web application
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=firefox "http://scheduleit.[-DOMAIN-]/"
+Terminal=false
+StartupNotify=true
+Icon=phpscheduleit

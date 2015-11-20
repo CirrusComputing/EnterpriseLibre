@@ -1,0 +1,15 @@
+#
+# xmpp.newvirtualorgs.net.cnf
+#
+
+[ req ]
+prompt                  = no
+distinguished_name      = xmpp.newvirtualorgs.net
+
+[ xmpp.newvirtualorgs.net ]
+commonName              = xmpp.newvirtualorgs.net
+stateOrProvinceName     = ON
+countryName             = CA
+emailAddress            = hostmaster@newvirtualorgs.net
+organizationName        = newvirtualorgs
+organizationalUnitName  = IT Department

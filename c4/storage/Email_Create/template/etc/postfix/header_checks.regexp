@@ -1,0 +1,5 @@
+/^(X-DSPAM-Resu[A-z]*): (.+)$/ REPLACE X-prev${1}: ${2}
+/^(X-DSPAM-Proc[A-z]*): (.+)$/ REPLACE X-prev${1}: ${2}
+/^(X-DSPAM-Conf[A-z]*): (.+)$/ REPLACE X-prev${1}: ${2}
+/^(X-DSPAM-Prob[A-z]*): (.+)$/ REPLACE X-prev${1}: ${2}
+/^(X-DSPAM-Sign[A-z]*): (.+)$/ REPLACE X-prev${1}: ${2}

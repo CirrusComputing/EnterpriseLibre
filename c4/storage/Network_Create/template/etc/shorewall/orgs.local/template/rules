@@ -1,0 +1,13 @@
+#ACTION                 SOURCE                  DEST                    PROTO   DEST    SOURCE  ORIGINAL        RATE            USER/   MARK
+#                                                                               PORT    PORT(S) DEST            LIMIT           GROUP
+############################################################################################################################################
+# Internet
+############################################################################################################################################
+#
+#		Accept connections from Internat to Firewall at Public IP				net -> dmz
+#
+ACCEPT			net			dmz:PUBLICIP
+#
+#		Accept connections from Firewall at Public IP to the Internet				dmz -> net
+#
+ACCEPT			dmz:PUBLICIP		net

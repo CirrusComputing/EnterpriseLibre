@@ -1,0 +1,4 @@
+command[check_apt]=/usr/lib/nagios/plugins/check_apt
+command[check_disk]=/usr/lib/nagios/plugins/check_disk -w 10% -c 5% -W 2% -K 1% -e
+command[check_openvz]=/usr/local/lib/nagios/plugins/check_openvz -w 90 -c 95
+command[check_total_procs]=/usr/lib/nagios/plugins/check_procs -w 250 -c 300

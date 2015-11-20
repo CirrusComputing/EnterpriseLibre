@@ -1,0 +1,59 @@
+#!/bin/bash
+#
+# Double-Lock v2.1 - This script is run as root and replaces the /etc/pam_obc.conf with new values
+#
+# Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2012 (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+# Include eseri functions
+. ${0%/*}/eseriCommon
+
+# Mark start point in log file
+eseriStartLog "PAM OBC configuration"
+
+# We need to run as root
+if [[ $UID -ne 0 ]]; then
+    echo "$SCRIPT_NAME must be run as root"
+    exit 1
+fi
+
+if [ $# -ne 1 ]; then
+        echo "Usage: $0 <OPTION>"
+        exit 1
+fi
+
+#case=1 - New User
+#case=2 - Notify Address Changed
+#case=3 - Double Lock Option Changed
+case=$1
+
+su - -c "kinit -k -t keytabs/eseriman-admin.keytab eseriman/admin" eseriman
+
+su - -c "rm -rf pam/; mkdir -p pam" eseriman
+
+su - -c "$BIN_FOLDER/eseriCreatePamObcConf.py $case >>$LOG_FILE 2>&1" eseriman
+	
+if [ $case == "1" ] || [ $case == "2" ]; then
+	mv $HOME/pam/pam_obc.conf /etc
+	chown root:root /etc/pam_obc.conf
+fi
+
+if [ $case == "1" ] || [ $case == "3" ]; then
+	for file in $HOME/pam/* 
+		do
+			USERNAME=`basename $file`
+			cp $file /home/$USERNAME/.config/autostart/gnome-screensaver-command.desktop
+			chown $USERNAME:$USERNAME /home/$USERNAME/.config/autostart/gnome-screensaver-command.desktop
+		done
+fi
+
+su - -c "kdestroy" eseriman
+
+exit 0

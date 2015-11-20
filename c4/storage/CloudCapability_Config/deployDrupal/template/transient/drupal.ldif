@@ -1,0 +1,6 @@
+# Drupal entry
+dn: cn=drupal,ou=applications,ou=system,[-LDAP_BASE_DN-]
+objectClass: top
+objectClass: eseriApplicationEntity
+cn: drupal
+userPassword: [-LDAP_SSHA_PASSWORD_DRUPAL-]

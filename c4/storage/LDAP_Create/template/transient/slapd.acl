@@ -1,0 +1,45 @@
+#
+# Ensure read access to the base for things like
+# supportedSASLMechanisms.  Without this you may
+# have problems with SASL not knowing what
+# mechanisms are available and the like.
+# Note that this is covered by the 'access to *'
+# ACL below too but if you change that as people
+# are wont to do you'll still need this if you
+# want SASL (and possible other things) to work
+# happily.
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+#
+# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+access to dn.base=""
+    by * read
+
+access to attrs=userPassword,shadowLastChange
+    by dn="uid=root/admin,ou=people,[-LDAP_BASE_DN-]" write
+    by dn="uid=eseriman/admin,ou=people,[-LDAP_BASE_DN-]" write
+    by dn="cn=libnss,ou=applications,ou=system,[-LDAP_BASE_DN-]" read
+    by anonymous auth
+    by self auth
+    by * none
+
+access to dn.subtree="ou=nuxeogroups,[-LDAP_BASE_DN-]"
+    by dn="uid=root/admin,ou=people,[-LDAP_BASE_DN-]" write
+    by dn="uid=eseriman/admin,ou=people,[-LDAP_BASE_DN-]" write
+    by dn="cn=nuxeo5,ou=applications,ou=system,[-LDAP_BASE_DN-]" write
+    by users read
+    by * none
+
+access to *
+    by dn="uid=root/admin,ou=people,[-LDAP_BASE_DN-]" write
+    by dn="uid=eseriman/admin,ou=people,[-LDAP_BASE_DN-]" write
+    by dn.regex="^uid=([^,]+),ou=people,[-LDAP_BASE_DN-]" read
+    by users read
+    by * none

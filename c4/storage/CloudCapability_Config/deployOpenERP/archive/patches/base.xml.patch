@@ -1,0 +1,11 @@
+--- base.xml	2014-01-16 11:17:43.000000000 -0500
++++ base.xml.new	2014-01-16 11:16:50.000000000 -0500
+@@ -79,7 +79,7 @@
+             </form>
+             <div class="oe_login_footer">
+                 <a href="#" class="oe_login_manage_db">Manage Databases</a> |
+-                <a href="http://www.openerp.com" target="_blank">Powered by <span>OpenERP</span></a>
++                <a href="/web/webclient/sso_login"><span>SSO</span> Login</a>
+             </div>
+         </div>
+     </div>

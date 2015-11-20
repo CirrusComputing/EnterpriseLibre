@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE web-app PUBLIC '-//Sun Micsrosystems, Inc.//DTD Web Application 2.3//EN' 'http://java.sun.com/dtd/web-app_2_3.dtd'>
+<web-app>
+
+  <display-name>WebmeetWAR</display-name>
+
+    <!-- spring/acegi settings -->
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+
+<!--
+        <param-value>
+            /WEB-INF/applicationContext-acegi-security.xml
+        </param-value>
+-->
+
+<!--
+        <param-value>
+            /WEB-INF/applicationContext-acegi-security-external.xml
+        </param-value>
+-->
+        <param-value>
+            /WEB-INF/applicationContext-acegi-security-ldap.xml
+        </param-value>
+
+    </context-param>
+
+    <context-param>
+        <param-name>javax.servlet.jsp.jstl.fmt.localizationContext</param-name>
+        <param-value>
+            com.sts.webmeet.web.Resources
+        </param-value>
+    </context-param>
+
+   <!--
+      - Loads the root application context of this web app at startup,
+      - by default from "/WEB-INF/applicationContext.xml".
+        - Note that you need to fall back to Spring's ContextLoaderServlet for
+        - J2EE servers that do not follow the Servlet 2.4 initialization order.
+        -
+      - Use WebApplicationContextUtils.getWebApplicationContext(servletContext)
+      - to access it anywhere in the web application, outside of the framework.
+      -
+      - The root context is the parent of all servlet-specific contexts.
+      - This means that its beans are automatically available in these child contexts,
+      - both for getBean(name) calls and (external) bean references.
+      -->
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+
+     <filter>
+        <filter-name>HostPrependingFilter</filter-name>
+        <filter-class>com.sts.webmeet.server.filters.HostPrependingFilter</filter-class>
+     </filter>
+
+     <filter-mapping>
+        <filter-name>HostPrependingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+     </filter-mapping>
+
+     <filter>
+        <filter-name>SslEnforcingFilter</filter-name>
+        <filter-class>com.sts.webmeet.server.filters.SslEnforcingFilter</filter-class>
+     </filter>
+
+     <filter-mapping>
+        <filter-name>SslEnforcingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+     </filter-mapping>
+
+     <filter>
+        <filter-name>PluginClientJarFilter</filter-name>
+        <filter-class>com.sts.webmeet.server.filters.PluginClientJarFilter</filter-class>
+     </filter>
+
+     <filter-mapping>
+        <filter-name>PluginClientJarFilter</filter-name>
+        <url-pattern>*.jar</url-pattern>
+     </filter-mapping>
+
+     <filter-mapping>
+        <filter-name>PluginClientJarFilter</filter-name>
+        <url-pattern>*.cab</url-pattern>
+     </filter-mapping>
+
+     <filter>
+        <filter-name>Pack200Filter</filter-name>
+        <filter-class>com.sts.webmeet.server.filters.Pack200Filter</filter-class>
+     </filter>
+
+     <filter-mapping>
+        <filter-name>Pack200Filter</filter-name>
+        <url-pattern>*.jar</url-pattern>
+     </filter-mapping>
+
+
+ <listener>
+    <listener-class>com.sts.webmeet.web.listener.ContextListener</listener-class>
+  </listener>
+
+  <servlet>
+    <servlet-name>ImageServlet</servlet-name>
+    <display-name>ImageServlet</display-name>
+    <servlet-class>com.sts.webmeet.server.servlets.ImageServlet</servlet-class>
+  </servlet>
+<!--
+  <servlet>
+    <servlet-name>Pack200Servlet</servlet-name>
+    <display-name>Pack200Servlet</display-name>
+    <servlet-class>com.sts.webmeet.server.servlets.Pack200Servlet</servlet-class>
+  </servlet>
+-->
+  <servlet>
+    <servlet-name>PlaybackServlet</servlet-name>
+    <display-name>PlaybackServlet</display-name>
+    <servlet-class>com.sts.webmeet.server.servlets.PlaybackServlet</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>MessageProxyServlet</servlet-name>
+    <display-name>MessageProxyServlet</display-name>
+    <servlet-class>com.sts.webmeet.server.servlets.MessageProxyServlet</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>ScriptServlet</servlet-name>
+    <display-name>ScriptServlet</display-name>
+    <servlet-class>com.sts.webmeet.server.servlets.ScriptServlet</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>BulkUploadServlet</servlet-name>
+    <display-name>BulkUploadServlet</display-name>
+    <servlet-class>com.sts.webmeet.server.servlets.BulkUploadServlet</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>StreamServlet</servlet-name>
+    <display-name>StreamServlet</display-name>
+    <servlet-class>com.sts.webmeet.server.servlets.StreamServlet</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>CreateMeetingServlet</servlet-name>
+    <display-name>CreateMeetingServlet</display-name>
+    <servlet-class>com.sts.webmeet.server.servlets.CreateMeetingServlet</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>AudioMergingServlet</servlet-name>
+    <display-name>AudioMergingServlet</display-name>
+    <servlet-class>com.sts.webmeet.server.servlets.AudioMergingServlet</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>ListPublicEventsServlet</servlet-name>
+    <display-name>ListPublicEventsServlet</display-name>
+    <servlet-class>com.sts.webmeet.server.servlets.ListPublicEventsServlet</servlet-class>
+  </servlet>
+  <servlet>
+      <servlet-name>ResetPassword</servlet-name>
+      <display-name>ResetPassword</display-name>
+      <servlet-class>com.sts.webmeet.server.servlets.ResetPassword</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>action</servlet-name>
+    <display-name>action</display-name>
+    <servlet-class>org.apache.struts.action.ActionServlet</servlet-class>
+    <init-param>
+      <param-name>config</param-name>
+      <param-value>/WEB-INF/struts-config.xml</param-value>
+    </init-param>
+    <init-param>
+      <param-name>debug</param-name>
+      <param-value>3</param-value>
+    </init-param>
+    <init-param>
+      <param-name>detail</param-name>
+      <param-value>5</param-value>
+    </init-param>
+    <init-param>
+      <param-name>nocache</param-name>
+      <param-value>true</param-value>
+    </init-param>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>action</servlet-name>
+    <url-pattern>*.do</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>StreamServlet</servlet-name>
+    <url-pattern>/stream</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>MessageProxyServlet</servlet-name>
+    <url-pattern>/messageproxy</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>ImageServlet</servlet-name>
+    <url-pattern>/imageDB</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>ScriptServlet</servlet-name>
+    <url-pattern>/script</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>BulkUploadServlet</servlet-name>
+    <url-pattern>/bulkUpload</url-pattern>
+  </servlet-mapping>  
+  <servlet-mapping>
+    <servlet-name>CreateMeetingServlet</servlet-name>
+    <url-pattern>/createMeeting</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>AudioMergingServlet</servlet-name>
+    <url-pattern>/mergeAudio</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>ListPublicEventsServlet</servlet-name>
+    <url-pattern>/publicEvents</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>PlaybackServlet</servlet-name>
+    <url-pattern>/playback</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+      <servlet-name>ResetPassword</servlet-name>
+      <url-pattern>/resetPassword</url-pattern>
+  </servlet-mapping>
+<!--
+  <servlet-mapping>
+    <servlet-name>Pack200Servlet</servlet-name>
+    <url-pattern>*.jar</url-pattern>
+  </servlet-mapping>
+-->
+  <session-config>
+    <session-timeout>30</session-timeout>
+  </session-config>
+  <welcome-file-list>
+    <welcome-file>homepage.jsp</welcome-file>
+  </welcome-file-list>
+<!--
+  <taglib>
+    <taglib-uri>/WEB-INF/struts-template.tld</taglib-uri>
+    <taglib-location>/WEB-INF/struts-template.tld</taglib-location>
+  </taglib>
+
+  <taglib>
+    <taglib-uri>/WEB-INF/struts-bean.tld</taglib-uri>
+    <taglib-location>/WEB-INF/struts-bean.tld</taglib-location>
+  </taglib>
+
+  <taglib>
+    <taglib-uri>/WEB-INF/struts-logic.tld</taglib-uri>
+    <taglib-location>/WEB-INF/struts-logic.tld</taglib-location>
+  </taglib>
+
+  <taglib>
+    <taglib-uri>/WEB-INF/struts-html.tld</taglib-uri>
+    <taglib-location>/WEB-INF/struts-html.tld</taglib-location>
+  </taglib>
+
+  <taglib>
+    <taglib-uri>/WEB-INF/app.tld</taglib-uri>
+    <taglib-location>/WEB-INF/app.tld</taglib-location>
+  </taglib>
+
+  <taglib>
+    <taglib-uri>http://acegisecurity.sf.net/authz</taglib-uri>
+    <taglib-location>/WEB-INF/authz.tld</taglib-location>
+  </taglib>
+
+  <taglib>
+     <taglib-uri>http://java.sun.com/jsp/jstl/fmt</taglib-uri>
+     <taglib-location>/WEB-INF/fmt.tld</taglib-location>
+  </taglib>
+-->
+<!--
+   <security-constraint>
+     <web-resource-collection>
+          <web-resource-name>Protected Context</web-resource-name>
+          <url-pattern>/*</url-pattern>
+     </web-resource-collection>
+     <user-data-constraint>
+       <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+     </user-data-constraint>
+   </security-constraint>
+-->
+  <ejb-local-ref>
+    <ejb-ref-name>ejb/Customer</ejb-ref-name>
+    <ejb-ref-type>Entity</ejb-ref-type>
+    <local-home>com.sts.webmeet.server.interfaces.CustomerLocalHome</local-home>
+    <local>com.sts.webmeet.server.interfaces.CustomerLocal</local>
+    <ejb-link>webhuddle-ejb.jar#Customer</ejb-link>
+  </ejb-local-ref>
+  <ejb-local-ref>
+    <ejb-ref-name>ejb/Meeting</ejb-ref-name>
+    <ejb-ref-type>Entity</ejb-ref-type>
+    <local-home>com.sts.webmeet.server.interfaces.MeetingLocalHome</local-home>
+    <local>com.sts.webmeet.server.interfaces.MeetingLocal</local>
+    <ejb-link>webhuddle-ejb.jar#Meeting</ejb-link>
+  </ejb-local-ref>
+  <ejb-local-ref>
+    <ejb-ref-name>ejb/Contentupload</ejb-ref-name>
+    <ejb-ref-type>Entity</ejb-ref-type>
+    <local-home>com.sts.webmeet.server.interfaces.ContentuploadLocalHome</local-home>
+    <local>com.sts.webmeet.server.interfaces.ContentuploadLocal</local>
+    <ejb-link>webhuddle-ejb.jar#Contentupload</ejb-link>
+  </ejb-local-ref>
+  <ejb-local-ref>
+    <ejb-ref-name>ejb/Contentslid</ejb-ref-name>
+    <ejb-ref-type>Entity</ejb-ref-type>
+    <local-home>com.sts.webmeet.server.interfaces.ContentslidLocalHome</local-home>
+    <local>com.sts.webmeet.server.interfaces.ContentslidLocal</local>
+    <ejb-link>webhuddle-ejb.jar#Contentslid</ejb-link>
+  </ejb-local-ref>
+  <ejb-local-ref>
+    <ejb-ref-name>ejb/Slidechunk</ejb-ref-name>
+    <ejb-ref-type>Entity</ejb-ref-type>
+    <local-home>com.sts.webmeet.server.interfaces.SlidechunkLocalHome</local-home>
+    <local>com.sts.webmeet.server.interfaces.SlidechunkLocal</local>
+    <ejb-link>webhuddle-ejb.jar#Slidechunk</ejb-link>
+  </ejb-local-ref>
+
+  <ejb-local-ref>
+    <ejb-ref-name>ejb/Participation</ejb-ref-name>
+    <ejb-ref-type>Entity</ejb-ref-type>
+    <local-home>com.sts.webmeet.server.interfaces.ParticipationLocalHome</local-home>
+    <local>com.sts.webmeet.server.interfaces.ParticipationLocal</local>
+    <ejb-link>webhuddle-ejb.jar#Participation</ejb-link>
+  </ejb-local-ref>
+
+  <ejb-local-ref>
+      <ejb-ref-name>ejb/SequenceSession</ejb-ref-name>
+      <ejb-ref-type>Session</ejb-ref-type>
+      <local-home>com.sts.webmeet.server.interfaces.SequenceSessionLocalHome</local-home>
+      <local>com.sts.webmeet.server.interfaces.SequenceSessionLocal</local>
+      <ejb-link>webhuddle-ejb.jar#SequenceSession</ejb-link>
+  </ejb-local-ref>
+
+  <ejb-local-ref>
+      <ejb-ref-name>ejb/Sequence</ejb-ref-name>
+      <ejb-ref-type>Entity</ejb-ref-type>
+      <local-home>com.sts.webmeet.server.interfaces.SequenceLocalHome</local-home>
+      <local>com.sts.webmeet.server.interfaces.SequenceLocal</local>
+      <ejb-link>webhuddle-ejb.jar#Sequence</ejb-link>
+  </ejb-local-ref>
+
+</web-app>
+

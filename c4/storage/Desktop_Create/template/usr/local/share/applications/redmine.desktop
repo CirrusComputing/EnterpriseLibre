@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Project Management
+Comment= A flexible project management web application
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=firefox "http://redmine.[-DOMAIN-]/"
+Terminal=false
+StartupNotify=true
+Icon=redmine

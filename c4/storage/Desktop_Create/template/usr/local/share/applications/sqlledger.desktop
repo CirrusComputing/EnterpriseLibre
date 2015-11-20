@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Accounting
+Comment=Double-entry accounting
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=firefox "http://sql-ledger.[-DOMAIN-]/"
+Terminal=false
+StartupNotify=true
+Icon=gnucash-icon

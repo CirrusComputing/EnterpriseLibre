@@ -1,0 +1,17 @@
+#
+# Add user to allusers openfire group - v1.0
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+#
+# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+dn: cn=allusers,ou=chatgroups,[-LDAP_BASE-]
+changetype: modify
+add: member
+member: uid=[-USERNAME-],ou=people,[-LDAP_BASE-]

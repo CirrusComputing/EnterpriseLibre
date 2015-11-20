@@ -1,0 +1,12 @@
+--- mail.js	2014-01-16 17:30:32.000000000 -0500
++++ mail.js.new	2014-01-16 17:32:43.000000000 -0500
+@@ -6,7 +6,8 @@
+ 
+     openerp_mail_followers(session, mail);        // import mail_followers.js
+     openerp_FieldMany2ManyTagsEmail(session);      // import manyy2many_tags_email.js
+-    openerp_announcement(session);
++    //Remove the announcement that pops up if OpenERP is not registered. - Nimesh Jethwa 01/16/2014
++    //openerp_announcement(session);
+ 
+     /**
+      * ------------------------------------------------------------

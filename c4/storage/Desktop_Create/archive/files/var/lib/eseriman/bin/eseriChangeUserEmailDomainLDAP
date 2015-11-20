@@ -1,0 +1,61 @@
+#!/bin/bash
+#
+# Change email domain for user mail, eseriMailAlternate, eseriMailSender addresses - v1.0
+#
+# Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2014 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+# Include eseri functions
+. ${0%/*}/eseriCommon
+
+# Mark start point in log file
+eseriStartLog "Change user domain for mail, eseriMailAlternateAddress, eseriMailSenderAddress attributes in LDAP"
+
+# Check for proper number of parameters
+if [ $# -ne 3 ]; then
+    echo "Usage: $SCRIPT_NAME Username Email_Domain LDAP_Replace_Attributes"
+    exit 1
+fi
+
+# Check the format of the input parameters
+checkparam "Username" $1
+
+ESERI_USERNAME=$1
+ESERI_EMAILDOMAIN=$2
+LDAP_REPLACE_ATTRIBUTES=$3
+
+# Log to eseri.log via syslog
+/usr/local/share/eseri/EseriLog "$ESERI_USERNAME - Change user domain for $LDAP_REPLACE_ATTRIBUTES attributes in LDAP"
+
+# Variables
+LDIF_TEMPLATE=$TEMPLATE_LDAP_FOLDER/useremaildomain-change.ldif.template
+LDIF_FILE=/tmp/eseri.$RANDOM.useremaildomain-change.ldif
+
+LDAP_BASE=$(awk '$1 ~ "^BASE" {print $2}' /etc/ldap/ldap.conf 2>>$LOG_FILE)
+
+# Kerberos init
+kinit -k -t $KEYTAB $KRB_IDENT >>$LOG_FILE 2>&1 || exit $?
+
+if [ $LDAP_REPLACE_ATTRIBUTES == 'ALL' ]; then
+    LDAP_REPLACE_ATTRIBUTES='mail eseriMailAlternateAddress eseriMailSenderAddress'
+fi
+
+for LDAP_REPLACE_ATTRIBUTE in $LDAP_REPLACE_ATTRIBUTES; do
+    LDAP_REPLACE_DATA=$(ldapsearch "(&(objectClass=*)(uid=$ESERI_USERNAME))" "$LDAP_REPLACE_ATTRIBUTE" 2>/dev/null | grep "$LDAP_REPLACE_ATTRIBUTE: " | awk "{split(\$2,a,\"@\"); print \$1, a[1]\"@$ESERI_EMAILDOMAIN\"}" | sort -u)
+    sed -e "s|\[-LDAP_BASE-\]|$LDAP_BASE|g" -e "s|\[-USERNAME-\]|$ESERI_USERNAME|g" -e "s|\[-LDAP_ATTRIBUTE-\]|$LDAP_REPLACE_ATTRIBUTE|g" -e "/\[-LDAP_REPLACE_DATA-\]/d"<$LDIF_TEMPLATE >$LDIF_FILE
+    echo "$LDAP_REPLACE_DATA" >> $LDIF_FILE
+    ldapmodify -f $LDIF_FILE >>$LOG_FILE 2>&1
+    rm $LDIF_FILE >>$LOG_FILE 2>&1
+done
+
+# Kerberos deinit
+kdestroy >>$LOG_FILE 2>&1
+
+exit 0

@@ -1,0 +1,26 @@
+console-setup	console-setup/variant	select	USA
+console-setup	console-setup/variantcode	string	
+console-setup	console-setup/unsupported_layout	boolean	true
+console-setup	console-setup/codesetcode	string	Lat15
+console-setup	console-setup/unsupported_options	boolean	true
+console-setup	console-setup/layoutcode	string	us
+console-setup	console-setup/charmap	select	UTF-8
+console-setup	console-setup/compose	select	No compose key
+console-setup	console-setup/fontsize-text	select	16
+console-setup	console-setup/modelcode	string	pc105
+console-setup	console-setup/optionscode	string	
+console-setup	console-setup/ask_detect	boolean	false
+console-setup	console-setup/altgr	select	No AltGr key
+console-setup	console-setup/ttys	string	/dev/tty[1-6]
+console-setup	console-setup/unsupported_config_options	boolean	true
+console-setup	console-setup/model	select	Generic 105-key (Intl) PC
+console-setup	console-setup/fontsize-fb	select	16
+console-setup	console-setup/layout	select	USA
+console-setup	console-setup/switch	select	No temporary switch
+console-setup	console-setup/detect	detect-keyboard	
+console-setup	console-setup/unsupported_config_layout	boolean	true
+console-setup	console-setup/codeset	select	# Latin1 and Latin5 - western Europe and Turkic languages
+console-setup	console-setup/detected	note	
+console-setup	console-setup/toggle	select	No toggling
+console-setup	console-setup/fontface	select	VGA
+console-setup	console-setup/fontsize	string	16

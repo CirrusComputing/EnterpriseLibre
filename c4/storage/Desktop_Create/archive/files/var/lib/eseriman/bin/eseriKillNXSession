@@ -1,0 +1,63 @@
+#!/bin/bash
+#
+# Kill the NX session - v1.0
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+#
+# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+# Include eseri functions
+. ${0%/*}/eseriCommon
+
+# Mark start point in log file
+eseriStartLog "Kill NX Session"
+
+# We need to run as root
+if [[ $UID -ne 0 ]]; then
+    echo "$SCRIPT_NAME must be run as root"
+    exit 1
+fi
+	
+# Check for proper number of parameters
+if [ $# -ne 1 -a $# -ne 2 ]; then
+    echo "Usage: $SCRIPT_NAME Username [--killall]"
+    exit 1
+fi
+
+# Check the format of the input parameters
+checkparam "Username" $1
+
+if [ $# -eq 2 ]; then
+	if [ "$2" == "--killall" ]; then
+		KILLALL=1
+	else
+		echo "Usage: $SCRIPT_NAME Username [--killall]"
+		exit 1
+	fi
+else
+	KILLALL=0
+fi
+
+ESERI_USERNAME=$1
+
+# Log to eseri.log via syslog
+/usr/local/share/eseri/EseriLog "$ESERI_USERNAME - Kill NX Session"
+
+# Terminate the NX session
+/usr/NX/bin/nxserver --terminate $ESERI_USERNAME
+/usr/NX/bin/nxserver --kill $ESERI_USERNAME
+
+# Terminate any remaining processes
+if [ $KILLALL -eq 1 ]; then
+	killall -q -u $ESERI_USERNAME
+	sleep 5
+	killall -q -s KILL -u $ESERI_USERNAME
+fi
+
+exit 0

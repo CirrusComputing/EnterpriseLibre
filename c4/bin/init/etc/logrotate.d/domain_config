@@ -1,0 +1,9 @@
+/var/log/c4/domain_config.log {
+        monthly
+        rotate 6
+        compress
+        delaycompress
+        missingok
+        notifempty
+        create 644 c4 c4
+}

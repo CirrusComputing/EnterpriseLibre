@@ -1,0 +1,16 @@
+Dear [% first_name %] [% last_name %],
+
+Welcome to your Cirrus Open desktop!  Please visit the Cirrus Open login page http://login.[% system_anchor_domain %] and follow the instructions.
+
+Your desktop login credentials are as follows:
+
+    Email Address: [% email_prefix %]@[% domain %]
+    Password: [% password %]
+
+(If you copy-and-paste the password, make sure there isn't an extra
+space added onto the end as a ninth character by your browser.)
+
+Enjoy!
+The Cirrus Open Team
+---
+You received this email because you just subscribed to a Cirrus Open cloud. If this email reached you in error for any reason, please let us know immediately.

@@ -1,0 +1,16 @@
+[Desktop Entry]
+Version=1.0
+Terminal=false
+Icon=libreoffice-base
+Type=Application
+Categories=Office;
+Exec=libreoffice -base %U
+MimeType=application/vnd.oasis.opendocument.database;application/vnd.sun.xml.base;
+Name=Databases
+Name[pt_BR]=BrOffice Base
+GenericName=Database Development
+GenericName[en]=Database Development
+Comment=Manage databases, create queries and reports to track and manage your information by using Base.
+Comment[en]=Manage databases, create queries and reports to track and manage your information by using Base.
+InitialPreference=5
+X-KDE-Protocols=file,http,smb,ftp,webdav

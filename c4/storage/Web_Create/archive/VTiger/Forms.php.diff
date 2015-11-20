@@ -1,0 +1,18 @@
+--- Forms.php	2010-08-26 14:46:15.000000000 -0400
++++ Forms.php	2010-08-26 14:46:39.000000000 -0400
+@@ -107,6 +107,7 @@
+ 	var errorMessage = "";
+ 	
+ 	//check if asterisk server details are set or not
++	/*
+ 	if(trim(form.asterisk_extension.value)!="" && "$checkAsteriskDetails" == "false"){
+ 		errorMessage = "$lbl_asterisk_details_not_set";
+ 		alert(errorMessage);
+@@ -119,6 +120,7 @@
+ 			return false;
+ 		}
+ 	}
++	*/
+ 	//asterisk check ends
+ 	
+ 	if (trim(form.email1.value) == "") {

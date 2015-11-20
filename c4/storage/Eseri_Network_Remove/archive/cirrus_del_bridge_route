@@ -1,0 +1,53 @@
+#!/usr/bin/perl -w
+#
+# cirrus_del_bridge_route v1.1
+#
+# This script deletes the bridge and the route.
+#
+# Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2014 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+if ( $#ARGV != 0 ){
+    print "Usage: cirrus_del_bridge brNAME";
+    exit 1;
+}
+
+$BRIDGENAME=$ARGV[0];
+#print "Bridge: $BRIDGENAME, IP: $IPADDRESS\n";
+unless ( $BRIDGENAME =~ m/^br[A-Z0-9]+$/ ){
+    print "Bridge name must be in form brNAME $BRIDGENAME\n";
+#   exit 1; let's continue anyhow -- RWL 2013-12
+}
+
+unless ( -e "/etc/sysconfig/network-scripts/ifcfg-$BRIDGENAME" ){
+    print "Error: Bridge control file does not exist $BRIDGENAME \n";
+#   exit 1; let's continue anyhow -- RWL 2013-12
+}
+
+unless ( -e "/etc/sysconfig/network-scripts/route-$BRIDGENAME" ){
+    print "Error: Route file does not exist $BRIDGENAME \n";
+}
+
+`ifdown $BRIDGENAME`;
+if ( $? != 0 ) {
+    print "Failed to bring down bridge properly $BRIDGENAME\n";
+    exit 1;
+}
+
+`brctl delbr $BRIDGENAME`;
+if ( $? != 0 ) {
+    print "Failed to delete bridge entry properly $BRIDGENAME\n";
+    exit 1;
+}
+unlink "/etc/sysconfig/network-scripts/ifcfg-$BRIDGENAME";
+if ( -e "/etc/sysconfig/network-scripts/route-$BRIDGENAME" ){
+    unlink "/etc/sysconfig/network-scripts/route-$BRIDGENAME";
+}
+exit 0;

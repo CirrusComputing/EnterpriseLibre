@@ -1,0 +1,20 @@
+# MySQL dump
+#
+# Host: localhost    Database: timesheet
+#--------------------------------------------------------
+
+#cleanup
+DROP DATABASE IF EXISTS timesheet;
+CREATE DATABASE timesheet;
+
+#
+# Now add a user with access to timesheets tables
+#
+
+use mysql;
+
+#Manual creation was braindead, use MySQL GRANT statements instead to ensure correct privilege creation
+CREATE USER 'timesheet'@'poseidon.[-DOMAIN-]' IDENTIFIED BY '[-DB_PASSWORD_TIMESHEET-]';
+GRANT ALL ON timesheet.* TO 'timesheet'@'poseidon.[-DOMAIN-]';
+
+FLUSH PRIVILEGES;

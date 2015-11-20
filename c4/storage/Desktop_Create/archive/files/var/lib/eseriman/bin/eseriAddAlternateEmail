@@ -1,0 +1,64 @@
+#!/bin/bash
+#
+# Add alternate email address - v1.0
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+#
+# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+# Include eseri functions
+. ${0%/*}/eseriCommon
+
+# Mark start point in log file
+eseriStartLog "Add alternate email address"
+
+# Check for proper number of parameters
+if [ $# -ne 2 ]; then
+    echo "Usage: $SCRIPT_NAME Username Email"
+    exit 1
+fi
+
+# Check the format of the input parameters
+checkparam "Username" $1
+checkparam "Email" $2
+
+ESERI_USERNAME=$1
+ESERI_EMAIL=$2
+
+# Log to eseri.log via syslog
+/usr/local/share/eseri/EseriLog "$ESERI_USERNAME - Add alternate email address"
+
+# Variables
+LDIF_TEMPLATE=$TEMPLATE_LDAP_FOLDER/alternateemail-add.ldif.template
+LDIF_FILE=/tmp/eseri.$RANDOM.alternateemail-add.ldif
+
+LDAP_BASE=$(awk '$1 ~ "^BASE" {print $2}' /etc/ldap/ldap.conf 2>>$LOG_FILE)
+
+# Kerberos init
+kinit -k -t $KEYTAB $KRB_IDENT >>$LOG_FILE 2>&1 || exit $?
+
+sed -e "s/\[-LDAP_BASE-\]/$LDAP_BASE/g" -e "s/\[-USERNAME-\]/$ESERI_USERNAME/g" -e "s/\[-EMAIL-\]/$ESERI_EMAIL/g" <$LDIF_TEMPLATE >$LDIF_FILE
+ldapmodify -f $LDIF_FILE >>$LOG_FILE 2>&1
+EXIT_VAL=$?
+
+rm $LDIF_FILE >>$LOG_FILE 2>&1
+
+LDAP_RESULT=$(ldapsearch -LLL "(uid=$ESERI_USERNAME)" sn givenName 2>/dev/null)
+DN=$(echo "$LDAP_RESULT" | grep "^dn:" | awk '{print $2}')
+if [ "$DN" == "uid=$ESERI_USERNAME,ou=people,$LDAP_BASE" ]; then
+	FIRST_NAME=$(echo "$LDAP_RESULT" | grep "^givenName:" | awk '{print $2}')
+	LAST_NAME=$(echo "$LDAP_RESULT" | grep "^sn:" | awk '{print $2}')
+
+	$BIN_FOLDER/eseriDirectory.py -a -f "$FIRST_NAME" -l "$LAST_NAME" -u "$ESERI_USERNAME" -e "$ESERI_EMAIL" >>$LOG_FILE 2>&1
+fi
+
+# Kerberos deinit
+kdestroy >>$LOG_FILE 2>&1
+
+exit $EXIT_VAL

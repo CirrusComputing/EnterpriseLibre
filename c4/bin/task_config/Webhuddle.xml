@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c4:boot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:c4="http://www.eseri.com/C4" xsi:schemaLocation="http://lucid-mirror.wan.virtualorgs.net/schema/C4/Boot.xsd">
+	<name>Webhuddle</name>
+	<host>atlas</host>
+	<deploy>
+	</deploy>
+	<certificates>
+		<cert host="webmeeting" type="RSA" />
+	</certificates>
+	<passwords>
+		<password host="aphrodite" entity="webhuddle" name="LDAP_PASSWORD_WEBHUDDLE" ><always/></password>
+		<password host="atlas" entity="keystore" name="WEBHUDDLE_KEYSTORE" ><always/></password>
+	</passwords>
+	<kerberos_keys>
+	</kerberos_keys>
+	<deployment_files>
+	</deployment_files>
+	<package>
+		<required>WebConferencing</required>
+	</package>
+</c4:boot>

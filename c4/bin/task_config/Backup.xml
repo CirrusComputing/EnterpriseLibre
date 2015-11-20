@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c4:boot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:c4="http://www.eseri.com/C4" xsi:schemaLocation="http://lucid-mirror.wan.virtualorgs.net/schema/C4/Boot.xsd">
+	<name>Backup</name>
+	<host>apollo</host>
+	<deploy>
+		<arg>system_anchor_domain</arg>
+		<arg>shortname</arg>
+		<arg>backup_target_url</arg>
+		<arg>container_list</arg>
+	</deploy>
+	<certificates>
+	</certificates>
+	<passwords>
+		<password host="mysql" entity="root" name="DB_PASSWORD_MYSQL"><always/></password>
+		<password host="backup" entity="gpg" name="GPG_PASSWORD_BACKUP"><always/></password>	
+	</passwords>
+	<kerberos_keys>
+	</kerberos_keys>
+	<deployment_files>
+	</deployment_files>
+	<package>
+		<required>Duplicity</required>
+	</package>
+</c4:boot>

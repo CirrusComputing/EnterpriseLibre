@@ -1,0 +1,90 @@
+#!/usr/bin/perl -w
+#
+# cirrus_add_bridge_route v2.2
+#
+# Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Adds a new bridge to the system and brings it up, if and only if it's safe to do so
+# Add a new route through the fw container
+#
+# Copyright (c) 1996-2015 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+if ( $#ARGV != 1 ){
+   print "Usage: cirrus_add_bridge_route brNAME 10.101.x.0\n";
+   exit 1;
+}
+
+$BRIDGENAME=$ARGV[0];
+$PRIVATENET=$ARGV[1];
+
+$ROUTER_IP = $PRIVATENET;
+$FW_IP = $PRIVATENET;
+$ROUTER_IP =~ s/\.0$/\.1/;
+$FW_IP =~ s/\.0$/\.3/;
+
+unless ( $BRIDGENAME =~ m/^br[A-Z0-9]+$/ ){
+       print "Bridge name must be in form brNAME\n";
+       exit 1;
+}
+
+unless ( $ROUTER_IP =~ m/^10\.101\.[0-2]?[0-9]?[0-9]\.1$/ ){
+       print "Router IP address must match 10.101.x.1\n";
+       exit 1;
+}
+
+unless ( $FW_IP =~ m/^10\.101\.[0-2]?[0-9]?[0-9]\.3$/ ){
+       print "Firewall IP address must match 10.101.x.3\n";
+       exit 1;
+}
+
+if ( -e "/etc/sysconfig/network-scripts/route-$BRIDGENAME" ){
+   print "Error: Route file already exists\n";
+   exit 1;
+}
+
+if ( -e "/etc/sysconfig/network-scripts/ifcfg-$BRIDGENAME" ){
+   print "Error: Bridge name already in use\n";
+   exit 1;
+}
+
+$RES=`grep -l "$FW_IP dev $BRIDGENAME" /etc/sysconfig/network-scripts/route-br*`;
+if ( $? == 0 ) {
+   print "Error: Static route appears to exist in $RES\n";
+   exit 1;
+}
+
+$RES=`grep -l "IPADDR=$ROUTER_IP" /etc/sysconfig/network-scripts/ifcfg-br*`;
+if ( $? == 0 ) {
+   print "Error: Bridge IP appears to be in use by $RES already\n";
+   exit 1;
+}
+
+open(F,">/etc/sysconfig/network-scripts/route-$BRIDGENAME");
+print F <<EOF;
+$FW_IP dev $BRIDGENAME
+$PRIVATENET/24 via $FW_IP dev $BRIDGENAME
+EOF
+close(F);
+
+open(F,">/etc/sysconfig/network-scripts/ifcfg-$BRIDGENAME");
+print F <<EOF;
+DEVICE=$BRIDGENAME
+TYPE=Bridge
+BOOTPROTO=static
+IPADDR=$ROUTER_IP
+NETMASK=255.255.255.255
+ONBOOT=yes
+EOF
+close(F);
+`ifup $BRIDGENAME`;
+if ( $? != 0 ) {
+   print "Failed to bring up bridge properly\n";
+   exit 1;
+}
+exit 0;

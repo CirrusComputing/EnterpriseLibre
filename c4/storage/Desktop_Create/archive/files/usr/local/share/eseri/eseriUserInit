@@ -1,0 +1,144 @@
+#!/bin/bash
+#
+# This scripts configures the applications for the user and 
+# installs necssary plugins and extensions - v1.1
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+# Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2012 (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+########################################
+# Firefox automation
+
+# Variables
+ESERI_FF_HOME=$HOME/.mozilla/firefox
+ESERI_FF_DEFAULT_PROFILE=/etc/firefox/profile
+ESERI_FF_TEMPLATE=/usr/local/share/eseri/ffautomation
+ESERI_FF_TEMPLATE_PROFILES=profiles.ini
+ESERI_FF_TEMPLATE_USER=user.js
+ESERI_FF_TEMPLATE_LOGIN=Login.js
+ESERI_FF_TEMPLATE_LOGIN_WEBHUDDLE=LoginWebhuddle.js
+ESERI_DOMAIN=$(hostname -d)
+ESERI_JSBRIDGE_PORT=$((30000+$(id -u)))
+ESERI_CA_CRT=/usr/share/ca-certificates/$ESERI_DOMAIN/CA.crt
+ESERI_REAL_NAME=$(getent passwd $LOGNAME | awk 'BEGIN { FS =":" } { print $5 }')
+
+PASSWORD=$1
+
+# Figure out the real email - doesn't work
+#ALTERNATE_MAIL=$(ldapsearch uid=$LOGNAME 2>/dev/null| grep eseriMailAlternateAddress | awk '{print $2}')
+#if [ ${#ALTERNATE_MAIL} > 3 ] ; then
+#	ESERI_EMAIL="$ALTERNATE_MAIL"
+#else
+#	ESERI_EMAIL="$LOGNAME@$ESERI_DOMAIN"
+#fi
+
+# Figure out the real email - Added by Nimesh
+ALTERNATE_MAIL=$(ldapsearch uid=$LOGNAME 2>/dev/null| grep eseriMailAlternateAddress | awk '{print $2}' | wc -l)
+if [ $ALTERNATE_MAIL -gt 0 ] ; then
+        ESERI_EMAIL="$(ldapsearch uid=$LOGNAME 2>/dev/null| grep eseriMailAlternateAddress | awk '{print $2}')"
+else
+        ESERI_EMAIL="$LOGNAME@$ESERI_DOMAIN"
+fi
+
+# Uncomment this if you need debug info
+#ESERI_FF_DEBUG=Yes
+
+# Remove FF profile folder
+[ -d $ESERI_FF_HOME ] && rm -r $ESERI_FF_HOME
+
+# Generate random profile
+function random_string
+{
+	RND=""
+	RNDLEN=$1
+	array1=( q w e r t y u i o p a s d f g h j k l z x c v b n m 1 2 3 4 5 6 7 8 9 0 )
+	MODNUM=${#array1[*]}
+
+	count=0
+	while [ ${count:=0} -lt $RNDLEN ]
+	do
+		number=$(($RANDOM%$MODNUM))
+		RND="$RND""${array1[$number]}"
+		((count++))
+	done
+
+	echo $RND
+}
+
+# Create profile based on the default profile
+ESERI_FF_RANDOM_PROFILE_NAME=$(random_string 8).default
+ESERI_FF_PROFILE=$ESERI_FF_HOME/$ESERI_FF_RANDOM_PROFILE_NAME
+mkdir -p $ESERI_FF_PROFILE
+sed "s/\[-RANDOM-\]/$ESERI_FF_RANDOM_PROFILE_NAME/g" >$ESERI_FF_HOME/$ESERI_FF_TEMPLATE_PROFILES <$ESERI_FF_TEMPLATE/$ESERI_FF_TEMPLATE_PROFILES
+cp -dR -t $ESERI_FF_PROFILE $ESERI_FF_DEFAULT_PROFILE/*
+chown -R $LOGNAME:$LOGNAME $ESERI_FF_PROFILE
+sed -e "s/\[-USERNAME-\]/$LOGNAME/g" -e "s/\[-PASSWORD-\]/$PASSWORD/g" >$ESERI_FF_PROFILE/$ESERI_FF_TEMPLATE_USER <$ESERI_FF_TEMPLATE/$ESERI_FF_TEMPLATE_USER
+
+# Run the Nuxeo and Wiki Login script
+sed -e "s/\[-USERNAME-\]/$LOGNAME/g" -e "s/\[-PASSWORD-\]/$PASSWORD/g" -e "s/\[-DOMAIN-\]/$ESERI_DOMAIN/g" -e "s/\[-REAL_NAME-\]/$ESERI_REAL_NAME/g" -e "s/\[-EMAIL-\]/$ESERI_EMAIL/g" >$ESERI_FF_HOME/$ESERI_FF_TEMPLATE_LOGIN <$ESERI_FF_TEMPLATE/$ESERI_FF_TEMPLATE_LOGIN
+[ -n "$ESERI_FF_DEBUG" ] && ESERI_FF_DEBUG_LOGIN="--show-errors -l $ESERI_FF_HOME/mozmill.log"
+mozmill -p $ESERI_FF_PROFILE -t $ESERI_FF_HOME/$ESERI_FF_TEMPLATE_LOGIN -P $ESERI_JSBRIDGE_PORT $ESERI_FF_DEBUG_LOGIN
+[ -z "$ESERI_FF_DEBUG" ] && rm $ESERI_FF_HOME/$ESERI_FF_TEMPLATE_LOGIN
+
+# Import Local Certificate Authority
+certutil -A -n "LocalCA" -t "TCu,TCu,TCu" -d $ESERI_FF_PROFILE -i $ESERI_CA_CRT
+
+# Run the Webhuddle Login script
+WEBHUDDLE=1[-DELETE_UNLESS_WebConferencing-]
+if [ -n "$WEBHUDDLE" ]; then
+	TIME=0
+	TIMEOUT=30
+	while true; do
+		echo "Time: $TIME sec(s)"
+		wget -q -O /dev/null https://webmeeting.$ESERI_DOMAIN/ >/dev/null
+		[ $? -eq 0 ] && break
+		sleep 1
+		TIME=$(expr $TIME + 1)
+		[ $TIME -ge $TIMEOUT ] && break
+	done
+	echo 'user_pref("security.warn_viewing_mixed", false);' >>$ESERI_FF_PROFILE/prefs.js
+	sed -e "s/\[-USERNAME-\]/$LOGNAME/g" -e "s/\[-PASSWORD-\]/$PASSWORD/g" -e "s/\[-DOMAIN-\]/$ESERI_DOMAIN/g" >$ESERI_FF_HOME/$ESERI_FF_TEMPLATE_LOGIN_WEBHUDDLE <$ESERI_FF_TEMPLATE/$ESERI_FF_TEMPLATE_LOGIN_WEBHUDDLE
+	[ -n "$ESERI_FF_DEBUG" ] && ESERI_FF_DEBUG_LOGIN_WEBHUDDLE="--show-errors -l $ESERI_FF_HOME/mozmillWebhuddle.log"
+	mozmill -p $ESERI_FF_PROFILE -t $ESERI_FF_HOME/$ESERI_FF_TEMPLATE_LOGIN_WEBHUDDLE -P $ESERI_JSBRIDGE_PORT $ESERI_FF_DEBUG_LOGIN_WEBHUDDLE
+	[ -z "$ESERI_FF_DEBUG" ] && rm $ESERI_FF_HOME/$ESERI_FF_TEMPLATE_LOGIN_WEBHUDDLE
+fi
+
+# Cleanup the user's prefs.js after automation
+sed -i '/extensions.update.enabled/d
+/extensions.update.notifyUser/d
+/browser.shell.checkDefaultBrowser/d
+/browser.tabs.warnOnClose/d
+/browser.warnOnQuit/d
+/browser.sessionstore.resume_from_crash/d
+/security.warn_viewing_mixed/d
+/focusmanager.testmode/d' $ESERI_FF_PROFILE/prefs.js
+
+########################################
+# Pidgin Certificate Import
+
+PIDGIN_CERTIFICATE_TEMPLATE=/usr/local/share/eseri/pidgin/xmpp_crt.pem
+PIDGIN_CERTIFICATE_FILE=$HOME/.purple/certificates/x509/tls_peers/xmpp.$ESERI_DOMAIN
+cp $PIDGIN_CERTIFICATE_TEMPLATE $PIDGIN_CERTIFICATE_FILE
+chown $LOGNAME:$LOGNAME $PIDGIN_CERTIFICATE_FILE
+
+########################################
+# Desktop personalization
+
+# Variables
+ESERI_DESKTOP_HOME=$HOME/Desktop
+ESERI_DESKTOP_TEMPLATE=/usr/local/share/eseri/desktop
+ESERI_DESKTOP_TEMPLATE_START_HERE=$ESERI_DESKTOP_TEMPLATE/StartHere.desktop
+
+# Add the Start here icon to the desktop
+cp -t $ESERI_DESKTOP_HOME $ESERI_DESKTOP_TEMPLATE_START_HERE
+chown -R $LOGNAME:$LOGNAME $ESERI_DESKTOP_HOME
+
+exit 0

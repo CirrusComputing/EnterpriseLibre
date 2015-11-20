@@ -1,0 +1,130 @@
+######################################################################
+# General
+######################################################################
+
+smtpd_banner = $myhostname ESMTP $mail_name (Ubuntu)
+biff = no
+append_dot_mydomain = no
+readme_directory = no
+myhostname = [-FQDN_HOSTNAME-]
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+myorigin = /etc/mailname
+mydestination = [-FQDN_HOSTNAME-], localhost.localdomain, localhost
+mynetworks = 127.0.0.0/8 [-NETWORK-].0/24 [::ffff:127.0.0.0]/104 [::1]/128
+mailbox_size_limit = 0
+recipient_delimiter = +
+inet_interfaces = all
+message_size_limit = 52428800
+
+# recommended by amavis
+strict_rfc821_envelopes = yes
+
+# before dspam, rename any existing dspam headers
+# because we do not want to have 2 sets of dspam headers
+# it would cause retraining to fail
+header_checks = regexp:/etc/postfix/header_checks.regexp
+
+######################################################################
+# TLS
+######################################################################
+
+smtpd_tls_cert_file = /etc/ssl/certs/smtp.[-DOMAIN-].pem
+smtpd_tls_key_file = /etc/ssl/private/smtp.[-DOMAIN-].pem
+
+smtpd_use_tls=yes
+smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+
+######################################################################
+# Relaying
+######################################################################
+
+relay_domains = lists.[-DOMAIN-]
+transport_maps = hash:/etc/postfix/transport
+
+######################################################################
+# Mailman
+######################################################################
+
+mailman_destination_recipient_limit = 1
+
+######################################################################
+# Restrictions
+######################################################################
+
+smtpd_recipient_restrictions = check_sender_access hash:/etc/postfix/whitelist,
+    reject_non_fqdn_recipient,
+    reject_unknown_recipient_domain,
+    reject_non_fqdn_sender,
+    reject_unknown_sender_domain,
+    permit_mynetworks,
+    permit_sasl_authenticated,
+    reject_unauth_destination,
+    reject_invalid_helo_hostname,
+    reject_non_fqdn_helo_hostname,
+    check_policy_service inet:127.0.0.1:60000,
+    reject_rbl_client b.barracudacentral.org,
+    reject_rbl_client cbl.abuseat.org,
+    reject_rbl_client zen.spamhaus.org
+
+disable_vrfy_command = yes
+smtpd_helo_required = yes
+
+smtpd_client_restrictions = check_client_access hash:/etc/postfix/client_access
+
+######################################################################
+# Virtual Mailboxes
+######################################################################
+
+virtual_mailbox_base = /var/spool/vmail
+virtual_mailbox_domains = [-DOMAIN-]
+virtual_mailbox_maps = proxy:ldap:/etc/postfix/ldap/virtual_mailbox_maps.cf
+virtual_alias_maps = proxy:ldap:/etc/postfix/ldap/virtual_alias_maps.cf proxy:ldap:/etc/postfix/ldap/virtual_alias_forward_maps.cf proxy:ldap:/etc/postfix/ldap/virtual_alias_onlyforward_maps.cf
+smtpd_sender_login_maps = proxy:ldap:/etc/postfix/ldap/smtpd_sender_login_maps.cf
+proxy_read_maps = $local_recipient_maps $mydestination $virtual_alias_maps $virtual_alias_domains $virtual_mailbox_maps $virtual_mailbox_domains $relay_recipient_maps $relay_domains $canonical_maps $sender_canonical_maps $recipient_canonical_maps $relocated_maps $transport_maps $mynetworks $smtpd_sender_login_maps
+virtual_minimum_uid = [-VMAIL_UID-]
+virtual_uid_maps = static:[-VMAIL_UID-]
+virtual_gid_maps = static:[-VMAIL_GID-]
+virtual_mailbox_limit = 0
+virtual_mailbox_limit_inbox = no
+virtual_create_maildirsize = yes
+virtual_mailbox_extended = yes
+virtual_mailbox_limit_maps = proxy:ldap:/etc/postfix/ldap/virtual-mailbox-limits.cf
+virtual_mailbox_limit_override = yes
+virtual_maildir_limit_message = Sorry, the recipients mailbox is currently full. Please try again later.
+virtual_overquota_bounce = yes
+virtual_transport = dovecot
+dovecot_destination_recipient_limit = 1
+
+######################################################################
+# SASL
+######################################################################
+
+smtpd_sasl_local_domain = [-DOMAIN-]
+broken_sasl_auth_clients = yes
+smtpd_sasl_security_options = noanonymous
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/auth
+
+######################################################################
+# Domainkey and DKIM
+######################################################################
+
+smtpd_milters = inet:localhost:8891,inet:localhost:8892
+non_smtpd_milters = inet:localhost:8891,inet:localhost:8892
+
+######################################################################
+# Bounce management
+######################################################################
+
+delay_warning_time = 0h
+maximal_queue_lifetime = 2h
+bounce_queue_lifetime = 2h
+
+######################################################################
+# Debug
+######################################################################
+
+#debug_peer_level = 2
+#debug_peer_list = 

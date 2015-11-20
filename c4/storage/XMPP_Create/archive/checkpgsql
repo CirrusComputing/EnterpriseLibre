@@ -1,0 +1,56 @@
+#!/bin/sh
+#
+# Wait for live pgsql connection - v1.0
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+#
+# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+# The .pgpass file must exist in the /root folder with username, password and
+# accurate permissions
+
+. /lib/lsb/init-functions
+
+TIMEOUT=60
+PGSQL_HOST=pgsql.$(hostname -d)
+
+WaitForPostgreSQL()
+{
+	DEBUG=$1
+	log_daemon_msg "Checking for live PostgreSQL connection" checkPgSQL
+	TIME=0
+	while true; do
+		PGSQL_OUT=$(psql -h $PGSQL_HOST -c 'SELECT * FROM ofuser;' openfire openfire 2>&1)
+		PGSQL_SUCCESS=$?
+		[ $DEBUG -eq 1 ] && echo "$PGSQL_OUT"
+		[ $PGSQL_SUCCESS -eq 0 ] && break
+		sleep 1
+		TIME=$(expr $TIME + 1)
+		[ $DEBUG -eq 1 ] && echo "Time: $TIME sec(s)"
+		if [ $TIME -ge $TIMEOUT ]; then
+			log_end_msg 1
+			exit 1
+		fi
+	done
+	log_end_msg 0
+}
+
+case "$1" in
+	start)
+		WaitForPostgreSQL 0
+		;;
+	startdebug)
+		WaitForPostgreSQL 1
+		;;
+	*)
+		log_action_msg "Usage: /etc/init.d/checkpgsql {start|startdebug}"
+		exit 1
+		;;
+esac
+
+exit 0

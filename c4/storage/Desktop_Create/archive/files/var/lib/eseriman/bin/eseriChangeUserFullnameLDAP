@@ -1,0 +1,59 @@
+#!/bin/bash
+#
+# Change the user's first and last name in the LDAP directory - v1.1
+#
+# Created by Rick Leir <rleir@cirruscomputing.com>
+# Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2014 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+# Include eseri functions
+. ${0%/*}/eseriCommon
+
+# Mark start point in log file
+eseriStartLog "Change user's fullname in LDAP"
+
+# Check for proper number of parameters
+if [ $# -ne 3 ]; then
+	echo "Usage: $SCRIPT_NAME Username NewFirstname NewLastname"
+	exit 1
+fi
+
+# Check the format of the input parameters
+checkparam "Username"  $1
+checkparam "Firstname" $2
+checkparam "Lastname"  $3
+
+ESERI_USERNAME="$1"
+ESERI_FIRSTNAME="$2"
+ESERI_LASTNAME="$3"
+
+# Log to eseri.log via syslog
+/usr/local/share/eseri/EseriLog "$ESERI_USERNAME name changed to $ESERI_FIRSTNAME $ESERI_LASTNAME"
+
+# Variables
+LDIF_TEMPLATE=$TEMPLATE_LDAP_FOLDER/userfullname-change.ldif.template
+LDIF_FILE=/tmp/eseri.$RANDOM.userfullname-change.ldif
+
+LDAP_BASE=$(awk '$1 ~ "^BASE" {print $2}' /etc/ldap/ldap.conf 2>>$LOG_FILE)
+
+# Kerberos init
+kinit -k -t $KEYTAB $KRB_IDENT >>$LOG_FILE 2>&1 || exit $?
+
+sed -e "s/\[-LDAP_BASE-\]/$LDAP_BASE/g" -e "s/\[-USERNAME-\]/$ESERI_USERNAME/g" -e "s/\[-FIRSTNAME-\]/$ESERI_FIRSTNAME/g" -e "s/\[-LASTNAME-\]/$ESERI_LASTNAME/g" <$LDIF_TEMPLATE >$LDIF_FILE
+
+ldapmodify -f $LDIF_FILE >>$LOG_FILE 2>&1
+EXIT_VAL=$?
+
+rm $LDIF_FILE >>$LOG_FILE 2>&1
+
+# Kerberos deinit
+kdestroy >>$LOG_FILE 2>&1
+
+exit $EXIT_VAL

@@ -1,0 +1,196 @@
+#!/bin/bash
+#
+# Create user account in the LDAP directory - v1.3
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+# Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2014 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+# Include eseri functions
+. ${0%/*}/eseriCommon
+
+# Mark start point in log file
+eseriStartLog "Create account"
+
+# Check for proper number of parameters
+if [ $# -ne 7 ]; then
+    echo "Usage: $SCRIPT_NAME Username Email_Prefix Surename Given_Name Email_Domain Nuxeo Chat"
+    exit 1
+fi
+
+# Check the format of the input parameters
+checkparam "Username" $1
+
+ESERI_USERNAME=$1
+ESERI_EMAILPREFIX=$2
+ESERI_SURENAME=$3
+ESERI_GIVENNAME=$4
+ESERI_EMAILDOMAIN=$5 
+USE_NUXEO=$6
+USE_CHAT=$7
+
+# Log to eseri.log via syslog
+/usr/local/share/eseri/EseriLog "$ESERI_USERNAME - Registration"
+
+# Variables
+USER_HOME=$USER_HOME_BASE/$ESERI_USERNAME
+LDIF_ADDUSER_TEMPLATE=$TEMPLATE_LDAP_FOLDER/adduser.ldif.template
+LDIF_ADDUSER_FILE=/tmp/eseri.$RANDOM.adduser.ldif
+LDIF_LASTUIDUPDATE_TEMPLATE=$TEMPLATE_LDAP_FOLDER/lastUidUpdate.ldif.template
+LDIF_LASTUIDUPDATE_FILE=/tmp/eseri.$RANDOM.lastUidUpdate.ldif
+LDIF_NUXEOGROUP_ADD_TEMPLATE=$TEMPLATE_LDAP_FOLDER/nuxeogroup-add.ldif.template
+LDIF_NUXEOGROUP_ADD_FILE=/tmp/eseri.$RANDOM.nuxeogroup-add.ldif
+LDIF_NUXEOGROUP_CLEANUP_TEMPLATE=$TEMPLATE_LDAP_FOLDER/nuxeogroup-cleanup.ldif.template
+LDIF_NUXEOGROUP_CLEANUP_FILE=/tmp/eseri.$RANDOM.nuxeogroup-cleanup.ldif
+LDIF_CHATGROUP_TEMPLATE=$TEMPLATE_LDAP_FOLDER/chatgroup-add.ldif.template
+LDIF_CHATGROUP_FILE=/tmp/eseri.$RANDOM.chatgroup-add.ldif
+LDAP_BASE=$(awk '$1 ~ "^BASE" {print $2}' /etc/ldap/ldap.conf 2>>$LOG_FILE)
+REALM_TMP=$(grep default_realm /etc/krb5.conf)
+REALM=${REALM_TMP#*=}
+REALM_TMP2=${REALM_TMP#*=}
+REALM=${REALM_TMP2#* }
+DOMAIN=$(hostname -d)
+
+EXIT_VAL=0
+CREATE_HOME=0
+
+# Safe method of reading and incrementing the maxUid value
+LastUidUpdate()
+{
+	LASTUID_UPDATED=0
+	LASTUID_NEW=1
+
+	until [ $LASTUID_UPDATED -eq $LASTUID_NEW -a $EXIT_VAL -eq 0 ]; do
+		# Read last Uid
+		LASTUID=$(ldapsearch -LLL -b "ou=system,$LDAP_BASE" "(cn=lastUid)" uidNumber 2>&1 | tee -a $LOG_FILE | awk '$1 ~ "uidNumber:" {print $2}' 2>>$LOG_FILE)
+
+		# Check wheter we could read the value or not
+		[ $LASTUID -eq 0 -o $LASTUID -ne 0 ] 1>>$LOG_FILE 2>&1
+		[ $? -ne 0 ] && return 1
+
+		# New value
+		LASTUID_NEW=$((LASTUID + 1))
+
+		# Create LDIF file from template
+		sed -e "s/\[-LDAP_UID_OLD-\]/$LASTUID/g" -e "s/\[-LDAP_UID_NEW-\]/$LASTUID_NEW/g" -e "s/\[-LDAP_BASE-\]/$LDAP_BASE/g" < $LDIF_LASTUIDUPDATE_TEMPLATE > $LDIF_LASTUIDUPDATE_FILE 2>>$LOG_FILE
+
+		# Update LDAP
+		ldapmodify -f $LDIF_LASTUIDUPDATE_FILE >>$LOG_FILE 2>&1
+		EXIT_VAL=$?
+
+		# Remove the LDIF file
+		rm $LDIF_LASTUIDUPDATE_FILE >>$LOG_FILE 2>&1
+
+		# Check whether we changed the last Uid or not
+		LASTUID_UPDATED=$(ldapsearch -LLL -b "ou=system,$LDAP_BASE" "(cn=lastUid)" uidNumber 2>&1 | tee -a $LOG_FILE |  awk '$1 ~ "uidNumber:" {print $2}' 2>>$LOG_FILE)
+
+		# If the actual value is equal to the value before the modify then something went totaly wrong hence aborting
+		[ $LASTUID -eq $LASTUID_UPDATED ] && return 1
+	done
+
+	return 0
+}
+
+# Kerberos init
+kinit -k -t $KEYTAB $KRB_IDENT >>$LOG_FILE 2>&1 || exit $?
+
+# Read and Increment maxUid
+LastUidUpdate
+EXIT_VAL=$?
+
+# Was it successful?
+if [ $EXIT_VAL -eq 0 ]; then
+	# Add user to LDAP - Create LDIF file from template
+	sed "
+s/\[-LDAP_BASE-\]/$LDAP_BASE/g
+s/\[-USERNAME-\]/$ESERI_USERNAME/g
+s/\[-USER_SURENAME-\]/$ESERI_SURENAME/g
+s/\[-USER_GIVEN_NAME-\]/$ESERI_GIVENNAME/g
+s/\[-USER_UID-\]/$LASTUID/g
+s/\[-USER_GID-\]/$LASTUID/g
+s|\[-USER_HOME_FOLDER-\]|$USER_HOME|g
+s/\[-REALM-\]/$REALM/g
+s/\[-DOMAIN-\]/$DOMAIN/g
+s/\[-USER_EMAIL_QUOTA-\]/$EMAIL_QUOTA/g
+s/\[-EMAIL_PREFIX-\]/$ESERI_EMAILPREFIX/g
+s/\[-EMAIL_DOMAIN-\]/$ESERI_EMAILDOMAIN/g" < $LDIF_ADDUSER_TEMPLATE > $LDIF_ADDUSER_FILE 2>>$LOG_FILE
+
+	cat $LDIF_ADDUSER_FILE >>$LOG_FILE
+
+	# Execute the LDIF
+	ldapadd -f $LDIF_ADDUSER_FILE >>$LOG_FILE 2>&1
+	EXIT_VAL=$?
+	[ $EXIT_VAL -eq 0 ] && CREATE_HOME=1
+
+	# Remove the LDIF
+	rm $LDIF_ADDUSER_FILE >>$LOG_FILE 2>&1
+
+	# the userid is not effective immediately. 
+	# lets make sure it is effective before adduser is called. 
+	while ! id -u $ESERI_USERNAME >/dev/null 2>&1;
+	do
+		echo "user does exist yet" >>$LOG_FILE
+		sleep 3
+	done
+fi
+
+# Add user to directory
+if [ $CREATE_HOME -eq 1 ]; then
+	$BIN_FOLDER/eseriDirectory.py -c -f "$ESERI_GIVENNAME" -l "$ESERI_SURENAME" -u "$ESERI_USERNAME" -e "$ESERI_EMAILPREFIX@$ESERI_EMAILDOMAIN" >>$LOG_FILE 2>&1
+fi
+
+##############################
+# Add user to Nuxeo
+if [ $CREATE_HOME -eq 1 ]; then
+	# Create LDIF file from template
+	sed "
+s/\[-LDAP_BASE-\]/$LDAP_BASE/g
+s/\[-USERNAME-\]/$ESERI_USERNAME/g
+s/\[-NUXEO_GROUP-\]/members/g" < $LDIF_NUXEOGROUP_ADD_TEMPLATE > $LDIF_NUXEOGROUP_ADD_FILE 2>>$LOG_FILE
+	cat $LDIF_NUXEOGROUP_ADD_FILE >>$LOG_FILE
+
+	# Execute the LDIF
+	if [ $USE_NUXEO -eq 1 ]; then
+		ldapmodify -f $LDIF_NUXEOGROUP_ADD_FILE >>$LOG_FILE 2>&1
+	fi
+
+	# Remove the LDIF
+	rm $LDIF_NUXEOGROUP_ADD_FILE >>$LOG_FILE 2>&1
+
+	# Nuxeo group cleanup
+	# TODO: Check whether we have an empty uniqueMember in the group or not
+	#ldapsearch -LLL -b "ou=nuxeogroups,dc=gacg,dc=eseri,dc=net" "cn=members" uniqueMember | awk '$1 ~ "^uniqueMember:" {print $2}'
+
+	# Repeat the process for the "all users" chat group
+	sed "
+s/\[-LDAP_BASE-\]/$LDAP_BASE/g
+s/\[-USERNAME-\]/$ESERI_USERNAME/g" < $LDIF_CHATGROUP_TEMPLATE > $LDIF_CHATGROUP_FILE 2>>$LOG_FILE
+	echo $? >>$LOG_FILE
+	cat $LDIF_CHATGROUP_FILE >>$LOG_FILE
+
+	# Execute the LDIF
+	if [ $USE_CHAT -eq 1 ]; then
+		ldapmodify -f $LDIF_CHATGROUP_FILE >>$LOG_FILE 2>&1
+	fi
+
+	# Remove the LDIF
+	rm $LDIF_CHATGROUP_FILE >>$LOG_FILE 2>&1
+fi
+
+# Kerberos deinit
+kdestroy >>$LOG_FILE 2>&1
+
+# Create home folder (only when all the LDAP stuff were successful, otherwise it would fail)
+if [ $CREATE_HOME -eq 1 ]; then
+	sudo $BIN_FOLDER/eseriCreateHomeFolder "$ESERI_USERNAME" "$USER_HOME" >>$LOG_FILE 2>&1
+	EXIT_VAL=$?
+fi
+
+exit $EXIT_VAL

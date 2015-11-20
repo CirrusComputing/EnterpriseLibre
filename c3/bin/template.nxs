@@ -1,0 +1,117 @@
+<!DOCTYPE NXClientSettings>
+<NXClientSettings application="nxclient" version="1.3" >
+<group name="Advanced" >
+<option key="Cache size" value="16" />
+<option key="Cache size on disk" value="64" />
+<option key="Current keyboard" value="true" />
+<option key="Custom keyboard layout" value="" />
+<option key="Disable DirectDraw" value="false" />
+<option key="Disable ZLIB stream compression" value="false" />
+<option key="Disable deferred updates" value="true" />
+<option key="Enable HTTP proxy" value="false" />
+<option key="Enable SSL encryption" value="true" />
+<option key="Enable response time optimisations" value="false" />
+<option key="Grab keyboard" value="false" />
+<option key="HTTP proxy host" value="" />
+<option key="HTTP proxy port" value="8080" />
+<option key="HTTP proxy username" value="" />
+<option key="Remember HTTP proxy password" value="false" />
+<option key="Restore cache" value="true" />
+<option key="StreamCompression" value="" />
+</group>
+<group name="Environment" >
+<option key="CUPSD path" value="/usr/sbin/cupsd" />
+</group>
+<group name="General" >
+<option key="Automatic reconnect" value="true" />
+<option key="Command line" value="" />
+<option key="Custom Unix Desktop" value="console" />
+<option key="Desktop" value="gnome" />
+<option key="Disable SHM" value="false" />
+<option key="Disable emulate shared pixmaps" value="false" />
+<option key="Link speed" value="lan" />
+<option key="Remember password" value="true" />
+<option key="Resolution" value="available" />
+<option key="Resolution height" value="600" />
+<option key="Resolution width" value="800" />
+<option key="Server host" value="" />
+<option key="Server port" value="22" />
+<option key="Session" value="unix" />
+<option key="Use default image encoding" value="0" />
+<option key="Use render" value="true" />
+<option key="Use taint" value="true" />
+<option key="Virtual desktop" value="false" />
+<option key="XAgent encoding" value="true" />
+<option key="displaySaveOnExit" value="true" />
+<option key="xdm broadcast port" value="177" />
+<option key="xdm list host" value="localhost" />
+<option key="xdm list port" value="177" />
+<option key="xdm mode" value="server decide" />
+<option key="xdm query host" value="localhost" />
+<option key="xdm query port" value="177" />
+</group>
+<group name="Images" >
+<option key="Disable JPEG Compression" value="0" />
+<option key="Disable all image optimisations" value="false" />
+<option key="Disable backingstore" value="false" />
+<option key="Disable composite" value="false" />
+<option key="Image Compression Type" value="3" />
+<option key="Image Encoding Type" value="0" />
+<option key="Image JPEG Encoding" value="false" />
+<option key="JPEG Quality" value="6" />
+<option key="RDP Image Encoding" value="3" />
+<option key="RDP JPEG Quality" value="6" />
+<option key="RDP optimization for low-bandwidth link" value="false" />
+<option key="Reduce colors to" value="" />
+<option key="Use PNG Compression" value="true" />
+<option key="VNC JPEG Quality" value="6" />
+<option key="VNC images compression" value="3" />
+</group>
+<group name="Login" >
+<option key="Auth" value="" />
+<option key="Guest Mode" value="false" />
+<option key="Guest password" value="" />
+<option key="Guest username" value="" />
+<option key="Login Method" value="nx" />
+<option key="Public Key" value="-----BEGIN DSA PRIVATE KEY-----
+MIIBugIBAAKBgQCUTBHXX5TzsgEjDPG9oblOuh4HLPF/Da4bErjuuHsDkx4efDB9
+id4XMk9CaTBvLphx/LZpRcTC5/jXkDgxjAIo6040+J4Aj5reUtDgtTM9NrJbUaEF
+TjRkgcCrnyVn3A2fISbDszxtxA3EECnknth+g8YDC77qy1ddUJebmZuQjQIVAI7H
+9hcRX00MN5ChY8IaJ5yXdaw9AoGAaqRmidKiRAFWGDNVEz9BVJgNG20LAJpRyM/o
+MZWEcwlNe2eGyX6DcmrKSqtlQlcUXyR/rDhJOz5QvlSIgw11lbMJ4jmuNx5FY/jX
+G3ls+veZs+YZVZWPtIFr4qPL1RcpBkxldkGRDbOAt/E9FhIGuFlF3oByhA8H5y9+
+/7qJcJ4CgYAk/NWW5UvZGJUb+h4pCVYubZBDG6XPd3/5MeY/ngob+RUvrKSTdIxq
+acpwqCZZHeIXLX2/wsczQfuWBkdfdcPAtpg3WMaa7sNWIgqbBqZALB7egT7OQYos
+W/zcEpBr4VV6VEvc1MtZIxk8U1m2FRcbRRD3X5Rf653ccQfOva+yCQIUUknagKht
+mwWPa0G3752KN/0kM0Q=
+-----END DSA PRIVATE KEY-----
+" />
+<option key="User" value="" />
+</group>
+<group name="Services" >
+<option key="Audio" value="false" />
+<option key="IPPPort" value="631" />
+<option key="IPPPrinting" value="false" />
+<option key="Shares" value="false" />
+</group>
+<group name="VNC Session" >
+<option key="Display" value="0" />
+<option key="Remember" value="false" />
+<option key="Server" value="" />
+</group>
+<group name="Windows Session" >
+<option key="Application" value="" />
+<option key="Authentication" value="2" />
+<option key="Color Depth" value="8" />
+<option key="Domain" value="" />
+<option key="Image Cache" value="true" />
+<option key="Password" value="EMPTY_PASSWORD" />
+<option key="Remember" value="true" />
+<option key="Run application" value="false" />
+<option key="Server" value="" />
+<option key="User" value="" />
+</group>
+<group name="share chosen" >
+<option key="Share number" value="0" />
+</group>
+</NXClientSettings>

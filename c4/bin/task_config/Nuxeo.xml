@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c4:boot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:c4="http://www.eseri.com/C4" xsi:schemaLocation="http://lucid-mirror.wan.virtualorgs.net/schema/C4/Boot.xsd">
+	<name>Nuxeo</name>
+	<host>cronus</host>
+	<deploy>
+	</deploy>
+	<certificates>
+	</certificates>
+	<passwords>
+		<password host="pgsql" entity="nuxeo" name="DB_PASSWORD_NUXEO" ><always/></password>
+		<password host="aphrodite" entity="nuxeo5" name="LDAP_PASSWORD_NUXEO" ><always/></password>
+		<password host="cronus" entity="Java Keystore" name="NUXEO_KEYPASS" ><always/></password>
+	</passwords>
+	<kerberos_keys>
+	</kerberos_keys>
+	<deployment_files>
+	</deployment_files>
+	<package>
+		<required>Nuxeo</required>
+	</package>
+</c4:boot>

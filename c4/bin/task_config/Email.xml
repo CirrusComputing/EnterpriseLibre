@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c4:boot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:c4="http://www.eseri.com/C4" xsi:schemaLocation="http://lucid-mirror.wan.virtualorgs.net/schema/C4/Boot.xsd">
+	<name>Email</name>
+	<host>hera</host>
+	<deploy>
+		<arg>email_domain</arg>
+		<arg>manager_username</arg>
+		<arg>backup_server</arg>
+	</deploy>
+	<certificates>
+		<cert host="imap" type="RSA" />
+		<cert host="smtp" type="RSA" />
+		<cert host="dkim" type="RSA" />
+	</certificates>
+	<passwords>
+		<password host="aphrodite" entity="libnss" name="LDAP_PASSWORD_LIBNSS"><always/></password>
+		<password host="aphrodite" entity="postfix" name="LDAP_PASSWORD_POSTFIX"><always/></password>
+		<password host="aphrodite" entity="dovecot" name="LDAP_PASSWORD_DOVECOT"><always/></password>
+		<password host="pgsql" entity="dspam" name="DB_PASSWORD_DSPAM"><always/></password>
+		<password host="mailman" entity="listcreate" type="user" name="MAILMAN_LISTCREATOR_PASSWORD"><required>MailingLists</required></password>
+		<password host="mailman" entity="mailman" type="user" name="MAILMAN_MAILMANLIST_PASSWORD"><required>MailingLists</required></password>
+		<password host="dovecot" entity="proxy" name="DOVECOT_MASTER_USER_PASSWORD"><required>SOGo</required></password>
+	</passwords>
+	<kerberos_keys>
+		<service>dovecot</service>
+		<service>host</service>
+	</kerberos_keys>
+	<deployment_files>
+	</deployment_files>
+	<package>
+		<required>Email</required>
+	</package>
+</c4:boot>

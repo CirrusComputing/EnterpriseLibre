@@ -1,0 +1,2 @@
+# Nagios - OpenVZ bridge
+nagios    ALL=NOPASSWD: /usr/local/sbin/vz_beancounters

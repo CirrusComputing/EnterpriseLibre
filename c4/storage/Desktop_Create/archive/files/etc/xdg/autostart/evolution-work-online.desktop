@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Evolution Work Online
+Comment=Ensures that Evolution is always working online.
+Icon=evolution
+Exec=gconftool-2 --load /usr/local/share/eseri/evolution/evolutionWorkOnline.xml
+Terminal=false
+Type=Application
+OnlyShowIn=GNOME;
+NoDisplay=true
+X-Ubuntu-Gettext-Domain=evolution-2.28

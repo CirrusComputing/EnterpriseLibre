@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c4:boot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:c4="http://www.eseri.com/C4" xsi:schemaLocation="http://lucid-mirror.wan.virtualorgs.net/schema/C4/Boot.xsd">
+	<name>Firewall</name>
+	<host>hermes</host>
+	<deploy>
+                <arg>system_anchor_domain</arg>
+		<arg>short_domain</arg>
+		<arg>timezone</arg>
+	</deploy>
+	<certificates>
+		<cert host="ROOT" type="RSA" />
+		<cert host="ssl" type="RSA" />
+	</certificates>
+	<passwords>
+	</passwords>
+	<kerberos_keys>
+	</kerberos_keys>
+	<deployment_files>
+	</deployment_files>
+	<package>
+		<always/>
+	</package>
+</c4:boot>

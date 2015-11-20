@@ -1,0 +1,1 @@
+*/5 * * * * root if ! /usr/lib/nagios/plugins/check_imap -H localhost >/dev/null; then /etc/init.d/dovecot restart >/dev/null; fi

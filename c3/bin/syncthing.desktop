@@ -1,0 +1,11 @@
+
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Version=1.0
+Name=Syncthing
+Name[en_CA]=Sycthing
+Comment[en_CA]=Folder Sync
+Comment=Folder Sync
+Exec=syncthing
+X-GNOME-Autostart-enabled=true

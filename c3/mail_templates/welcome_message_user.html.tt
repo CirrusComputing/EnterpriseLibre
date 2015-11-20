@@ -1,0 +1,16 @@
+<html>
+ <body>
+  <p>Dear [% first_name %] [% last_name %],</p>
+  <p>Welcome to your Cirrus Open desktop!  Please visit the <a href="http://login.[% system_anchor_domain %]">Cirrus Open login</a> page and follow the instructions.</p>
+  <p>Your desktop login credentials are as follows:</p>
+  <ul>
+   <li>Email Address: [% email_prefix %]@[% domain %]</li>
+   <li>Password: [% password %]</li>
+  </ul>
+  <p>(If you copy-and-paste the password, make sure there isn't an extra space added onto the end as a ninth character by your browser.)</p>
+  <p>Enjoy!<br/>
+The Cirrus Open Team</p>
+---
+  <p>You received this email because you just subscribed to a Cirrus Open cloud. If this email reached you in error for any reason, please let us know immediately.</p>
+ </body>
+</html>

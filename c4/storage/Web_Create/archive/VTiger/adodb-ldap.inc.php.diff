@@ -1,0 +1,18 @@
+--- vtigercrm/adodb/drivers/adodb-ldap.inc.php	2008-03-10 08:54:31.000000000 -0400
++++ /var/lib/vtigercrm/adodb/drivers/adodb-ldap.inc.php	2009-01-13 21:47:00.000000000 -0500
+@@ -54,7 +54,7 @@
+ 		
+ 		$conn_info = array( $host,$this->port);
+ 		
+-		if ( strstr( $host, ':' ) ) {
++		if ( strstr( $host, ':' ) && ! ereg("^ldaps://", $host) ) {
+ 		    $conn_info = split( ':', $host );
+ 		} 
+ 		
+@@ -403,4 +403,4 @@
+ 	}
+ 	
+ }
+-?>
+\ No newline at end of file
++?>

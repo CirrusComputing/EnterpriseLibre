@@ -1,0 +1,72 @@
+#!/bin/bash
+#
+# Common variables and functions - v1.1
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+# Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2014 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+# Parameters
+EMAIL_QUOTA=512
+
+# Variables
+KEYTAB=$HOME/keytabs/eseriman-admin.keytab
+KRB_IDENT=eseriman/admin
+USER_HOME_BASE=/home
+BACKUP_BASE=/var/backup-eseri
+TEMPLATE_FOLDER=$HOME/templates
+TEMPLATE_LDAP_FOLDER=$TEMPLATE_FOLDER/ldap
+TEMPLATE_DESKTOP_FOLDER=$TEMPLATE_FOLDER/desktop
+LOG_FILE=/var/log/eseri/eseri.log
+BIN_FOLDER=${0%/*}
+SCRIPT_NAME=${0##*/}
+
+# Make sure that we can write to the log file
+if [ ! -w $LOG_FILE ];  then
+	touch $LOG_FILE &>/dev/null
+	[ -w $LOG_FILE ] || LOG_FILE=$(pwd)/eseri.log
+fi
+
+# Mark start point in log file
+eseriStartLog()
+{
+	echo "$(date) - $@" >>$LOG_FILE
+}
+
+# Check whether the paramters is one word or not
+checkparam()
+{
+	if [ $# -ne 2 ]; then
+		echo "Error: $1 must not contain space or other separator characters"
+		exit 1
+	fi
+}
+
+# Check whether the parameter is numeric or not
+checknum()
+{
+	test $2 -ne 0 -o $2 -eq 0 &>/dev/null
+
+	if [ $? -ne 0 ]; then
+		echo "Error: $1 must be an integer value"
+		exit 1
+	fi
+}
+
+acquire_ssh_fingerprint()
+{
+    FULL_HOSTNAME=$1
+    # Clearing SSH Fingerprint for target host
+    ssh-keygen -R $FULL_HOSTNAME 2>/dev/null
+    ssh-keygen -R $(host $FULL_HOSTNAME |  grep 'has address' | awk '{print $4}') 2>/dev/null
+    # Acquiring SSH Fingerprint for target host
+    ssh-keyscan -t rsa -H $FULL_HOSTNAME >> /root/.ssh/known_hosts 2>/dev/null
+    ssh-keyscan -t rsa -H $(host $FULL_HOSTNAME | grep 'has address' | awk '{print $4}') >> /root/.ssh/known_hosts 2>/dev/null
+}

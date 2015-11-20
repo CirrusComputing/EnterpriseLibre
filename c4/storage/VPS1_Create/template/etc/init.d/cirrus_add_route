@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+# cirrus_add_route - v1.0
+#
+# This script runs at startup to add custom routes to the
+# firewall container.
+#
+# Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2014 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+ip route add 10.0.0.0/8 via [-NETWORK-].1 dev eth0

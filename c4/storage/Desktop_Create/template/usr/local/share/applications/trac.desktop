@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Issue Tracking
+Comment=Manage team issues, actions, tasks
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=firefox "http://trac.[-DOMAIN-]/login"
+Terminal=false
+StartupNotify=true
+Icon=trac

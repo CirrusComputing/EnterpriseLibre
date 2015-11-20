@@ -1,0 +1,68 @@
+$TTL 2d
+$ORIGIN [-DOMAIN-].
+;
+@	IN	SOA	zeus.[-DOMAIN-]. hostmaster.[-DOMAIN-]. (
+			[-DEPLOY_TIME-]		; serial number (YYYYMMDD##)
+			1d			; refresh = 1 days (we are using notify, so this is just a backup)
+			15M			; update retry = 15 minutes
+			1W			; expiry = 1 week
+			1h			; minimum = 1 hour
+			)
+;
+; Name servers
+;
+@			IN	NS	zeus
+;
+; A records
+;
+router			IN	A	[-NETWORK-].1
+zeus			IN	A	[-NETWORK-].2
+hermes			IN	A	[-NETWORK-].3
+apollo			IN	A	[-NETWORK-].4 [-DELETE_UNLESS_Duplicity-]
+athena			IN	A	[-NETWORK-].10
+aphrodite		IN	A	[-NETWORK-].11
+hades			IN	A	[-NETWORK-].30
+hera			IN	A	[-NETWORK-].31 [-DELETE_UNLESS_Email-]
+mail1			IN	A	[-NETWORK-].31 [-DELETE_UNLESS_Email-]
+mail2			IN	A	[-NETWORK-].31 [-DELETE_UNLESS_Email-]
+poseidon		IN	A	[-NETWORK-].32
+cronus			IN	A	[-NETWORK-].33 [-DELETE_UNLESS_Nuxeo-]
+atlas			IN	A	[-NETWORK-].34 [-DELETE_UNLESS_WebConferencing-]
+erato			IN	A	[-NETWORK-].35 [-DELETE_UNLESS_InstantMessaging-]
+metis			IN	A	[-NETWORK-].36 [-DELETE_UNLESS_Smartphone-]
+gaia			IN	A	[-NETWORK-].37 [-DELETE_UNLESS_SOGo-]
+trident			IN	A	[-NETWORK-].39
+chaos			IN	A	[-NETWORK-].50 [-DELETE_UNLESS_Desktop-]
+;
+; MX records
+;
+@			IN	MX	10	mail1
+@			IN	MX	20	mail2
+;
+; CNAME records
+;
+kdc			IN	CNAME	athena
+directory		IN	CNAME	athena
+ldap			IN	CNAME	aphrodite
+imap			IN	CNAME	hera [-DELETE_UNLESS_Email-]
+smtp			IN	CNAME	hera [-DELETE_UNLESS_Email-]
+lists			IN	CNAME	hera [-DELETE_UNLESS_MailingLists-]
+desktop			IN	CNAME	chaos [-DELETE_UNLESS_Desktop-]
+help			IN	CNAME	poseidon
+sys			IN	CNAME	poseidon
+pgsql			IN	CNAME	hades
+mysql			IN	CNAME	hades
+backup			IN	CNAME	apollo [-DELETE_UNLESS_Duplicity-]
+;
+; A & CNAME records for internal capabilities
+;
+$INCLUDE "/etc/bind/db.internalcapabilities"
+;
+; Server settings
+;
+_kerberos		IN	TXT	"[-REALM-]"
+_kerberos._udp		IN	SRV	0 0 88 athena
+_kerberos-master._udp	IN	SRV	0 0 88 athena
+_kerberos-adm._tcp	IN	SRV	0 0 749 athena
+_kpasswd._udp		IN	SRV	0 0 464 athena
+_ldap._tcp		IN	SRV	0 0 636 aphrodite

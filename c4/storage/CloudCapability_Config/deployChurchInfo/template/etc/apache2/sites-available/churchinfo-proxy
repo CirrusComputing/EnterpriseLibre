@@ -1,0 +1,27 @@
+<VirtualHost [-WAN_IP-]:80>
+    ServerAdmin webmaster@[-DOMAIN-]
+    ServerName churchinfo.[-DOMAIN-]
+    ServerAlias churchinfo.[-ALIAS_DOMAIN-]
+
+    SSLEngine Off
+    SSLCertificateFile /etc/ssl/certs/ssl.[-DOMAIN-].pem
+    SSLCertificateKeyFile /etc/ssl/private/ssl.[-DOMAIN-].pem
+
+    # Configure reverse proxy.
+    ProxyRequests Off
+    ProxyPreserveHost Off
+
+    <Location />
+        ProxyPass http://churchinfo.[-DOMAIN-]/
+        ProxyPassReverse http://churchinfo.[-DOMAIN-]/
+
+        Order allow,deny
+        Allow from all
+    </Location>
+
+    # Possible values include: debug, info, notice, warn, error, crit, alert, emerg.
+    LogLevel warn
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log combined
+    ServerSignature Off
+</VirtualHost>

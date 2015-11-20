@@ -1,0 +1,40 @@
+#
+# Add user and user's group to LDAP - v1.1
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+# Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2014 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+dn: uid=[-USERNAME-],ou=people,[-LDAP_BASE-]
+objectClass: top
+objectClass: posixAccount
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: eseriMailUser
+uid: [-USERNAME-]
+sn: [-USER_SURENAME-]
+givenName: [-USER_GIVEN_NAME-]
+cn: [-USER_GIVEN_NAME-] [-USER_SURENAME-]
+displayName: [-USER_GIVEN_NAME-] [-USER_SURENAME-]
+uidNumber: [-USER_UID-]
+gidNumber: [-USER_GID-]
+gecos: [-USER_GIVEN_NAME-] [-USER_SURENAME-]
+loginShell: /bin/bash
+homeDirectory: [-USER_HOME_FOLDER-]
+userPassword: {SASL}[-USERNAME-]@[-REALM-]
+mail: [-EMAIL_PREFIX-]@[-EMAIL_DOMAIN-]
+eseriMailQuota: [-USER_EMAIL_QUOTA-]
+
+dn: cn=[-USERNAME-],ou=group,[-LDAP_BASE-]
+objectClass: top
+objectClass: posixGroup
+cn: [-USERNAME-]
+gidNumber: [-USER_GID-]

@@ -1,0 +1,30 @@
+<VirtualHost [-IP_ADDRESS-]:80>
+    ServerAdmin webmaster@[-DOMAIN-]
+    ServerName timesheet.[-DOMAIN-]
+    ServerAlias timesheet.[-DOMAIN-]
+
+    DocumentRoot /var/lib/timesheet/
+
+    <Directory /var/lib/timesheet/>
+        Options +FollowSymLinks
+     	AllowOverride All
+     	order allow,deny
+     	allow from [-NETWORK-].0/255.255.255.0
+    </Directory>
+
+    <Location "/">
+        AuthType Kerberos
+       	AuthName "Timesheet"
+       	KrbAuthRealms [-REALM-]
+       	Krb5Keytab /etc/apache2/apache2.keytab
+       	KrbMethodNegotiate on
+       	KrbMethodK5Passwd on
+       	Require valid-user
+    </Location>
+
+    # Possible values include: debug, info, notice, warn, error, crit, alert, emerg.
+    LogLevel warn
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log combined
+    ServerSignature Off
+</VirtualHost>

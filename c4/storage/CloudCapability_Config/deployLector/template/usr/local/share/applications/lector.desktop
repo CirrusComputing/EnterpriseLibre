@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Optical Character Recognition
+Comment=Optical Character Recognition
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=lector
+Terminal=false
+StartupNotify=true
+Icon=lector

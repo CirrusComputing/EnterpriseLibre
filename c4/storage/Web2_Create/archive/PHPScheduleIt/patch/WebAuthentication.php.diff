@@ -1,0 +1,22 @@
+--- phpscheduleit/lib/Application/Authentication/WebAuthentication.php	2013-04-04 11:44:50.000000000 -0400
++++ phpscheduleit.new/lib/Application/Authentication/WebAuthentication.php	2013-09-17 11:26:44.000000000 -0400
+@@ -86,10 +86,10 @@
+ 	 */
+ 	public function Validate($username, $password)
+ 	{
+-		if (empty($username) || empty($password))
++		/*if (empty($username) || empty($password))
+ 		{
+ 			return false;
+-		}
++		}*/
+ 		return $this->authentication->Validate($username, $password);
+ 	}
+ 
+@@ -235,4 +235,4 @@
+ 	}
+ }
+ 
+-?>
+\ No newline at end of file
++?>

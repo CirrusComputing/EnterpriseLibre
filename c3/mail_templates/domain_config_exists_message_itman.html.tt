@@ -1,0 +1,13 @@
+<html>
+ <body>
+  <p>Dear Superuser,</p>
+  <p>The following domain is already in use by another organization:</p>
+  <ul>
+	<li>Domain - [% email_domain %]</li>
+  </ul>
+  <p>Enjoy!<br/>
+The Cirrus Open Team </p>
+---
+  <p>You received this email because you just changed the settings of your Cirrus Open cloud. If this email reached you in error for any reason, please let us know immediately.</p>
+ </body>
+</html> 

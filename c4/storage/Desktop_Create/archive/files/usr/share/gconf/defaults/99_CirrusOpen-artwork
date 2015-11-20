@@ -1,0 +1,11 @@
+/desktop/gnome/interface/gtk_theme Clearlooks
+/desktop/gnome/interface/icon_theme Faenza
+/desktop/gnome/peripherals/mouse/cursor_theme DMZ-White
+/apps/metacity/general/theme Clearlooks
+/apps/metacity/general/button_layout menu:minimize,maximize,close
+/apps/gnome-screensaver/idle_activation_enabled 0
+/desktop/gnome/background/picture_filename "/usr/share/backgrounds/infinity.jpg"
+/desktop/gnome/background/picture_options "zoom"
+/desktop/gnome/background/color_shading_type "solid"
+/desktop/gnome/background/primary_color "#0a0b48"
+/desktop/gnome/background/secondary_color "#0a0b48"

@@ -1,0 +1,28 @@
+<VirtualHost [-IP_ADDRESS-]:80>
+    ServerAdmin webmaster@[-DOMAIN-]
+    ServerName vtiger.[-DOMAIN-]
+    ServerAlias vtiger.[-DOMAIN-]
+
+    DocumentRoot /var/lib/vtigercrm
+
+    <Directory "/var/lib/vtigercrm/">
+        Options -Indexes
+      	order allow,deny
+      	allow from all
+	<FilesMatch "^((?!vtigerservice).)*$">
+      	    AuthType Kerberos
+      	    AuthName "Vtiger"
+      	    KrbAuthRealms [-REALM-]
+      	    Krb5KeyTab /etc/apache2/apache2.keytab
+      	    KrbMethodNegotiate on
+      	    KrbMethodK5Passwd on
+      	    Require valid-user
+	</FilesMatch>
+   </Directory>
+
+   # Possible values include: debug, info, notice, warn, error, crit, alert, emerg.
+   LogLevel warn
+   ErrorLog /var/log/apache2/error.log
+   CustomLog /var/log/apache2/access.log combined
+   ServerSignature Off
+</VirtualHost>

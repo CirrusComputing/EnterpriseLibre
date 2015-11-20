@@ -1,0 +1,61 @@
+//
+// Do any local configuration here
+//
+
+acl trusted-internal {
+	127.0.0.1/32;
+	[-NETWORK-].0/24;
+	10.101.1.4/32;
+	[-ESERI_DNS_IP_PRIVATE-]/32;
+};
+
+acl trusted-external {
+        [-ESERI_DNS_IP_PUBLIC-]/32;
+};
+
+key "internal-[-DOMAIN-]." {
+        algorithm hmac-md5;
+        secret "[-INTERNAL_SECRET-]";
+};
+
+server [-ESERI_DNS_IP_PRIVATE-] {
+       keys {
+            internal-[-DOMAIN-].;
+       };
+};
+
+key "external-[-DOMAIN-]." {
+    	algorithm hmac-md5;
+        secret "[-EXTERNAL_SECRET-]";
+};
+
+server [-ESERI_DNS_IP_PUBLIC-] {
+       keys {
+            external-[-DOMAIN-].;
+       };
+};
+
+view "internal" {
+        match-clients { key internal-[-DOMAIN-].; trusted-internal; };
+        recursion yes;
+	allow-recursion {
+	     trusted-internal;
+	};
+
+	//Moved from top due to use of views
+	include "/etc/bind/zones.rfc1918";
+
+	//Moved from named.conf due use of views
+	include "/etc/bind/named.conf.default-zones";
+
+	//Customer's internal zones
+	include "/etc/bind/named.conf.internal";
+};
+
+view "external" {
+	match-clients { any; };
+        recursion no;
+
+	//Customer's external zones
+	include "/etc/bind/named.conf.external";
+};

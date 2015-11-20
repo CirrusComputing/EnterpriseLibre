@@ -1,0 +1,161 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          skeleton
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Funambol
+# Description:       Funambol server startup script
+### END INIT INFO
+
+# Karoly Molnar <kmolnar@eseri.com>
+
+FUNAMBOL_HOME=/opt/Funambol
+
+# Setting the JAVA_HOME to the JRE in the bundle
+export JAVA_HOME=$FUNAMBOL_HOME/tools/jre-1.6.0/jre
+export J2EE_HOME=$FUNAMBOL_HOME/tools/tomcat
+export CATALINA_HOME=$FUNAMBOL_HOME/tools/tomcat
+
+# PATH should only include /usr/* if it runs after the mountnfs.sh script
+DESC="Funambol"
+NAME=funambol
+SCRIPTNAME=/etc/init.d/$NAME
+DAEMON_CTP_SERVER=$FUNAMBOL_HOME/bin/ctp-server
+DAEMON_DS_SERVER=$FUNAMBOL_HOME/bin/funambol-server
+DAEMON_INBOX_LISTENER=$FUNAMBOL_HOME/bin/inbox-listener
+DAEMON_PIM_LISTENER=$FUNAMBOL_HOME/bin/pim-listener
+
+# Load the VERBOSE setting and other rcS variables
+. /lib/init/vars.sh
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.0-6) to ensure that this file is present.
+. /lib/lsb/init-functions
+
+#
+# Function that checks the status of daemon/service
+#
+get_status()
+{
+	# Return
+	#   0 if daemons are running
+	#   1 if at least one, but not all daemons are running
+	#   2 if daemons are not running
+	#   other if a failure occurred
+	DAEMON_CTP_SERVER_PID=$(ps ax | grep ctp.serve | grep java | awk '{print $1}')
+	DAEMON_DS_SERVER_PID=$(ps ax | grep ds-server | grep java | awk '{print $1}')
+	DAEMON_INBOX_LISTENER_PID=$(ps ax | grep inbox-listener | grep java | awk '{print $1}')
+	DAEMON_PIM_LISTENER_PID=$(ps ax | grep pimlistener | grep java | awk '{print $1}')
+
+	if [ -n "$DAEMON_CTP_SERVER_PID" -a -n "$DAEMON_DS_SERVER_PID" -a -n "$DAEMON_INBOX_LISTENER_PID" -a -n "$DAEMON_PIM_LISTENER_PID" ]; then
+		return 0
+	else if [ -n "$DAEMON_CTP_SERVER_PID" -o -n "$DAEMON_DS_SERVER_PID" -o -n "$DAEMON_INBOX_LISTENER_PID" -o -n "$DAEMON_PIM_LISTENER_PID" ]; then
+		return 1
+	else if [ -z "$DAEMON_CTP_SERVER_PID" -a -z "$DAEMON_DS_SERVER_PID" -a -z "$DAEMON_INBOX_LISTENER_PID" -a -z "$DAEMON_PIM_LISTENER_PID" ]; then
+		return 2
+	else
+		return 3
+	fi
+	fi
+	fi
+}
+
+#
+# Function that starts the daemon/service
+#
+do_start()
+{
+	# Return
+	#   0 if daemon has been started
+	#   1 if daemon was already running
+	#   2 if daemon could not be started
+
+	get_status
+	[ $? -ne 2 ] && return 1
+
+	sh $DAEMON_CTP_SERVER start > /dev/null
+	sh $DAEMON_DS_SERVER start > /dev/null
+	sh $DAEMON_INBOX_LISTENER start > /dev/null
+	sh $DAEMON_PIM_LISTENER start > /dev/null
+
+	get_status
+	[ $? -ne 0 ] && return 2
+
+	return 0
+}
+
+#
+# Function that stops the daemon/service
+#
+do_stop()
+{
+	# Return
+	#   0 if daemon has been stopped
+	#   1 if daemon was already stopped
+	#   2 if daemon could not be stopped
+	#   other if a failure occurred
+
+	get_status
+	[ $? -eq 2 ] && return 1
+
+	sh $DAEMON_PIM_LISTENER stop > /dev/null
+	sh $DAEMON_INBOX_LISTENER stop > /dev/null
+	sh $DAEMON_DS_SERVER stop > /dev/null
+	sh $DAEMON_CTP_SERVER stop > /dev/null
+
+	# Wait for the daemons to stop, max 30 seconds
+	TIME=0
+	TIMEOUT=30
+	RETVAL=2
+	while [ $TIME -lt $TIMEOUT -a $RETVAL -eq 2 ]; do
+		sleep 1
+		TIME=`expr $TIME + 1`
+		get_status
+		[ $? -eq 2 ] && RETVAL=0
+	done
+
+	return $RETVAL
+}
+
+case "$1" in
+  start)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+	do_start
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  stop)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
+	do_stop
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  restart)
+	log_daemon_msg "Restarting $DESC" "$NAME"
+	do_stop
+	case "$?" in
+	  0|1)
+		do_start
+		case "$?" in
+			0) log_end_msg 0 ;;
+			1) log_end_msg 1 ;; # Old process is still running
+			*) log_end_msg 1 ;; # Failed to start
+		esac
+		;;
+	  *)
+	  	# Failed to stop
+		log_end_msg 1
+		;;
+	esac
+	;;
+  *)
+	echo "Usage: $SCRIPTNAME {start|stop|status|restart}" >&2
+	exit 3
+	;;
+esac

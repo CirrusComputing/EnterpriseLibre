@@ -1,0 +1,15 @@
+#
+# aphrodite.newvirtualorgs.net.cnf
+#
+
+[ req ]
+prompt                  = no
+distinguished_name      = aphrodite.newvirtualorgs.net
+
+[ aphrodite.newvirtualorgs.net ]
+commonName              = aphrodite.newvirtualorgs.net
+stateOrProvinceName     = ON
+countryName             = CA
+emailAddress            = hostmaster@newvirtualorgs.net
+organizationName        = newvirtualorgs
+organizationalUnitName  = IT Department

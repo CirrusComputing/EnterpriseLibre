@@ -1,0 +1,26 @@
+--
+-- SQL authentication for sogo - v1.0
+--
+-- Created by Karoly Molnar <kmolnar@eseri.com>
+--
+-- Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+-- All Rights Reserved 
+--
+-- Free Open Source Solutions Inc. owns and reserves all rights, title,
+-- and interest in and to this software in both machine and human
+-- readable forms.
+--
+
+CREATE TABLE auth
+(
+  c_uid text NOT NULL,
+  c_name text NOT NULL,
+  c_password text NOT NULL,
+  c_cn text NOT NULL,
+  mail text NOT NULL,
+  CONSTRAINT auth_pkey PRIMARY KEY (c_uid)
+);
+
+INSERT INTO auth VALUES ('system-freebusy', 'System User for Free Busy', '[-SOGO_PASSWORD_FREEBUSY-]', 'System User for Free Busy', 'system-freebusy@[-DOMAIN-]');
+
+GRANT SELECT ON TABLE auth TO sogo;

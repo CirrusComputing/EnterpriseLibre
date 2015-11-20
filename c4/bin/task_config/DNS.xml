@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c4:boot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:c4="http://www.eseri.com/C4" xsi:schemaLocation="http://lucid-mirror.wan.virtualorgs.net/schema/C4/Boot.xsd">
+	<name>DNS</name>
+	<host>IP:2</host>
+	<deploy>
+		<arg>system_anchor_domain</arg>
+		<arg>short_domain</arg>
+		<arg>timezone</arg>
+		<arg>wan_ip</arg>
+	</deploy>
+	<certificates>
+		<cert host="ROOT" type="RSA" />
+                <cert host="dkim" type="RSA" />
+	</certificates>
+	<passwords>
+	</passwords>
+	<kerberos_keys>
+	</kerberos_keys>
+	<deployment_files>
+		<file service="Eseri_DNS1" file="Eseri_DNS_IP.txt" />
+                <file service="Eseri_DNS1" file="Cloud_Secret.txt" />
+	</deployment_files>
+	<package>
+		<always/>
+	</package>
+</c4:boot>

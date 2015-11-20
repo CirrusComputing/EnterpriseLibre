@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Timesheets
+Comment=Keep track of personnel time
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=firefox "http://timesheet.[-DOMAIN-]/"
+Terminal=false
+StartupNotify=true
+Icon=timesheet

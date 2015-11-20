@@ -1,0 +1,78 @@
+#!/bin/sh
+
+# This script needs to be saved in place of nxclient, nxclient needs to be
+# moved to $NXCLIENT_BIN.
+
+# When printer is connected for the first time and BLOCK_PRINT_DIALOG is set to 1
+# nxclient starts the dialog to choose the printer driver driver.  
+# The nxclient will also display the "successful" attachment
+# dialog the first time, through the use of the PRINTER_DRIVER_SELECTED file in
+# the user's home/.nx/config directory.
+# The next time the driver is selected without displaying the
+# confirmation dialog, or the successful attachment dialog.
+#
+# When BLOCK_FILE_DIALOG is set to 1, all SMB mounting messages
+# will be suppressed
+#
+# All other dialogs are not filtered.
+
+BLOCK_FILE_DIALOG=1  # set to 0 to not block
+BLOCK_PRINT_DIALOG=1  # set to 0 to not block
+
+# Do not change anything below
+NXCLIENT_BIN="exec /usr/NX/bin/nxclient.bin"
+PRINTER_DRIVER_SELECTED=~/.nx/config/PRINTER_DRIVER_SELECTED
+
+case "$1" in
+	"-printer" | "--printer"  )
+		PRINTER="$2"
+		if [ -n "$PRINTER" ]; then
+			DRIVER=`cat ~/.nx/config/drivers.cache | grep "$PRINTER" | awk -F'|' ' { print $3 }' 2>/dev/null`
+			if [ -n "$DRIVER" ]; then
+				echo "$DRIVER"
+			else
+				$NXCLIENT_BIN "$@"
+				rm -f "$PRINTER_DRIVER_SELECTED"
+				exit 0
+			fi
+		fi
+		exit 0
+		;;
+
+	"-dialog" | "--dialog" )
+		MESSAGE="$6" 
+		TEST=`echo "$MESSAGE" | grep "was successfully attached on"`
+		if [ -n "$TEST" -a "$BLOCK_PRINT_DIALOG" -eq "1" ]; then
+			if [ ! -e $PRINTER_DRIVER_SELECTED ]; then
+				/usr/bin/touch "$PRINTER_DRIVER_SELECTED"
+				$NXCLIENT_BIN "$@"
+				exit 0
+			else
+				exit 0
+			fi
+		fi
+
+		TEST=`echo "$MESSAGE" | grep "SMB share.*mounted on"`
+		if [ -n "$TEST" && "$BLOCK_FILE_DIALOG" -eq "1" ]; then
+			exit 0
+		fi
+
+		TEST=`echo "$MESSAGE" | grep "Press the disconnect button to disconnect the running session."`
+		if [ -n "$TEST" ]; then
+			export DISPLAY="${10}.0"
+			/usr/local/bin/CirrusOpenLeaveSession
+			exit 0
+		fi
+
+		$NXCLIENT_BIN "$@"
+		exit 0
+		;;
+
+	* )
+		$NXCLIENT_BIN "$@"
+		exit 0
+		;;
+
+esac
+
+exit 0

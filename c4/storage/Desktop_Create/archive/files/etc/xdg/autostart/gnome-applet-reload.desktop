@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Gnome Applet Reload
+Comment=Ensures that the gnome panel applets have been loaded correctly
+Exec=/usr/local/share/CirrusOpen/CirrusOpenGnomeAppletReload
+Terminal=false
+Type=Application
+OnlyShowIn=GNOME;
+NoDisplay=true

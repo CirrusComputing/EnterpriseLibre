@@ -1,0 +1,43 @@
+#!/bin/bash
+#
+# Archive user account in the LDAP directory - v1.0
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+#
+# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+# Include eseri functions
+. ${0%/*}/eseriCommon
+
+# Mark start point in log file
+eseriStartLog "Archive account"
+
+# Check for proper number of parameters
+if [ $# -ne 1 ]; then
+	echo "Usage: $SCRIPT_NAME Username"
+	exit 1
+fi
+
+# Check the format of the input parameters
+checkparam "Username" $1
+
+ESERI_USERNAME="$1"
+
+# Log to eseri.log via syslog
+/usr/local/share/eseri/EseriLog "$ESERI_USERNAME - Archive"
+
+# Disable the Kerberos principal
+KADMIN_OUT=$(kadmin -k -t $KEYTAB -p $KRB_IDENT -q "modprinc -expire yesterday $ESERI_USERNAME" 2>&1)
+echo $KADMIN_OUT >>$LOG_FILE
+
+# Check for errors
+KADMIN_RETV=$(echo $KADMIN_OUT | grep -E 'Principal ".*" modified\.' | wc -l)
+[ $KADMIN_RETV -ne 1 ] && exit 2
+
+exit 0

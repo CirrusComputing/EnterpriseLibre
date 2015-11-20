@@ -1,0 +1,11 @@
+--- orig/chrome.py	2010-04-21 00:35:00.000000000 -0400
++++ chrome.py	2010-07-04 23:02:00.000000000 -0400
+@@ -268,7 +268,7 @@
+         """Base URL of the core static resources.""")
+ 
+     metanav_order = ListOption('trac', 'metanav',
+-                               'login,logout,prefs,help,about', doc=
++                               'login,prefs,help,about', doc=
+         """Order of the items to display in the `metanav` navigation bar,
+            listed by IDs. See also TracNavigation.""")
+ 

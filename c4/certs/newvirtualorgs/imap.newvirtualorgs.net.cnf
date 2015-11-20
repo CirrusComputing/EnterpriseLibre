@@ -1,0 +1,15 @@
+#
+# imap.newvirtualorgs.net.cnf
+#
+
+[ req ]
+prompt                  = no
+distinguished_name      = imap.newvirtualorgs.net
+
+[ imap.newvirtualorgs.net ]
+commonName              = imap.newvirtualorgs.net
+stateOrProvinceName     = ON
+countryName             = CA
+emailAddress            = hostmaster@newvirtualorgs.net
+organizationName        = newvirtualorgs
+organizationalUnitName  = IT Department

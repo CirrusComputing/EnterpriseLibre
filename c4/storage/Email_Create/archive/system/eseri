@@ -1,0 +1,23 @@
+# 
+# this example is for using kerberos to authenticate. Has been used with
+# nss-updatedb, libpam-krb5 and libpam-ccreds. Sould also work with
+# libpam-heimdal. This is only an example, and you may have to create
+# your own profiles to authenticate with your system.
+# 
+[eseri]
+nss_passwd=passwd: compat ldap
+nss_group=group: compat ldap
+nss_shadow=shadow: compat
+nss_netgroup=netgroup: nis
+pam_auth=auth	sufficient	pam_krb5.so minimum_uid=5000 use_first_pass ignore_root retain_after_close
+	auth	required	pam_unix.so nullok_secure
+pam_account=account	sufficient	pam_krb5.so minimum_uid=5000 ignore_root retain_after_close
+	account	sufficient	pam_unix.so
+	account	required	pam_permit.so
+pam_password=password	sufficient	pam_unix.so nullok obscure md5
+	password	sufficient	pam_krb5.so try_first_pass use_authok minimum_uid=5000 ignore_root retain_after_close
+	password	required	pam_deny.so
+pam_session=session	required	pam_mkhomedir.so umask=0022 skel=/etc/skel
+	session	optional	pam_foreground.so
+	session	optional	pam_krb5.so minimum_uid=5000 ignore_root retain_after_close
+	session	required	pam_unix.so

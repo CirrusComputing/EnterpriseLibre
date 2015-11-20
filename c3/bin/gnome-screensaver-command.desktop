@@ -1,0 +1,12 @@
+
+[Desktop Entry]
+Name=Screenlock
+GenericName=screenlock
+Comment=Lock the screen!
+Keywords=lock;screen;screensaver;password;desktop
+Exec=gnome-screensaver-command --lock
+Terminal=false
+Type=Application
+StartupNotify=true
+NoDisplay=true
+Hidden=true

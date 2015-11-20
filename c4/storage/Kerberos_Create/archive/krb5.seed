@@ -1,0 +1,3 @@
+krb5-admin-server	krb5-admin-server/kadmind	boolean	true
+krb5-admin-server	krb5-admin-server/newrealm	note	
+krb5-kdc	krb5-kdc/debconf	boolean	false

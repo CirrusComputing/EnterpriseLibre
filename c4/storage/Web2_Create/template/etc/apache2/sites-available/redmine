@@ -1,0 +1,30 @@
+<VirtualHost [-IP-]:80>
+    ServerAdmin webmaster@[-DOMAIN-]
+    ServerName redmine.[-DOMAIN-]
+    ServerAlias redmine.[-DOMAIN-]
+
+    DocumentRoot /usr/share/redmine/public
+
+    <Directory /usr/share/redmine/public/>
+        Options FollowSymLinks
+        RailsBaseURI /
+        PassengerResolveSymlinksinDocumentRoot on
+        AllowOverride None
+    </Directory>
+
+    <Location />
+        AuthType Kerberos
+	AuthName "Redmine"
+        KrbAuthRealms [-REALM-]
+        Krb5Keytab /etc/apache2/apache2.keytab
+        KrbMethodNegotiate on
+        KrbMethodK5Passwd on
+        require valid-user
+    </Location>
+
+    # Possible values include: debug, info, notice, warn, error, crit, alert, emerg.
+    LogLevel warn
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log combined
+    ServerSignature Off
+</VirtualHost>

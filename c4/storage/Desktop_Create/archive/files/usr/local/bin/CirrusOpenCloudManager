@@ -1,0 +1,2679 @@
+#!/usr/bin/python
+#
+# Cloud Manager GUI - v7.0
+#
+# Created by Gregory Wolgemuth <woogie@cirruscomputing.com>
+# Modified by Lukas Kamps <lkamps@cirruscomputing.com> and Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2015 (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+import os
+import socket
+import pygtk
+import gtk
+import sys
+import pycurl
+import pwd
+import datetime
+import hashlib
+import webbrowser
+from xml.sax.saxutils import escape
+import time
+from lxml import etree
+import pytz
+import re
+from ordereddict import OrderedDict
+from urlparse import urlparse
+import urllib
+pygtk.require("2.0")
+
+class AccountManager(object):
+
+    network_name = socket.gethostbyaddr(socket.gethostname())[0].partition('.')[2]
+    help_wiki = 'http://wiki.cirrusopen.org/index.php/Main_Page'
+    subscribe_url = 'http://wiki.cirrusopen.org/index.php/Main_Page'
+    queue = '<?xml version="1.0" encoding="UTF-8"?><queue></queue>'
+    queue_add = ''
+    queue_restore = ''
+    queue_utype = ''
+    queue_cloudcapability = ''
+    hash_string = ''
+    server_timezone_combo = None
+    user_timezone_combo = None
+    timezone_list = None
+    eseriman_keytab = '/var/lib/eseriman/keytabs/eseriman-admin.keytab'
+    eseriman_krb_ident = 'eseriman/admin'
+    color_bg_gui = gtk.gdk.color_parse('#FFFFFF')
+    color_bg_subscrButton = gtk.gdk.color_parse('#99CCFF')
+    color_bg_entrybox = gtk.gdk.color_parse('#E1F0FF')
+    base_full_user_pricing = float('14.95')
+    base_emailonly_user_pricing = float('0.45')
+    trial_full_user_max_count = int('500')
+    trial_emailonly_user_max_count = int('500')
+    trial_backup_profile_max_count = int('3')
+    duply_tmp_folder = '/tmp/.duply/profile'
+
+    # Initializes the GUI
+    def __init__(self):
+        self.contents = '' 
+        self.builder = gtk.Builder()
+        self.builder.add_from_file("/usr/local/share/CirrusOpen/glade/CirrusOpenCloudManager.glade")
+        self.builder.connect_signals(self)
+
+        # Software tab
+        self.cccview = self.builder.get_object("ccclist1")
+        self.cccview.get_selection().set_mode(gtk.SELECTION_SINGLE)	
+        self.cccmodel = gtk.ListStore(str, str, str, str, str, str, 'gboolean', str, bool)
+        self.cccview.set_model(self.cccmodel)        
+        col=0
+        for name in ['Type', 'Category', 'Description', 'Application', 'User Price', 'Cloud Price', 'Enabled']:
+            if col == 6:
+                ccc_cell = gtk.CellRendererToggle()
+                column = gtk.TreeViewColumn(name, ccc_cell, active=col)
+                column.set_clickable(True)
+                ccc_cell.connect("toggled", self.on_ccc_cell_toggle_callback, col)
+                column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+                column.set_fixed_width(70)
+            else:
+                ccc_cell = gtk.CellRendererText()
+                column = gtk.TreeViewColumn(name, ccc_cell, text=col)
+                column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
+            column.set_expand(True)
+            column.set_sort_column_id(col)
+            col += 1
+            self.cccview.append_column(column)
+
+        # External tab
+        self.fpcview = self.builder.get_object("fpclist1")
+        self.fpcview.get_selection().set_mode(gtk.SELECTION_SINGLE)	
+        self.fpcmodel = gtk.ListStore(str, str, str, 'gboolean', 'gboolean', str, bool)
+        self.fpcview.set_model(self.fpcmodel)
+        col=0
+        for name in ['Service', 'Name', 'Domain', 'Outside Desktop', 'HTTP Secure']:
+            if col == 1:
+                fpc_cell = gtk.CellRendererText()
+                column = gtk.TreeViewColumn(name, fpc_cell, markup=col, background=5, background_set=6)
+                fpc_cell.set_property('editable', True)
+                fpc_cell.connect("edited", self.on_fpc_cell_edit_callback, col)
+                column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+                column.set_fixed_width(50)
+            elif col == 3 or col == 4:
+                fpc_cell = gtk.CellRendererToggle()
+                column = gtk.TreeViewColumn(name, fpc_cell, active=col)
+                column.set_clickable(True)
+                fpc_cell.connect("toggled", self.on_fpc_cell_toggle_callback, col)
+                column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+                column.set_fixed_width(70)
+            else:
+                fpc_cell = gtk.CellRendererText()
+                column = gtk.TreeViewColumn(name, fpc_cell, text=col)
+                column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
+            column.set_expand(True)
+            column.set_sort_column_id(col)
+            col += 1
+            self.fpcview.append_column(column)
+
+        # Alias tab
+        self.aliasesview1 = self.builder.get_object("aliaseslist1")
+        self.aliasesview1.get_selection().set_mode(gtk.SELECTION_SINGLE)	
+        self.aliasesmodel1 = gtk.ListStore(str)
+        self.aliasesview1.set_model(self.aliasesmodel1)
+        col=0
+        for name in ['Email Alias']:
+            column = gtk.TreeViewColumn(name, gtk.CellRendererText(), text=col)
+            column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
+            column.set_expand(True)
+            column.set_sort_column_id(col)
+            col += 1
+            self.aliasesview1.append_column(column)
+        self.aliasesview2 = self.builder.get_object("aliaseslist2")
+        self.aliasesview2.get_selection().set_mode(gtk.SELECTION_SINGLE)	
+        self.aliasesmodel2 = gtk.ListStore(str)
+        self.aliasesview2.set_model(self.aliasesmodel2)
+        col=0
+        for name in ['Forward To Address']:
+            column = gtk.TreeViewColumn(name, gtk.CellRendererText(), text=col)
+            column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
+            column.set_expand(True)
+            column.set_sort_column_id(col)
+            col += 1
+            self.aliasesview2.append_column(column)
+
+        # Backup tab
+        self.backupview1 = self.builder.get_object("backuplist1")
+        self.backupview1.get_selection().set_mode(gtk.SELECTION_SINGLE)
+        self.backupview1.connect("button-press-event", self.on_treeview_double_clicked, "backup")
+        self.backupmodel1 = gtk.ListStore(str, str, str, str, str, str, 'gboolean', str, bool)
+        self.backupview1.set_model(self.backupmodel1)        
+        col=0
+        for name in ['Name', 'Frequency', 'Start', 'Connection', 'Location', 'Folder', 'Enabled']:
+            if col == 6:
+                backup_cell = gtk.CellRendererToggle()
+                column = gtk.TreeViewColumn(name, backup_cell, active=col)
+                column.set_clickable(False)
+                column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+                column.set_fixed_width(75)
+            else:
+                backup_cell = gtk.CellRendererText()
+                column = gtk.TreeViewColumn(name, backup_cell, text=col)
+                column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
+            column.set_expand(True)
+            column.set_sort_column_id(col)
+            col += 1
+            self.backupview1.append_column(column)
+
+        self.backupview2 = self.builder.get_object("viewBackupSummary_window_backuplist1")
+        self.backupview2.get_selection().set_mode(gtk.SELECTION_SINGLE)	
+        self.backupmodel2 = gtk.ListStore(str, str, str)
+        self.backupview2.set_model(self.backupmodel2)        
+        col=0
+        for name in ['Backup Type', 'Time', 'Number of Volumes']:
+            backup_cell = gtk.CellRendererText()
+            column = gtk.TreeViewColumn(name, backup_cell, text=col)
+            column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
+            column.set_expand(True)
+            column.set_sort_column_id(col)
+            col += 1
+            self.backupview2.append_column(column)
+
+        self.backupview3 = self.builder.get_object("restoreBackup_window_backuplist1")
+        self.backupview3.get_selection().set_mode(gtk.SELECTION_SINGLE)	
+        self.backupmodel3 = gtk.ListStore(str)
+        self.backupview3.set_model(self.backupmodel3)
+        col=0
+        for name in ['File Path']:
+            backup_cell = gtk.CellRendererText()
+            column = gtk.TreeViewColumn(name, backup_cell, text=col)
+            column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
+            column.set_expand(True)
+            column.set_sort_column_id(col)
+            col += 1
+            self.backupview3.append_column(column)
+
+        # Users tab
+        self.userview = self.builder.get_object("userslist1")
+        self.userview.get_selection().set_mode(gtk.SELECTION_SINGLE)	
+        self.usermodel = gtk.ListStore(str, str, str, str, str, str, str, str, str, bool)
+        self.userview.set_model(self.usermodel)
+        col = 0
+        for name in ['Email Address', 'Username', 'Full Name', 'Notify Address', 'Timezone', '2-Factor Auth', 'Type', 'Status']:
+            column = gtk.TreeViewColumn(name, gtk.CellRendererText(), text=col, foreground=8, foreground_set=9)
+            column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
+            column.set_expand(True)
+            column.set_sort_column_id(col)
+            col += 1
+            # Disable alternate white and grey color rows.
+            #self.userview.set_rules_hint(True)
+            self.userview.append_column(column)
+
+        # Window
+        self.window1 = self.builder.get_object("window1")
+        notebook = self.builder.get_object("notebook1")
+        # Setting the backgroud color for the window and the notebook
+        self.window1.modify_bg(gtk.STATE_NORMAL, self.color_bg_gui)
+        notebook.modify_bg(gtk.STATE_NORMAL, self.color_bg_gui)
+        notebook.set_show_tabs(False)
+        notebook.hide()
+        self.window1.show()
+
+        # Get Cloud User Details
+        self.get_cloud_user_details()
+        # If this user is not an admin, switch their view to Me tab.
+        if self.admin:
+            notebook.set_show_tabs(True)
+            notebook.show()
+        if not self.admin:
+            self.builder.get_object("window_resize_label1").hide()
+            notebook.set_current_page(6)
+            notebook.show()
+
+        # subscrButton
+        if self.admin:
+            self.subscrUpdateButton = self.builder.get_object("subscrUpdateButton")
+            self.subscrCancelButton = self.builder.get_object("subscrCancelButton")
+            self.subscrUpdateButton.connect("clicked", self.on_subscrUpdateButton_clicked_callback)
+            self.subscrCancelButton.connect("clicked", self.on_subscrCancelButton_clicked_callback, 'all')
+            self.footer_label1 = self.builder.get_object("footer_label1")
+            self.footer_label2 = self.builder.get_object("footer_label2")
+            #Setting the background color for the subscr buttons
+            self.subscrUpdateButton.modify_bg(gtk.STATE_NORMAL, self.color_bg_subscrButton)
+            self.subscrCancelButton.modify_bg(gtk.STATE_NORMAL, self.color_bg_subscrButton)
+            self.builder.get_object("subscrButton_hbox1_alignment1").show()
+            self.footer_label1.show()
+            self.footer_label2.show()
+
+        # Initialize cloud manager with values from the DB. But do not get new details from the database, since we already fetched it above.
+        self.update_window(False)
+        
+        # Connect tab signals
+        if self.admin:
+            # Cloud tab
+            self.builder.get_object("ad_dname_entry").connect("changed", self.only_restricted_chars_callback, 'domain', '')
+            self.builder.get_object("dc_radio1").connect("clicked", self.domainconfig_radio_callback,None)
+            self.builder.get_object("dc_radio2").connect("clicked", self.domainconfig_radio_callback,None)
+            self.builder.get_object("dc_edname_entry").connect("changed", self.only_restricted_chars_callback, 'domain', 'dc')
+            self.builder.get_object("dc_radio21").connect("clicked", self.domainconfig_radio_callback,None)
+            self.builder.get_object("dc_radio211").connect("clicked", self.domainconfig_radio_callback,None)
+            self.builder.get_object("dc_radio212").connect("clicked", self.domainconfig_radio_callback,None)
+            self.builder.get_object("dc_radio20").connect("clicked", self.domainconfig_radio_callback,None)
+            self.builder.get_object("dc_radio23").connect("clicked", self.domainconfig_radio_callback,None)
+            self.builder.get_object("dc_radio23_checkbox1").connect("clicked", self.domainconfig_radio_callback,None)
+            self.builder.get_object("dc_radio22").connect("clicked", self.domainconfig_radio_callback,None)
+            # Software tab
+            self.builder.get_object("cancelCloudCapabilityConfig_button").connect("clicked", self.on_subscrCancelButton_clicked_callback, 'queue_cloudcapability')
+
+            # Domains tab
+
+            # Email tab
+            self.builder.get_object("addAlias_button").connect('clicked', self.on_addordeletealiasButton_clicked_callback, 'addAlias')
+            self.builder.get_object("deleteAlias_button").connect('clicked', self.on_addordeletealiasButton_clicked_callback, 'deleteAlias')
+            self.builder.get_object("addForward_button").connect('clicked', self.on_addordeletealiasButton_clicked_callback, 'addForward')
+            self.builder.get_object("deleteForward_button").connect('clicked', self.on_addordeletealiasButton_clicked_callback, 'deleteForward')
+            self.builder.get_object("addordeleteAlias_dialog_entry1").connect("changed", self.only_restricted_chars_callback, 'eprefix', '')
+
+            # Backup tab
+            self.builder.get_object("addBackupConfig_button").connect("clicked", self.on_addoreditbackupconfigButton_clicked_callback, 'add')
+            self.builder.get_object("editBackupConfig_button").connect("clicked", self.on_addoreditbackupconfigButton_clicked_callback, 'edit')
+            self.builder.get_object("addoreditBackupConfig_dialog_entry1").connect("changed", self.only_restricted_chars_callback, 'backup_name', '')
+            self.builder.get_object("addoreditBackupConfig_dialog_entry3").connect("changed", self.only_restricted_chars_callback, 'port', '')
+            self.builder.get_object("addoreditBackupConfig_dialog_entry5").connect("changed", self.only_restricted_chars_callback, 'eprefix', '')
+            self.builder.get_object("addoreditBackupConfig_dialog_combobox2").connect("changed", self.on_backup_frequency_duration_changed_callback)
+            self.builder.get_object("addoreditBackupConfig_dialog_combobox4").connect("changed", self.on_backup_scheme_changed_callback)
+            self.backup_active_toggled_handler_id = self.builder.get_object("addoreditBackupConfig_dialog_checkbox1").connect("toggled", self.on_backup_active_toggled_callback)
+            self.builder.get_object("viewBackupSummary_window").connect('delete-event', lambda w, e: w.hide() or True)
+            self.builder.get_object("viewBackupSummary_window_button1").connect("clicked", lambda w: self.builder.get_object("viewBackupSummary_window").hide() or True)
+
+            # Users tab
+            self.builder.get_object("addUser_dialog_entry1").connect("changed", self.only_restricted_chars_callback, 'eprefix', 'addUser')
+            self.builder.get_object("addUser_dialog_entry2").connect("changed", self.only_restricted_chars_callback, 'name', 'addUser')
+            self.builder.get_object("addUser_dialog_entry3").connect("changed", self.only_restricted_chars_callback, 'name', 'addUser')
+            self.builder.get_object("addUser_dialog_entry5").connect("changed", self.only_restricted_chars_callback, 'uname', 'addUser')
+
+        # Backup tab
+        self.builder.get_object("restoreBackup_window").connect('delete-event', lambda w, e: w.hide() or True)
+        self.builder.get_object("restoreBackup_window_button1").connect("clicked", lambda w: self.builder.get_object("restoreBackup_window").hide() or True)
+        self.builder.get_object("restoreBackup_window_button3").connect("clicked", self.show_backup_path_list_callback, 'search')
+        self.builder.get_object("restoreBackup_window_button4").connect("clicked", self.show_backup_path_list_callback, 'clear')
+
+        # Me tab
+        self.builder.get_object("newFirstName_entry").connect("changed", self.only_restricted_chars_callback, 'name', '')
+        self.builder.get_object("newLastName_entry").connect("changed", self.only_restricted_chars_callback, 'name', '')
+        self.builder.get_object("newEmailAddress_entry").connect("changed", self.only_restricted_chars_callback, 'eprefix', '')
+        self.builder.get_object("restoreUserBackup_button").connect("clicked", self.on_restorebackupButton_clicked_callback, 'user')
+
+    # Called by pycurl object to build data from webserver
+    def buffer_callback(self, buf):
+        self.contents = self.contents + buf
+ 
+    # Updates window with new values from the database. 
+    # It fetches new data from the database when update_window() is called but not when the cloud manager starts up though, because we had previously called get_cloud_user_details()
+    def update_window(self, get_new_details=True):
+        if self.admin:
+            self.subscrUpdateButton.set_sensitive( False )
+            self.subscrCancelButton.set_sensitive( False )
+            if (self.check_cloud_user_status('both', False, get_new_details)):
+                self.configure_users_tab()
+                self.hide_tab_content()
+            else:
+                self.configure_users_tab()
+                self.configure_cloud_tab()
+                self.configure_software_tab()
+                self.configure_domains_tab()
+                self.configure_email_tab()
+                self.configure_backup_tab()
+                self.calculate_new_price()
+                self.show_tab_content()
+        else:
+            self.get_cloud_user_details()
+        self.configure_me_tab()
+
+    def on_refreshButton_clicked_callback(self, widget, data1=None, data2=None):
+        self.update_window()
+        
+    def on_window1_delete_event(self, widget, data=None):
+        # Called by exiting the program by any means (alt+f4, X button, etc)
+        if self.admin:
+            if self.queue_cloudcapability != '' or self.queue_add != '' or self.queue_restore != '' or self.queue_utype != '':
+                message = '\nHi, you have updates queued, but have not yet updated your subscription.\n\nIf you want to discard the update then click OK to exit, otherwise select Cancel to return to the Cloud Manager and then click the Update button.\n'
+                result=self.show_response_dialog(True, 'BOTH', True, gtk.JUSTIFY_CENTER, 'Confirmation', message)
+                if result != gtk.RESPONSE_ACCEPT:
+                    gtk.main()
+                    return
+        gtk.main_quit()
+        sys.exit()
+
+    def send_data(self, xml_value):
+        self.cursor_start_loading()
+        c = pycurl.Curl()
+        c.setopt(c.URL, 'http://sys')
+        c.setopt(c.USERPWD, ':')
+        c.setopt(c.WRITEFUNCTION, self.buffer_callback)
+        c.setopt(c.HTTPAUTH, c.HTTPAUTH_GSSNEGOTIATE)
+        c.setopt(c.HTTPHEADER, ['Content-Type: text/xml'])
+        c.setopt(c.POSTFIELDS, xml_value)
+        c.perform()
+        c.close()
+        contents = self.contents
+        self.contents = ''
+        self.cursor_stop_loading()
+        return contents
+
+    def show_response_dialog(self, ret, ok_cancel, wrap, justify, confirmation_error, message):
+        dl = gtk.Dialog(confirmation_error, self.window1, gtk.DIALOG_MODAL)
+        if ok_cancel=='BOTH' or ok_cancel=='CANCEL':
+            self.cancel_button = dl.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT)
+        if ok_cancel=='BOTH' or ok_cancel=='OK':
+            self.ok_button = dl.add_button(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
+
+        # So that this dialog is always on top. (Almost like set_transient for, but set_transient_for creates a window/dialog on top of the current one. With set_keep_above, a window/dialog created above this would be *not* be placed in the center of the screen.
+        dl.set_keep_above(True)
+
+        dl.resize(400,75)
+        hbox = gtk.HBox()
+        label = gtk.Label()
+        label.set_markup(message)
+        label.set_justify(justify)
+        label.set_line_wrap(wrap)
+        hbox.add(label)
+
+        dl.vbox.add(hbox)
+
+        hbox.show()
+        label.show()
+
+        result = dl.run()
+
+        dl.destroy()
+        if ret == True:
+            return result
+        else:
+           self.update_window()
+
+    def cursor_start_loading(self):
+        self.window1.get_root_window().set_cursor(gtk.gdk.Cursor(gtk.gdk.WATCH))
+        while gtk.events_pending (): gtk.main_iteration (False)
+
+    def cursor_stop_loading(self):
+        self.window1.get_root_window().set_cursor(gtk.gdk.Cursor(gtk.gdk.ARROW))
+        while gtk.events_pending (): gtk.main_iteration (False)
+
+    def queue_request(self, utype=None):
+        if self.cloud_type == 'trial':
+            if utype == 'Full':
+                return True if (self.new_active_full_user_count + 1) > self.trial_full_user_max_count else False
+            elif utype == 'Email Only':
+                return True if (self.new_active_emailonly_user_count + 1) > self.trial_emailonly_user_max_count else False
+        elif self.cloud_type == 'subscription':
+            if utype == 'Full':
+                self.new_active_full_user_count += 1
+            elif utype == 'Email Only':
+                self.new_active_emailonly_user_count += 1
+            self.calculate_new_price()
+            return True if self.new_amount > self.billing_amount else False
+
+    def construct_queue(self):
+        self.queue_add = self.queue_add.replace('<?xml version="1.0" encoding="UTF-8"?>','')
+        self.queue_restore = self.queue_restore.replace('<?xml version="1.0" encoding="UTF-8"?>','')
+        self.queue_utype = self.queue_utype.replace('<?xml version="1.0" encoding="UTF-8"?>','')
+        self.queue_cloudcapability = self.queue_cloudcapability.replace('<?xml version="1.0" encoding="UTF-8"?>','')
+        self.queue = '<?xml version="1.0" encoding="UTF-8"?><queue>\n' +self.queue_cloudcapability + self.queue_add + self.queue_restore + self.queue_utype + '</queue>'
+        self.hash_string = ''
+
+    def calculate_new_price(self):
+        self.billing_pricing = self.base_full_user_pricing
+        self.new_full_user_pricing = self.base_full_user_pricing
+        self.new_emailonly_user_pricing = self.base_emailonly_user_pricing
+        self.billing_app_count = int('0')
+        self.new_app_count = int('0')
+        for key in self.dictionary_capability_new:
+            if self.dictionary_capability_enabled[key] == True:
+                self.billing_pricing += float(self.dictionary_capability_price[key])
+                self.billing_app_count += 1
+            if self.dictionary_capability_new[key] == True:
+                self.new_full_user_pricing += float(self.dictionary_capability_price[key])
+                self.new_app_count += 1
+
+        self.billing_amount = "%0.2f" % round(float(self.billing_amount), 2)
+        self.new_amount = "%0.2f" % round(float((self.new_active_full_user_count if self.new_active_full_user_count != 0 else 1) * self.new_full_user_pricing) + float(self.new_active_emailonly_user_count * self.new_emailonly_user_pricing), 2)
+
+        self.net_change_pricing = "%0.2f" % round(float(self.new_full_user_pricing-self.billing_pricing), 2)
+        self.billing_pricing = "%0.2f" % round(float(self.billing_pricing), 2)
+        self.new_full_user_pricing = "%0.2f" % round(float(self.new_full_user_pricing), 2)
+
+        show=0
+        if self.cloud_type == 'trial':
+            show=1
+        elif self.cloud_type == 'subscription' and self.new_amount != self.billing_amount:
+            show=1
+
+        self.current_subscr_string = 'Current: ' + (str(self.active_full_user_count) if self.active_full_user_count != 0 else str(1)) + ' full user(s), ' + str(self.active_emailonly_user_count) + ' email user(s) and, ' + str(self.billing_app_count) + ' app(s) for a total of $' + str(self.billing_amount) + ' a month.'
+        self.new_subscr_string = 'Update: ' + (str(self.new_active_full_user_count) if self.new_active_full_user_count != 0 else str(1)) + ' full user(s), ' + str(self.new_active_emailonly_user_count) + ' email user(s), and ' + str(self.new_app_count) + ' app(s) for a total of $' + str(self.new_amount) + ' a month.'
+
+        if show==1:
+            self.subscrUpdateButton.set_sensitive( True )
+            self.subscrCancelButton.set_sensitive( True )
+        else:
+            self.subscrUpdateButton.set_sensitive( False )
+            self.subscrCancelButton.set_sensitive( False )
+
+        self.subscrUpdateButton.show()
+        self.subscrCancelButton.show()
+        self.footer_label1.set_markup(self.current_subscr_string + '\n' + self.new_subscr_string)
+        self.footer_label1.show()
+        footer_label2_text = ''
+        if self.cloud_type == 'trial':
+            footer_label2_text += 'All the software is included your Trial, so an update is needed only if you wish additional users.\n\n'
+        footer_label2_text += 'More information on this Cloud Manager can be found in the help <a href="' + self.help_wiki + '">Wiki</a>.'
+        self.footer_label2.set_markup(footer_label2_text)
+        self.footer_label2.show()
+            
+    # Activation function for subscrUpdateButton. Opens the subscription url with proper parameters
+    def on_subscrUpdateButton_clicked_callback(self, widget, data=None):
+        self.calculate_new_price()
+        self.subscrUpdateButton.set_sensitive( False )
+        if self.hash_string == '':
+            now = str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'))
+            self.hash_string = hashlib.sha256(self.network_name+self.queue+str(self.new_amount)+now).hexdigest()
+
+        self.cursor_start_loading()
+        time.sleep(3)
+        webbrowser.open(self.subscribe_url)
+        self.cursor_stop_loading()
+        self.update_window()
+
+    # Activation function for subscrCancelButton. Reinitializes the queue.
+    def on_subscrCancelButton_clicked_callback(self, widget, queue):
+        self.queue_cloudcapability = '' if (queue == 'queue_cloudcapability' or queue == 'all') else self.queue_cloudcapability
+        self.queue_add = '' if (queue == 'queue_add' or queue == 'all') else self.queue_add
+        self.queue_restore = '' if (queue == 'queue_restore' or queue == 'all') else self.queue_restore
+        self.queue_utype = '' if (queue == 'queue_utype' or queue == 'all') else self.queue_utype
+        self.construct_queue()
+        self.update_window()
+           
+    def check_cloud_user_status(self, cloud_user, show_error, get_new_details, not_refresh=True):
+        if get_new_details:
+            self.get_cloud_user_details()
+
+        processing = False
+        if cloud_user == 'cloud' or cloud_user == 'both':
+            processing = True if (self.dc_status != 'ACTIVE' or self.ccc_status != 'ACTIVE' or self.tzc_status != 'ACTIVE' or self.fpc_status != 'ACTIVE' or self.bc_status != 'ACTIVE') else processing
+        if cloud_user == 'user' or cloud_user == 'both':
+            processing = True if (self.user_processing_status != '0') else processing
+            
+        if processing and show_error:
+            self.show_response_dialog(not_refresh, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', '\nYour cloud is currently being updated, and will be ready for more changes in a few minutes.\n\nPlease try again later.\n')
+        
+        return processing
+
+    def combobox_model_set(self, combobox):
+        model = gtk.ListStore(str)
+        combobox.set_model(model)
+        combobox.clear()
+        cell = gtk.CellRendererText()
+        combobox.pack_start(cell, True)
+        combobox.add_attribute(cell, 'markup', 0)
+
+    def list_value_match(self, model, iter, data):
+        # data is a tuple containing column number, key
+        column, key = data
+        value = model.get_value(iter, column)
+        return value == key
+
+    def list_value_search(self, model, iter, func, data):
+        while iter:
+            if func(model, iter, data):
+                return iter
+            result = self.list_value_search(model, model.iter_children(iter), func, data)
+            if result:
+                return result
+            iter = model.iter_next(iter)
+        return None
+
+    def combobox_value_set(self, combobox, value):
+        model = combobox.get_model()
+        list_iter = self.list_value_search(model, model.iter_children(None), self.list_value_match, (0,value))
+        combobox.set_active_iter(list_iter) if (list_iter != None) else False
+
+    def only_restricted_chars_callback(self, widget, entry_type, method):
+
+        allowedchars = '0123456789'
+        allowedsymbols = ''
+
+        if entry_type != 'port':
+            allowedchars += 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+        if entry_type == 'eprefix' or entry_type == 'eprefix_final' or entry_type == 'domain' or entry_type == 'domain_final':
+            allowedsymbols += '#^*~.-_'
+        elif entry_type == 'backup_name' or entry_type == 'backup_name_final':
+            allowedchars += ' '
+
+        if entry_type.find('_final') != -1:
+            for char in widget:
+                if char not in allowedchars and char not in allowedsymbols:
+                    return True
+            return False
+        else:
+            pos = widget.get_position()
+            char = widget.get_chars(pos, pos + 1)
+            if char not in allowedchars and char not in allowedsymbols:
+                widget.select_region(pos, pos + 1)
+                widget.delete_selection()
+
+        if entry_type == 'eprefix':
+            if method == 'addUser':
+                username_temp = "".join(i for i in self.builder.get_object("addUser_dialog_entry1").get_text() if i in allowedchars)
+                username = username_temp
+                ext = 0
+                while (ext<10):
+                    ext +=1
+                    for user in self.root.xpath('/result/user_list/detail'):
+                        if user.xpath('username')[0].text == username.lower():
+                            username = username_temp+str(ext)			
+                self.builder.get_object("addUser_dialog_entry5").set_text(username.lower())
+
+        if method == 'dc':
+            label = 'Use your cloud\'s name server as well. This provides maximum security, and external app names will include your domain. Immediately after saving this change, set the primary name server at your domain registrar '
+            domain = self.builder.get_object("dc_edname_entry").get_text()
+            if domain == '':
+                label += 'and glue it to IP <u>' + self.dc_cloud_ip + '</u>.'
+            else:
+                label += 'to <u>ns1.' + domain + '</u> and glue it to IP <u>' + self.dc_cloud_ip + '</u>.'
+            self.builder.get_object("dc_radio23_label").set_markup(label)
+        
+    def check_passwords_callback(self, widget, string, *args):
+        if ((self.pw_entry.get_text() == self.cpw_entry.get_text()) and len(self.pw_entry.get_text()) != 0 and (' ' in self.pw_entry.get_text()) == False):
+            self.match_label.set_markup('<small><b><span foreground="#33CC66"> The passwords entered match.</span></b></small>')
+            self.ok_button.set_sensitive( True )
+        else:
+            self.match_label.set_markup('<small><b><span foreground="red"> The passwords do not match.</span></b></small>')
+            self.ok_button.set_sensitive( False )
+        if (len(self.pw_entry.get_text()) == 0 and len(self.cpw_entry.get_text()) == 0):
+            self.match_label.set_markup('<small><b><span foreground="red">\t\t\t\t</span></b></small>')
+
+    def valid_email_address(self, email):
+        valid = os.popen('perl -MEmail::Valid -we \'my $email = "'+re.escape(email)+'"; print (Email::Valid->address($email) && Email::Valid->address($email, -mxcheck => 1) ? 0 : 1);\'').read()
+        if valid == '1' or email.find(' ') != -1:
+            return False
+        return True
+
+    def valid_ip_address(self, ip):
+        try:
+            socket.inet_aton(ip)
+            return len(ip.split(".")) == 4
+        except socket.error:
+            return False
+
+    def valid_host(self, host):
+        try:
+            socket.gethostbyname(host)
+        except socket.error:
+            return False
+        return True
+
+    def show_tab_content(self):
+        # Configures tabs when the cloud processing is complete
+        
+        # Show contents of Cloud tab
+        self.builder.get_object("cc_vbox1").show_all()
+        if (self.system_anchor_domain == self.network_name):
+            self.builder.get_object("dc_vbox").hide_all()
+        else:
+            self.builder.get_object("ad_vbox").hide_all()            
+        self.builder.get_object("cc_header_label2").hide()
+        self.builder.get_object("guiRefresh_button1").hide()
+
+        # Show contents of Software tab
+        self.builder.get_object("ccc_vbox1").show_all()
+        self.builder.get_object("ccc_header_label2").hide()
+        self.builder.get_object("guiRefresh_button2").hide()
+
+        # Show contents of the Domains tab
+        self.builder.get_object("fpc_vbox1").show_all()
+        self.builder.get_object("fpc_header_label2").hide()
+        self.builder.get_object("guiRefresh_button3").hide()
+
+        # Show contents of the Aliases tab
+        self.builder.get_object("aliases_vbox1").show_all()
+        self.builder.get_object("aliases_header_label2").hide()
+        self.builder.get_object("aliases_button_hbox3_alignment1").hide_all()
+
+        # Show contents of the Backup tab
+        self.builder.get_object("backup_vbox1").show_all()
+        self.builder.get_object("backup_header_label2").hide()
+        self.builder.get_object("guiRefresh_button5").hide()
+
+    def hide_tab_content(self):
+        # Configures tabs when the cloud is processing
+
+        # Hide contents of the Cloud tab
+        self.builder.get_object("cc_vbox1").hide_all()
+        self.builder.get_object("cc_vbox1").show()
+        self.builder.get_object("cc_header_label2").show()
+        self.builder.get_object("cc_button_hbox1_alignment1").show_all()
+        self.builder.get_object("saveCloudConfig_button").hide()
+        self.builder.get_object("cancelCloudConfig_button").hide()
+        self.builder.get_object("guiRefresh_button1").show()
+
+        # Hide contents of the Software tab
+        self.builder.get_object("ccc_vbox1").hide_all()
+        self.builder.get_object("ccc_vbox1").show()
+        self.builder.get_object("ccc_header_label2").show()
+        self.builder.get_object("ccc_button_hbox1_alignment1").show_all()
+        self.builder.get_object("saveCloudCapabilityConfig_button").hide()
+        self.builder.get_object("cancelCloudCapabilityConfig_button").hide()
+        self.builder.get_object("guiRefresh_button2").show()
+
+        # Hide contents of the Domains tab
+        self.builder.get_object("fpc_vbox1").hide_all()
+        self.builder.get_object("fpc_vbox1").show()
+        self.builder.get_object("fpc_header_label2").show()
+        self.builder.get_object("fpc_button_hbox1_alignment1").show_all()
+        self.builder.get_object("saveFirewallProxyConfig_button").hide()
+        self.builder.get_object("cancelFirewallProxyConfig_button").hide()
+        self.builder.get_object("guiRefresh_button3").show()
+
+        # Hide contents of the Emails tab
+        self.builder.get_object("aliases_vbox1").hide_all()
+        self.builder.get_object("aliases_vbox1").show()
+        self.builder.get_object("aliases_header_label2").show()
+        self.builder.get_object("aliases_button_hbox1").show_all()
+        self.builder.get_object("aliases_button_hbox2_alignment1").hide_all()
+        self.builder.get_object("aliases_button_hbox4_alignment1").hide_all()
+
+        # Hide contents of the Emails tab
+        self.builder.get_object("backup_vbox1").hide_all()
+        self.builder.get_object("backup_vbox1").show()
+        self.builder.get_object("backup_header_label2").show()
+        self.builder.get_object("backup_hbox1_alignment1").show()
+        self.builder.get_object("backup_hbox1").show()
+        self.builder.get_object("guiRefresh_button5").show_all()
+        
+    def get_cloud_user_details(self):
+        # Updates the usermodel to use the server's most up-to-date information from the database about all config
+        self.contents_root = self.send_data('<?xml version="1.0" encoding="UTF-8"?><msg><getCloudUserDetails/></msg>')
+        self.root = etree.fromstring(self.contents_root)
+
+        if self.root.xpath('/result/is_admin')[0].text == '1':
+            self.admin=True
+        elif self.root.xpath('/result/is_admin')[0].text == '0':
+            self.admin=False
+        else:
+            self.admin=None
+
+        # System Anchor Domain
+        self.system_anchor_domain = self.root.xpath('/result/system_anchor_domain')[0].text
+        self.system_anchor_ip = self.root.xpath('/result/system_anchor_ip')[0].text
+        self.system_anchor_netmask = self.root.xpath('/result/system_anchor_netmask')[0].text
+        
+        # Cloud status
+        self.dc_status = self.root.xpath('/result/dc_status')[0].text
+        self.ccc_status = self.root.xpath('/result/ccc_status')[0].text
+        self.tzc_status = self.root.xpath('/result/tzc_status')[0].text
+        self.fpc_status = self.root.xpath('/result/fpc_status')[0].text
+        self.bc_status = self.root.xpath('/result/bc_status')[0].text
+
+        # User processing status
+        self.user_processing_status = self.root.xpath('/result/user_processing_status')[0].text
+
+        if self.admin:
+            # Billing
+            self.cloud_type = self.root.xpath('/result/b_cloud_type')[0].text
+            self.billing_amount = float(self.root.xpath('/result/b_paid_amount')[0].text)
+            
+            # Cloud
+            self.dc_config_version = self.root.xpath('/result/dc_config_version')[0].text
+            self.dc_email_domain = self.root.xpath('/result/dc_email_domain')[0].text
+            self.dc_imap_server = self.root.xpath('/result/dc_imap_server')[0].text
+            self.dc_alias_domain = self.root.xpath('/result/dc_alias_domain')[0].text
+            self.dc_website_ip = self.root.xpath('/result/dc_website_ip')[0].text
+            self.dc_cloud_ip = self.root.xpath('/result/dc_cloud_ip')[0].text
+
+            # Software
+            
+            # Timezone
+            self.tzc_timezone = self.root.xpath('/result/tzc_timezone')[0].text
+
+            # Domains
+
+            # Email
+            
+            # Backup
+            self.backup_limit_message = '\nHi, your cloud is enabled for up to ' + str(self.trial_backup_profile_max_count) + ' custom service(s).\nPlease disable a backup service before adding a new one.\n'
+
+            # Users
+            self.user_limit_message = '\nHi, your cloud is enabled for up to ' + str(self.trial_full_user_max_count) + ' full users and ' + str(self.trial_emailonly_user_max_count) + ' email only users, and this change will put you above that. No worries, this change, and any others you wish to make, will only be committed when you update your subscription with the button on the bottom of the cloud manager.\n' if self.cloud_type == 'trial' else '\nHi, your cloud is currently in a monthly subscription of $' + "%0.2f" % round(float(self.billing_amount), 2) + ', and this change will put you above that. No worries, this change, and any others you wish to make, will only be committed when you update your subscription with the button on the bottom of the cloud manager.\n'
+        # Me
+
+
+    # Updates the usermodel to use the server's most up-to-date information from the database about the domain configuration
+    def configure_cloud_tab(self):
+        if (self.system_anchor_domain == self.network_name):
+            # System Anchor Domain Config
+            
+            # Anchor Domain
+            self.ad_dname_entry = self.builder.get_object("ad_dname_entry")
+            self.ad_dname_entry.modify_base(gtk.STATE_NORMAL, self.color_bg_entrybox)
+            self.ad_dname_entry.set_text(self.system_anchor_domain)
+            
+            # Anchor IP
+            self.ad_ip_entry = self.builder.get_object("ad_ip_entry")
+            self.ad_ip_entry.modify_base(gtk.STATE_NORMAL, self.color_bg_entrybox)
+            self.ad_ip_entry.set_text(self.system_anchor_ip)
+
+            # Anchor Netmask
+            self.ad_netmask_entry = self.builder.get_object("ad_netmask_entry")
+            self.ad_netmask_entry.modify_base(gtk.STATE_NORMAL, self.color_bg_entrybox)
+            self.ad_netmask_entry.set_text(self.system_anchor_netmask)
+        else:
+            # Domain Config
+            
+            # Radio1
+            self.dc_radio1 = self.builder.get_object("dc_radio1")
+            self.dc_radio1.get_children()[0].set_markup("Use your Cirrus domain name: <u>"+self.network_name+"</u>")
+            # Email
+            self.dc_label2 = self.builder.get_object("dc_label2")
+            # Radio2
+            self.dc_radio2 = self.builder.get_object("dc_radio2")
+            self.dc_edname_entry = self.builder.get_object("dc_edname_entry")
+            self.dc_edname_entry.modify_base(gtk.STATE_NORMAL, self.color_bg_entrybox)
+            # Radio21
+            self.dc_radio21 = self.builder.get_object("dc_radio21")
+            self.dc_imapname_entry = self.builder.get_object("dc_imapname_entry")
+            self.dc_imapname_entry.modify_base(gtk.STATE_NORMAL, self.color_bg_entrybox)
+            self.dc_radio21_label3 = self.builder.get_object("dc_radio21_label3")
+            self.dc_radio211 = self.builder.get_object("dc_radio211")
+            self.dc_radio212 = self.builder.get_object("dc_radio212")
+            # Radio20
+            self.dc_radio20 = self.builder.get_object("dc_radio20")
+            # Radio23
+            self.dc_radio23 = self.builder.get_object("dc_radio23")
+            self.dc_radio23_label = self.builder.get_object("dc_radio23_label")
+            self.dc_radio23_checkbox1 = self.builder.get_object("dc_radio23_checkbox1")            
+            self.dc_radio23_label.set_markup('Use your cloud\'s name server as well. This provides maximum security, and external app names will include your domain. Immediately after saving this change, set the primary name server at your domain registrar and glue it to IP <u>' + self.dc_cloud_ip + '</u>.')
+            self.dc_website_ip_entry = self.builder.get_object("dc_website_ip_entry")
+            self.dc_website_ip_entry.modify_base(gtk.STATE_NORMAL, self.color_bg_entrybox)
+            # Radio22
+            self.dc_radio22 = self.builder.get_object("dc_radio22")
+            self.dc_radio22_label = self.builder.get_object("dc_radio22_label")
+            self.cloud_mx1 = os.popen('dig +short MX '+self.network_name + ' | sort | awk \'NR==1{print $2}\' | sed \'s|.$||\'').read()
+            self.cloud_mx1 = self.cloud_mx1[:self.cloud_mx1.rfind('\n')]
+            self.cloud_mx2 = os.popen('dig +short MX '+self.network_name + ' | sort | awk \'NR==2{print $2}\' | sed \'s|.$||\'').read()
+            self.cloud_mx2 = self.cloud_mx2[:self.cloud_mx2.rfind('\n')]
+            self.dc_radio22_label.set_markup('Point just mail at your cloud.  Email will work great, however app names will still include your Cirrus name. Immediately after saving this change, set the mail records at your domain registrar to <u>' + self.cloud_mx1 + '</u> priority 10 and <u>' + self.cloud_mx2 + '</u> priority 20.')
+
+            if self.dc_config_version=='1.1':
+                self.dc_radio1.set_active( True )
+            elif self.dc_config_version=='2.11':
+                self.dc_radio2.set_active( True )
+                self.dc_edname_entry.set_text(self.dc_email_domain)
+                self.dc_radio21.set_active( True )
+                self.dc_radio211.set_active( True )
+                self.dc_imapname_entry.set_text(self.dc_imap_server)
+            elif self.dc_config_version=='2.12':
+                self.dc_radio2.set_active( True )
+                self.dc_edname_entry.set_text(self.dc_email_domain)
+                self.dc_radio21.set_active( True )
+                self.dc_radio212.set_active( True )
+                self.dc_imapname_entry.set_text(self.dc_imap_server)
+            elif self.dc_config_version == '2.3':
+                self.dc_radio2.set_active( True )
+                self.dc_edname_entry.set_text(self.dc_email_domain)        
+                self.dc_radio20.set_active( True )
+                self.dc_radio23.set_active( True )
+                if self.dc_website_ip != '0.0.0.0':
+                    self.dc_radio23_checkbox1.set_active( True )
+                    self.dc_website_ip_entry.set_text(self.dc_website_ip)
+            elif self.dc_config_version == '2.2':
+                self.dc_radio2.set_active( True )
+                self.dc_edname_entry.set_text(self.dc_email_domain)
+                self.dc_radio20.set_active( True )
+                self.dc_radio22.set_active( True )
+            self.domainconfig_callback()
+        
+        # Timezone
+        self.server_timezone_combo = self.generate_timezone_combo(self.tzc_timezone, self.builder.get_object("server_timezone_combo"), None)
+
+    def on_savesystemanchorconfigButton_clicked_callback(self, widget, data=None):
+        new_system_anchor_domain = self.ad_dname_entry.get_text().lower()
+        new_system_anchor_ip = self.ad_ip_entry.get_text()
+        new_system_anchor_netmask = self.ad_netmask_entry.get_text()
+        message = ''
+        if new_system_anchor_domain == '':
+            message = '\nThe anchor domain cannot be empty.\nPlease enter an anchor domain.\n' if message == '' else message
+        elif ((self.system_anchor_domain in new_system_anchor_domain and self.system_anchor_domain != self.network_name) or self.only_restricted_chars_callback(new_system_anchor_domain, 'domain_final', '')):
+            message = '\nThe anchor domain entered has been taken by another cloud.\nPlease enter a new anchor domain.\n' if message == '' else message
+        elif new_system_anchor_ip == '':
+            message = '\nThe anchor IP cannot be empty.\nPlease enter your anchor IP.\n' if message == '' else message
+        elif self.valid_ip_address(new_system_anchor_ip) == False:
+            message = '\nThe anchor IP entered is not valid.\nPlease enter a valid IP.\n' if message == '' else message
+        elif new_system_anchor_netmask == '':
+            message = '\nThe anchor netmask cannot be empty.\nPlease enter your anchor IP.\n' if message == '' else message
+        elif self.valid_ip_address(new_system_anchor_netmask) == False:
+            message = '\nThe anchor netmask entered is not valid.\nPlease enter a valid IP.\n' if message == '' else message
+
+        if message != '':
+            self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', message)
+            return 'error'
+
+        if self.system_anchor_domain == new_system_anchor_domain and self.system_anchor_ip == new_system_anchor_ip and self.system_anchor_netmask == new_system_anchor_netmask:
+            return False
+        else:
+            xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+            xml_value += '<msg><changeSystemAnchorConfig>'
+            xml_value += '<new_system_anchor_domain>' + new_system_anchor_domain.lower() + '</new_system_anchor_domain>'
+            xml_value += '<new_system_anchor_ip>' + '#' + new_system_anchor_ip + '</new_system_anchor_ip>'
+            xml_value += '<new_system_anchor_netmask>' + '#' + new_system_anchor_netmask + '</new_system_anchor_netmask>'
+            xml_value += '</changeSystemAnchorConfig></msg>'
+            contents = self.send_data(xml_value)
+            message = '\nMake sure you have already set the primary name server for your anchor domain (at the registrar) to ns1.' + new_system_anchor_domain + ' and ' + new_system_anchor_ip + '.\n'
+            self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', message)
+            return True
+
+    def domainconfig_radio_callback(self,widget,data=None):
+        self.domainconfig_callback()
+
+    def domainconfig_callback(self):
+        if self.dc_radio1.get_active():
+            sensitivity1 = False
+        elif self.dc_radio2.get_active():
+            sensitivity1 = True
+        self.dc_edname_entry.set_sensitive( True )
+        self.dc_label2.set_sensitive( sensitivity1 )
+        self.builder.get_object("dc_radio21_hbox1").set_sensitive( sensitivity1 )
+        self.builder.get_object("dc_radio21_hbox2").set_sensitive( sensitivity1 )
+        self.dc_radio21_label3.set_sensitive( sensitivity1 )
+        self.builder.get_object("dc_radio20_hbox").set_sensitive( sensitivity1 )
+        self.builder.get_object("dc_radio23_hbox").set_sensitive( sensitivity1 )
+        self.builder.get_object("dc_radio23_checkbox1_hbox").set_sensitive( sensitivity1 )
+        self.builder.get_object("dc_radio22_hbox").set_sensitive( sensitivity1 )
+
+        if sensitivity1 == True:
+            if self.dc_radio21.get_active():
+                self.builder.get_object("dc_radio23_hbox").set_sensitive( False )
+                self.builder.get_object("dc_radio23_checkbox1_hbox").set_sensitive( False )
+                self.builder.get_object("dc_radio22_hbox").set_sensitive( False )
+            if self.dc_radio20.get_active():
+                if self.dc_radio23.get_active():
+                    self.dc_website_ip_entry.set_sensitive( True )
+                if self.dc_radio22.get_active():
+                    self.builder.get_object("dc_radio23_checkbox1_hbox").set_sensitive( False )
+                self.builder.get_object("dc_radio21_hbox2").set_sensitive( False )
+                self.dc_radio21_label3.set_sensitive( False )
+
+    def on_savedomainconfigButton_clicked_callback(self, widget, data=None):
+        new_config_version = '1.1'
+        new_email_domain = self.network_name
+        new_imap_server = 'imap.' + self.network_name
+        new_alias_domain = self.network_name
+        new_website_ip = '0.0.0.0'
+        message = ''
+        if self.dc_radio1.get_active():
+            new_config_version = '1.1'
+        elif self.dc_radio2.get_active():
+            new_email_domain = self.dc_edname_entry.get_text().lower()
+            if new_email_domain == '':
+                message = '\nThe email domain cannot be empty.\nPlease enter an email domain.\n' if message == '' else message
+            elif (self.system_anchor_domain in new_email_domain or self.only_restricted_chars_callback(new_email_domain, 'domain_final', '')):
+                message = '\nThe email domain entered has been taken by another cloud.\nPlease choose enter a new email domain.\n' if message == '' else message
+            if self.dc_radio20.get_active():
+                if self.dc_radio23.get_active():
+                    new_config_version = '2.3'
+                    new_imap_server = 'imap.' + new_email_domain
+                    new_alias_domain = new_email_domain
+                    for restricted_domain in self.root.xpath('/result/restricted_domain_list/detail'):
+                        if (new_email_domain == restricted_domain.text):
+                            message = '\nThe email domain entered has been taken by another cloud.\nPlease choose enter a new email domain.\n' if message == '' else message
+                    if self.dc_radio23_checkbox1.get_active():
+                        new_website_ip = self.dc_website_ip_entry.get_text()
+                        if new_website_ip == '':
+                            message = '\nThe website IP cannot be empty.\nPlease enter your website IP.\n' if message == '' else message
+                        elif self.valid_ip_address(new_website_ip) == False:
+                            message = '\nThe website IP entered is not valid.\nPlease enter a valid IP.\n' if message == '' else message
+                elif self.dc_radio22.get_active():
+                    new_config_version = '2.2'
+            elif self.dc_radio21.get_active():
+                new_imap_server = self.dc_imapname_entry.get_text()
+                if new_imap_server == '':
+                    message = '\nThe imap server cannot be empty.\nPlease enter an imap server.\n' if message == '' else message
+                elif self.valid_host(new_imap_server) == False:
+                    message = '\nThe imap server entered is not valid.\nPlease enter a valid imap server.\n' if message == '' else message
+                if self.dc_radio211.get_active():
+                    new_config_version = '2.11'
+                elif self.dc_radio212.get_active():
+                    new_config_version = '2.12'
+
+        if message != '':
+            self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', message)
+            return 'error'
+
+        if self.dc_radio1.get_active() and self.dc_config_version == '1.1':
+            return False
+        elif self.dc_radio2.get_active():
+            if self.dc_radio20.get_active():
+                if self.dc_radio23.get_active() and self.dc_config_version == '2.3' and self.dc_email_domain == new_email_domain:
+                    return False
+                elif self.dc_radio22.get_active()  and self.dc_config_version == '2.2' and self.dc_email_domain == new_email_domain and (self.dc_website_ip == new_website_ip):
+                    return False
+            elif self.dc_radio21.get_active():
+                if self.dc_radio211.get_active() and self.dc_config_version == '2.11' and self.dc_email_domain == new_email_domain and self.dc_imap_server == new_imap_server:
+                    return False
+                elif self.dc_radio212.get_active() and self.dc_config_version == '2.12' and self.dc_email_domain == new_email_domain and self.dc_imap_server == new_imap_server:
+                    return False
+        
+        xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+        xml_value += '<msg><changeDomainConfig>'
+        xml_value += '<new_config_version>' + '#' + new_config_version + '</new_config_version>'
+        xml_value += '<new_email_domain>' + new_email_domain.lower() + '</new_email_domain>'
+        xml_value += '<new_imap_server>' + new_imap_server.lower() + '</new_imap_server>'
+        xml_value += '<new_alias_domain>' + new_alias_domain.lower() + '</new_alias_domain>'
+        xml_value += '<new_website_ip>' + '#' + new_website_ip + '</new_website_ip>'
+        xml_value += '</changeDomainConfig></msg>'
+        contents = self.send_data(xml_value)
+        
+        if new_config_version=='1.1':
+            message = '\nYou have configured your cloud to use your Cirrus domain name <u>' + new_email_domain +'</u>.\n\nYou will receive an email as soon as the update is complete.\n'
+        if new_config_version=='2.11' or new_config_version=='2.12':
+            message = '\nYou have configured your cloud to use your own domain name and name server, and connect to an external email server.\n\nYou will receive an email as soon as the update is complete.\n'
+        if new_config_version=='2.2':
+            message = '\nYou have configured your cloud to use your own domain name and name server, and point the mail at your cloud.\n\nYou will receive an email as soon as the update is complete.\n'
+        if new_config_version=='2.3':
+            message = '\nYou have configured your cloud to use your own domain name, and your cloud\'s name servers.\n\nYou will receive an email as soon as the update is complete.\n'
+        self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', message)
+        return True
+
+    def timezone_callback(self, combobox, set_iter, ok_button):
+        new_iter = combobox.get_active_iter()
+        model = combobox.get_model()
+        path = model.get_string_from_iter(new_iter)
+
+        if model.iter_children(new_iter):
+             combobox.set_active_iter(model.get_iter_from_string(path+':0'))
+
+        if (set_iter != None and model.get_string_from_iter(set_iter) == model.get_string_from_iter(new_iter)):
+            ok_button.set_sensitive( False )
+        else:
+            ok_button.set_sensitive( True )
+        return
+
+    def timezone_offset(self, timezone):
+        try:
+            offset = ' <small><tt>[GMT' + datetime.datetime.now(pytz.timezone(timezone)).strftime('%z') +']</tt></small>'
+        except:
+            offset = ''
+        return offset
+
+    def generate_timezone_combo(self, currentUserTimezone, existing_timezone_combo, ok_button):
+        self.cursor_start_loading()
+        if existing_timezone_combo == None:
+            timezone_combo = gtk.ComboBox()
+        else:
+            timezone_combo = existing_timezone_combo
+
+        timezone_combo.clear()
+        cell = gtk.CellRendererText()
+        timezone_combo.pack_start(cell, True)
+        timezone_combo.add_attribute(cell, 'markup', 0)
+
+        if self.timezone_list == None:            
+            self.timezone_list = gtk.TreeStore(str)
+            for common_timezone in pytz.common_timezones:
+                tz = common_timezone.split('/')
+                for i in range(len(tz)):
+                    index1 = self.list_value_search(self.timezone_list, self.timezone_list.iter_children(None), self.list_value_match, (0,tz[0]))
+                    if i>0:
+                        index2 = self.list_value_search(self.timezone_list, self.timezone_list.iter_children(None), self.list_value_match, (0,tz[0]+'/'+tz[1]))
+                
+                    if (i == 0 and index1 == None):
+                        self.timezone_list.append(index1, [tz[0]+self.timezone_offset(tz[0])])
+                    if (i == 1 and index1 != None and index2 == None):
+                        self.timezone_list.append(index1, [tz[0]+'/'+tz[1]+self.timezone_offset(tz[0]+'/'+tz[1])])
+                    if (i == 2):
+                        self.timezone_list.append(index2, [tz[0]+'/'+tz[1]+'/'+tz[2]+self.timezone_offset(tz[0]+'/'+tz[1]+'/'+tz[2])])
+
+        timezone_combo.set_model(self.timezone_list)
+        
+        currentUserTimezoneIter = self.list_value_search(self.timezone_list, self.timezone_list.iter_children(None), self.list_value_match, (0,currentUserTimezone+self.timezone_offset(currentUserTimezone)))
+        timezone_combo.set_active_iter(currentUserTimezoneIter) if (currentUserTimezoneIter != None) else False
+        timezone_combo.connect('changed', self.timezone_callback, currentUserTimezoneIter, ok_button) if (ok_button != None) else False
+        self.cursor_stop_loading()
+        return timezone_combo
+
+    def get_selected_timezone(self, timezone_combo):
+        new_iter = timezone_combo.get_active_iter()
+        model = timezone_combo.get_model()
+        path = model.get_string_from_iter(new_iter)
+        timezone = model[path][0].split(' ')
+        return timezone[0]
+
+    # Activation function for and saveTimezoneConfig_button
+    def on_savetimezoneButton_clicked_callback(self, widget):
+        new_timezone = self.get_selected_timezone(self.server_timezone_combo)
+        if new_timezone == self.tzc_timezone:
+            return False
+        self.submit_timezone(new_timezone, 'server')
+        self.show_response_dialog(True, 'OK', False, gtk.JUSTIFY_CENTER, 'Confirmation', '\nYou have configured the timezone for your cloud to be ' + new_timezone + '.\n\nYou will receive an email as soon as the update is complete.\n')
+        return True
+
+    def submit_timezone(self, new_timezone, server_user, username=None):
+        xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+        xml_value += '<msg><changeTimezoneConfig>'
+        xml_value += '<new_timezone>' + new_timezone + '</new_timezone>'
+        xml_value += '<server_user>' + server_user + '</server_user>'
+        xml_value += '<username>' + username + '</username>' if (username != None) else ''
+        xml_value += '</changeTimezoneConfig></msg>'
+        contents = self.send_data(xml_value)
+
+    # Combines two button functions into one.
+    def on_savecloudconfigButton_clicked_callback(self, widget, data=None):
+        if (self.check_cloud_user_status('both', True, True, False)):
+            return
+        if (self.system_anchor_domain == self.network_name):
+            ret1 = self.on_savesystemanchorconfigButton_clicked_callback(widget, data)
+        else:
+            ret1 = self.on_savedomainconfigButton_clicked_callback(widget, data)
+        ret2 = self.on_savetimezoneButton_clicked_callback(widget)
+        if ret1 or ret2:
+            self.update_window()
+        elif not ret1 and not ret2:
+            self.show_response_dialog(False, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', '\nNo changes were made.\n')
+        
+    def on_cloudrebootButton_clicked_callback(self, widget, data=None):
+        if (self.check_cloud_user_status('both', True, True, False)):
+            return
+
+        result = self.show_response_dialog(True, 'BOTH', True, gtk.JUSTIFY_CENTER, 'Confirmation', '\nAre you sure you want to stop and restart all software in your cloud, and are aware that any unsaved work might be lost?\n')
+        # Proceed
+        if result==-3:
+            xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+            xml_value += '<msg><cloudReboot>'
+            xml_value += '</cloudReboot></msg>'
+            contents = self.send_data(xml_value)
+            self.show_response_dialog(False, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', '\nYour request is being processed.\n')
+
+    def on_ccc_cell_toggle_callback(self, cell, path, col):
+        self.cccmodel[path][col] = not self.cccmodel[path][col]
+        capability_name = self.dictionary_capability_description2.keys()[self.dictionary_capability_description2.values().index(self.cccmodel[path][3])]
+        self.dictionary_capability_new[capability_name] = self.cccmodel[path][col]
+        self.calculate_new_price()
+
+    # Updates the usermodel to use the server's most up-to-date information from the database about the clouds capability config
+    def configure_software_tab(self):
+        self.cccmodel.clear()
+        # Cloud Capability Queue
+        self.dictionary_capability_enabled_queue = {}
+        if self.queue_cloudcapability != '':
+            for capability in etree.fromstring('<queue>'+self.queue_cloudcapability+'</queue>').xpath('/queue/msg/changeCloudCapabilityConfig/detail'):
+                self.dictionary_capability_enabled_queue[capability.xpath('capability')[0].text] = True if (capability.xpath('enable')[0].text == 't') else False
+                
+        self.dictionary_capability_enabled = {}
+        self.dictionary_capability_price = {}
+        self.dictionary_capability_description1 = {}
+        self.dictionary_capability_description2 = {}
+        self.dictionary_capability_new = {}
+
+        for detail in self.root.xpath('/result/ccc_list/detail'):
+            capability_type = detail.xpath('capability_type')[0].text
+            category_name = detail.xpath('category_name')[0].text
+            capability_description1 = detail.xpath('capability_description1')[0].text
+            capability_description2 = detail.xpath('capability_description2')[0].text
+            capability_name = detail.xpath('capability_name')[0].text
+            capability_enabled = True if (detail.xpath('capability_enabled')[0].text == '1') else False
+            capability_price = escape(str("%0.2f" % round(float(detail.xpath('capability_price')[0].text), 2)))
+            capability_cloud_price = escape(str("%0.2f" % round(float(detail.xpath('capability_price')[0].text) * (self.new_active_full_user_count if self.new_active_full_user_count != 0 else 1), 2)))
+
+            # If there is a queue, then read from that, else read from database
+            try:
+                capability_enabled_new = True if (self.dictionary_capability_enabled_queue[capability_name] == True) else False
+            except:
+                capability_enabled_new = capability_enabled
+
+            self.cccmodel.append([capability_type, category_name, capability_description1, capability_description2, '$'+capability_price, '$'+capability_cloud_price, capability_enabled_new, '#99CCFF', True])
+
+            self.dictionary_capability_enabled[capability_name] = capability_enabled
+            self.dictionary_capability_price[capability_name] = capability_price
+            self.dictionary_capability_description1[capability_name] = capability_description1
+            self.dictionary_capability_description2[capability_name] = capability_description2
+            self.dictionary_capability_new[capability_name] = capability_enabled_new
+
+        # If items in queue are same as items in database, then it's safe to assume that the paypal payment has been received and the cloud manager req has been processed. So reset queue and dictionary.
+        if self.dictionary_capability_enabled_queue == self.dictionary_capability_enabled:
+            self.dictionary_capability_enabled_queue = {}
+            self.queue_cloudcapability = ''
+            self.construct_queue()
+
+    def on_savecloudcapabilityconfigButton_clicked_callback(self, widget, data=None):
+        if (self.check_cloud_user_status('both', True, True, False)):
+            return
+
+        message_capability_added = ''
+        message_capability_removed = ''
+        xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+        xml_value += '<msg><changeCloudCapabilityConfig>'
+        for key in self.dictionary_capability_new:
+            if self.dictionary_capability_enabled[key] == False and self.dictionary_capability_new[key] == True:
+                message_capability_added += 'Added: ' + self.dictionary_capability_description1[key] + '  (' + self.dictionary_capability_description2[key] + ')  $' + self.dictionary_capability_price[key] + '\n'
+            elif self.dictionary_capability_enabled[key] == True and self.dictionary_capability_new[key] == False:
+                message_capability_removed += 'Removed: ' + self.dictionary_capability_description1[key] + '  (' + self.dictionary_capability_description2[key] + ')  $' + self.dictionary_capability_price[key] + '\n'
+            xml_value += '<detail>'
+            xml_value += '<capability>' + key + '</capability>'
+            xml_value += '<enable>' + 't' + '</enable>' if (self.dictionary_capability_new[key] == True) else '<enable>' + 'f' + '</enable>'
+            xml_value += '</detail>'
+        xml_value += '</changeCloudCapabilityConfig></msg>'
+
+        message = '\nYou have made the following changes to your software:' + '\n\n' + (message_capability_added + '\n' if message_capability_added != '' else '') + (message_capability_removed + '\n' if message_capability_removed != '' else '') + 'Net change in user price: ' + ('+ $' if float(self.net_change_pricing) >= float('0') else '- $') + ("%0.2f" % round(abs(float(self.net_change_pricing)), 2)) + '\nNew user price: $' + str(self.new_full_user_pricing) + '\nNew monthly price: $' + str(self.new_amount) + '\n'
+        
+        # No change
+        if message_capability_added == '' and message_capability_removed == '':
+            self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', '\nNo changes were made.\n')
+            self.queue_cloudcapability = ''
+            self.construct_queue()            
+        else:
+            result = self.show_response_dialog(True, 'BOTH', True, gtk.JUSTIFY_CENTER, 'Confirmation', message)
+            if result != gtk.RESPONSE_ACCEPT:
+                return
+            if self.queue_request() == True:
+                self.queue_cloudcapability = xml_value + '\n'
+                self.construct_queue()
+                message = self.user_limit_message
+            else:
+                contents = self.send_data(xml_value)
+                message = '\nYour request is being processed\n\nYou will receive an email as soon as the update is complete.\n'
+            self.show_response_dialog(False, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', message)
+
+    # Updates the usermodel to use the server's most up-to-date information from the database about the clouds firewall and proxy configuration
+    def configure_domains_tab(self):
+        self.fpcmodel.clear()
+        self.dictionary_fpc_capability = {}
+    	for detail in self.root.xpath('/result/fpc_list/detail'):
+            description = detail.xpath('description')[0].text
+            if description[0].isdigit() and description[1] == ' ':
+                description = description[2:]
+            self.dictionary_fpc_capability[description] = detail.xpath('name')[0].text
+            external_name = detail.xpath('external_name')[0].text
+            external_access = True if detail.xpath('external_access')[0].text == '1' else False
+            ssl = True if detail.xpath('ssl')[0].text == '1' else False
+            self.fpcmodel.append([description, external_name, '.' + self.dc_alias_domain, external_access, ssl, '#99CCFF', True])
+
+    def on_fpc_cell_toggle_callback(self, cell, path, col):
+        if col != 3:
+            if self.dictionary_fpc_capability[self.fpcmodel[path][0]] == 'IMAP' or self.dictionary_fpc_capability[self.fpcmodel[path][0]] == 'SMTP':
+                return
+            if self.fpcmodel[path][3] == False:
+                self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', 'Please enable outside desktop access first.')
+                return
+        self.fpcmodel[path][col] = not self.fpcmodel[path][col]
+
+    def on_fpc_cell_edit_callback(self, cell, path, new_text, col):
+        if self.fpcmodel[path][3] == False:
+            self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', 'Please enable outside desktop access first.')
+            return
+        allowedletters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        alloweddigits = "0123456789"
+        allowedsymbols = '-'
+        reenter = False
+
+        for i in range (len(new_text)):
+            if i==0:
+                if new_text[i] not in allowedletters:
+                    reenter = True
+            elif i==(len(new_text)-1):
+                if new_text[i] not in allowedletters and new_text[i] not in alloweddigits:
+                    reenter = True
+            else:
+                if new_text[i] not in allowedletters and new_text[i] not in alloweddigits and new_text[i] not in allowedsymbols:
+                    reenter = True
+        
+        if reenter == True:
+            self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', '\nThe name you have entered must start with a letter, end with a letter or digit, and have as interior characters only letters, digits, and hyphen.\n\n Please reenter the name.\n')
+        elif len(new_text)>63:
+            self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', '\nThe name you have entered can have max characters of 63 or less.\n\n Please reenter the name.\n')
+        elif len(new_text)==0:
+            self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', '\nThe name cannot be empty. Please enter a name.\n')
+        else:
+            self.fpcmodel[path][col] = new_text
+
+    def on_savefirewallproxyconfigButton_clicked_callback(self, widget, data=None):
+        if (self.check_cloud_user_status('both', True, True, False)):
+            return
+
+        xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+        xml_value += '<msg><changeFirewallProxyConfig>'
+        i = 0
+        for key in self.dictionary_fpc_capability:
+            if str(self.fpcmodel[i][3]) == 'True':
+                if str(self.fpcmodel[i][1]) == '':
+                    self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', '\n' + str(self.fpcmodel[i][0]) + ' is accessible outside desktop but does not have a name. Please enter names for the services accessible outside desktop.\n')
+                    return
+                xml_value += '<detail>'
+                xml_value += '<capability>' + str(self.dictionary_fpc_capability[self.fpcmodel[i][0]]) + '</capability>'
+                xml_value += '<external_name>' + str(self.fpcmodel[i][1]).lower() + '</external_name>'
+                xml_value += '<ssl>' + 't' + '</ssl>' if (str(self.fpcmodel[i][4]) == 'True') else '<ssl>' + 'f' + '</ssl>'
+                xml_value += '</detail>'
+            i+=1
+        xml_value += '</changeFirewallProxyConfig></msg>'
+        contents = self.send_data(xml_value)
+        self.show_response_dialog(False, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', '\nYour update is being processed.\n\nIt might take up to five minutes for changes to take effect outside your desktop.\n')
+
+    # Updates the usermodel to use the server's most up-to-date information from the ldap about the user aliases
+    def configure_email_tab(self):
+        self.aliasesmodel1.clear()
+
+        user_aliases = os.popen('ldapsearch "(&(objectClass=*)(uid=*))" "eseriMailAlternateAddress" 2>/dev/null | sort -u | grep "eseriMailAlternateAddress: " | awk \'{print $2}\'').read()
+        for user_alias in user_aliases[:user_aliases.rfind('\n')].split('\n'):
+            self.aliasesmodel1.append([user_alias])
+
+    def on_aliaseslist1_cursor_changed(self,widget):
+        (model, iter) = self.aliasesview1.get_selection().get_selected()
+        if iter == None:
+            return
+        alias = model.get_value(iter, 0)
+
+        self.aliasesmodel2.clear()
+        users = os.popen('ldapsearch "(&(objectClass=*)(eseriMailAlternateAddress='+alias+'))" "mail" 2>/dev/null | grep "mail: " | awk \'{print $2}\'').read()
+        for user in users[:users.rfind('\n')].split('\n'):
+            self.aliasesmodel2.append([user])        
+
+    def on_addordeletealiasButton_clicked_callback(self, widget, option=None):
+        if (self.check_cloud_user_status('both', True, True, False)):
+            return
+
+        (model, iter) = self.aliasesview1.get_selection().get_selected()
+        try:
+            alias = model.get_value(iter, 0)
+        except:
+            if (option != 'addAlias'):
+                self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', '\nPlease select an alias first.\n')
+                return
+        self.builder.get_object("addordeleteAlias_dialog").show()
+            
+        if (option == 'addAlias'):
+            self.builder.get_object("addordeleteAlias_dialog_entry1").show()
+            self.builder.get_object("addordeleteAlias_dialog_label2").set_markup('@'+self.dc_email_domain)
+            user_mail_addresses = os.popen('ldapsearch "(&(objectClass=*)(uid=*))" "mail" 2>/dev/null | sort -u | grep "mail: " | awk \'{print $2}\'').read()
+            self.builder.get_object("addordeleteAlias_dialog_button2").set_label('Add')
+            self.builder.get_object("addordeleteAlias_dialog").set_title('Add an Alias')
+        elif (option == 'deleteAlias'):
+            self.builder.get_object("addordeleteAlias_dialog_entry1").hide()
+            self.builder.get_object("addordeleteAlias_dialog_label2").set_markup(alias)
+            user_mail_addresses = os.popen('ldapsearch "(&(objectClass=*)(eseriMailAlternateAddress='+alias+'))" "mail" 2>/dev/null | grep "mail: " | awk \'{print $2}\'').read()
+            self.builder.get_object("addordeleteAlias_dialog_button2").set_label('Delete')
+            self.builder.get_object("addordeleteAlias_dialog").set_title('Delete an Alias')
+        elif (option == 'addForward'):
+            self.builder.get_object("addordeleteAlias_dialog_entry1").hide()
+            self.builder.get_object("addordeleteAlias_dialog_label2").set_markup(alias)
+            user_mail_addresses = os.popen('ldapsearch "(&(objectClass=*)(uid=*))" "mail" 2>/dev/null | sort -u | grep "mail: " | awk \'{print $2}\'').read()
+            self.builder.get_object("addordeleteAlias_dialog_button2").set_label('Add')
+            self.builder.get_object("addordeleteAlias_dialog").set_title('Add a Forward')
+        elif (option == 'deleteForward'):
+            self.builder.get_object("addordeleteAlias_dialog_entry1").hide()
+            self.builder.get_object("addordeleteAlias_dialog_label2").set_markup(alias)
+            user_mail_addresses = os.popen('ldapsearch "(&(objectClass=*)(eseriMailAlternateAddress='+alias+'))" "mail" 2>/dev/null | grep "mail: " | awk \'{print $2}\'').read()
+            self.builder.get_object("addordeleteAlias_dialog_button2").set_label('Delete')
+            self.builder.get_object("addordeleteAlias_dialog").set_title('Delete a Forward')            
+
+        self.combobox_model_set(self.builder.get_object("addordeleteAlias_dialog_combobox1"))
+        user_mail_list = self.builder.get_object("addordeleteAlias_dialog_combobox1").get_model()
+
+        for user_mail in user_mail_addresses[:user_mail_addresses.rfind('\n')].split('\n'):
+            user_mail_list.append([user_mail])
+
+        self.builder.get_object("addordeleteAlias_dialog_combobox1").set_active(0)
+
+        while True:
+            response = self.builder.get_object("addordeleteAlias_dialog").run()
+
+            if response != 1:
+                self.builder.get_object("addordeleteAlias_dialog").hide()
+                break
+            elif response == 1:                
+                message = ''
+                if (option == 'addAlias'):
+                    alias = self.builder.get_object("addordeleteAlias_dialog_entry1").get_text() + self.builder.get_object("addordeleteAlias_dialog_label2").get_label()
+                    if self.builder.get_object("addordeleteAlias_dialog_entry1").get_text() == '':
+                        message = '\nPlease enter an email alias you wish to choose\n'
+                    elif self.only_restricted_chars_callback(self.builder.get_object("addordeleteAlias_dialog_entry1").get_text(), 'eprefix_final', ''):
+                        message = '\nSome characters in the chosen email alias are restricted.\nPlease type in a new email alias.\n'
+                elif (option == 'deleteAlias' or option == 'addForward' or option =='deleteForward'):
+                    alias = self.builder.get_object("addordeleteAlias_dialog_label2").get_label()
+
+                if message != '':
+                    self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', message)
+                else:
+                    mail = self.builder.get_object("addordeleteAlias_dialog_combobox1").get_active_text()
+                    username = os.popen('ldapsearch "(&(objectClass=*)(mail='+mail+'))" "uid" 2>/dev/null | grep "uid: " | awk \'{print $2}\'').read()
+                    username = username[:username.rfind('\n')].split('\n')[0]
+                    if option == 'addAlias' or option == 'addForward':
+                        self.submit_addordeletealias('add', alias, username)
+                    elif option == 'deleteAlias' or option == 'deleteForward':
+                        self.submit_addordeletealias('delete', alias, username)
+                    self.builder.get_object("addordeleteAlias_dialog").hide()
+                    self.show_response_dialog(False, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', '\nYour request is being processed.\n')
+                    break
+        
+    def submit_addordeletealias(self, option, alias, username=None):
+        xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+        xml_value += '<msg><changeUserAliasConfig>'
+        xml_value += '<option>' + option + '</option>'
+        xml_value += '<username>'+ username +'</username>' if (username != None) else ''
+        xml_value += '<alias>'+ alias.lower()  +'</alias>'
+        xml_value += '</changeUserAliasConfig></msg>'
+        contents = self.send_data(xml_value)    
+
+    def on_treeview_double_clicked(self, widget, event, option=None):
+        if option == 'backup':
+            if event.button == 1 and event.type == gtk.gdk._2BUTTON_PRESS:
+                self.on_addoreditbackupconfigButton_clicked_callback(widget, 'edit')
+        return False
+
+    def get_parsed_url(self, url):
+        return urlparse(url)
+
+    def get_quoted_string(self, string):
+        return urllib.quote(string, '')
+
+    def get_unquoted_string(self, string):
+        return urllib.unquote(string)
+
+    def get_name_from_scheme(self, scheme):
+        return [key for key, value in self.dictionary_backup_scheme.items() if scheme == self.get_parsed_url(value).scheme][0]
+
+    def get_parameter_from_scheme_name(self, param):
+        scheme_name = self.builder.get_object("addoreditBackupConfig_dialog_combobox4").get_active_text()
+        return getattr(self.get_parsed_url(self.dictionary_backup_scheme[scheme_name]), param)
+
+    # Updates the usermodel to use the server's most up-to-date information from the database about the clouds backup configuration
+    def configure_backup_tab(self):
+        # Making use of OrderedDict as we need to maintin the sequency. Normal python dictionary do not keep the order intact as it wants to make searching and indexing more efficient.
+        self.dictionary_backup_frequency = OrderedDict()
+        for detail in self.root.xpath('/result/backup_frequencies/detail'):
+            self.dictionary_backup_frequency[detail.xpath('frequency_duration')[0].text] = int(detail.xpath('frequency_number')[0].text)
+            
+        self.dictionary_backup_scheme = OrderedDict()
+        for detail in self.root.xpath('/result/backup_schemes/detail'):
+            self.dictionary_backup_scheme[detail.xpath('scheme_abbreviation')[0].text + ' (' + detail.xpath('scheme_name')[0].text + ')'] = detail.xpath('scheme_target_url')[0].text  
+
+        self.backupmodel1.clear()
+        self.dictionary_backup_profile_id = OrderedDict()
+        self.dictionary_backup_target_url = OrderedDict()
+        self.active_backup_profile_count = 0
+    	for detail in self.root.xpath('/result/backup_list/detail'):
+            backup_name = detail.xpath('name')[0].text
+            self.dictionary_backup_profile_id[detail.xpath('name')[0].text] =  detail.xpath('profile_id')[0].text
+            backup_frequency = 'Every '+ detail.xpath('frequency')[0].text
+            backup_time = detail.xpath('time')[0].text
+            self.dictionary_backup_target_url[detail.xpath('name')[0].text] =  detail.xpath('target_url')[0].text
+            backup_target_url_parsed = self.get_parsed_url(detail.xpath('target_url')[0].text)
+            backup_scheme = backup_target_url_parsed.scheme
+            backup_scheme_name = self.get_name_from_scheme(backup_scheme)
+            backup_server = backup_target_url_parsed.hostname
+            backup_path = backup_target_url_parsed.path if (backup_target_url_parsed.path != '') else '/'
+            # Get default backup scheme for the Add Backup Service pop-up.
+            if detail.xpath('profile_id')[0].text == '1':
+                self.backup_default_scheme = backup_scheme_name
+            backup_enabled = True if detail.xpath('enabled')[0].text == '1' else False
+            if backup_enabled == True and '.' + self.system_anchor_domain not in backup_server:
+                self.active_backup_profile_count += 1
+            self.backupmodel1.append([backup_name, backup_frequency, backup_time, backup_scheme_name, backup_server, backup_path, backup_enabled, '#99CCFF', True])
+
+        self.combobox_model_set(self.builder.get_object("addoreditBackupConfig_dialog_combobox1"))
+        backup_frequency_number_list= self.builder.get_object("addoreditBackupConfig_dialog_combobox1").get_model()
+
+        self.combobox_model_set(self.builder.get_object("addoreditBackupConfig_dialog_combobox2"))
+        backup_frequency_duration_list= self.builder.get_object("addoreditBackupConfig_dialog_combobox2").get_model()
+
+        self.combobox_model_set(self.builder.get_object("addoreditBackupConfig_dialog_combobox3"))
+        backup_time_list= self.builder.get_object("addoreditBackupConfig_dialog_combobox3").get_model()
+
+        self.combobox_model_set(self.builder.get_object("addoreditBackupConfig_dialog_combobox4"))
+        backup_scheme_list= self.builder.get_object("addoreditBackupConfig_dialog_combobox4").get_model()
+
+        for duration in self.dictionary_backup_frequency:
+            backup_frequency_duration_list.append([duration])            
+        for backup_hour in range(0,24):
+            for backup_minute in [0,15,30,45]:
+                backup_time_list.append([datetime.time(backup_hour,backup_minute).strftime('%H:%M')])                    
+        for scheme_name in self.dictionary_backup_scheme:
+            backup_scheme_list.append([scheme_name])
+
+    # Callback for frequency combobox in addoreditBackupConfig_dialog.
+    def on_backup_frequency_duration_changed_callback(self, widget, option=None):
+        # Check here because we remove 'hour(s)' from the list, in that case the active_text is None.
+        if self.builder.get_object("addoreditBackupConfig_dialog_combobox2").get_active_text() != None:
+            backup_frequency_number_list = self.builder.get_object("addoreditBackupConfig_dialog_combobox1").get_model()
+            backup_frequency_number_list.clear()
+            for backup_frequency_number in range(self.dictionary_backup_frequency[self.builder.get_object("addoreditBackupConfig_dialog_combobox2").get_active_text()]):
+                backup_frequency_number_list.append([backup_frequency_number+1])
+            self.builder.get_object("addoreditBackupConfig_dialog_combobox1").set_active(0)
+            return
+
+    # Callback for frequency combobox in addoreditBackupConfig_dialog.
+    def on_backup_scheme_changed_callback(self, widget, option=None):
+        # The location return is always in lower case, so we explicity call the title()
+        location_label = self.get_parameter_from_scheme_name('hostname').replace('_',' ').title() + ':'
+        username_label = self.get_parameter_from_scheme_name('username').replace('_',' ') + ':'
+        password_label = self.get_parameter_from_scheme_name('password').replace('_',' ') + ':'
+
+        self.builder.get_object("addoreditBackupConfig_dialog_label6").set_text(location_label)
+        self.builder.get_object("addoreditBackupConfig_dialog_label9").set_text(username_label)
+        self.builder.get_object("addoreditBackupConfig_dialog_label10").set_text(password_label)                        
+        return
+
+    # Callback for active checkbox in addoreditBackupConfig_dialog.
+    def on_backup_active_toggled_callback(self, widget, option=None):
+        if self.builder.get_object("addoreditBackupConfig_dialog_checkbox1").get_active() == False:
+            if '.' + self.system_anchor_domain in self.builder.get_object("addoreditBackupConfig_dialog_entry2").get_text():
+                message = '\nAre you absolutely sure?\n\nSecure backup best practice requires a primary and secondary, and stored at separate locations.  These two basic services provided by Cirrus Open are encrypted at all times, and provided daily at no cost.\n\nYou should be aware that if you disable them, and you have any problems with your running solution, and have problems with any other backups you have, it will be IMPOSSIBLE to recover the information.\n'
+            else:
+                message = '\nAre you sure you wish to turn this service off?\n'
+            result = self.show_response_dialog(True, 'BOTH', True, gtk.JUSTIFY_CENTER, 'Confirmation', message)
+            if result != gtk.RESPONSE_ACCEPT:
+                self.builder.get_object("addoreditBackupConfig_dialog_checkbox1").set_active(True)
+            return
+
+    # Show Add or Edit Backup Config window.
+    def on_addoreditbackupconfigButton_clicked_callback(self, widget, option=None):
+        if (self.check_cloud_user_status('both', True, True, False)):
+            return
+
+        if (option == 'edit'):
+            (model, iter) = self.backupview1.get_selection().get_selected()
+            if (iter == None):
+                self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', '\nPlease select a backup configuration to Edit.\n')
+                return
+
+            if self.check_backup_lock_file(self.dictionary_backup_profile_id[model.get_value(iter,0)]):
+                self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', '\nThis backup service is currently running. Please try again later.\n')
+                return            
+
+        backup_frequency_number_list = self.builder.get_object("addoreditBackupConfig_dialog_combobox1").get_model()
+        backup_frequency_duration_list = self.builder.get_object("addoreditBackupConfig_dialog_combobox2").get_model()
+        backup_time_list = self.builder.get_object("addoreditBackupConfig_dialog_combobox3").get_model()
+        backup_scheme_list = self.builder.get_object("addoreditBackupConfig_dialog_combobox4").get_model()
+
+        self.builder.get_object("addoreditBackupConfig_dialog").show()
+        self.builder.get_object("addoreditBackupConfig_dialog").set_title(option.title() + ' a Backup Service')
+        self.builder.get_object("addoreditBackupConfig_dialog_button2").set_label(option.title())
+        sensitivity = True
+
+        # Insert hour(s) before day(s) if hour(s) does not exist.
+        hours_iter = self.list_value_search(backup_frequency_duration_list, backup_frequency_duration_list.iter_children(None), self.list_value_match, (0,'hour(s)'))
+        days_iter = self.list_value_search(backup_frequency_duration_list, backup_frequency_duration_list.iter_children(None), self.list_value_match, (0,'day(s)'))
+        backup_frequency_duration_list.insert_before(days_iter, ['hour(s)']) if (hours_iter == None and days_iter != None) else False
+        # Get hours_iter again if added in previous line.
+        hours_iter = self.list_value_search(backup_frequency_duration_list, backup_frequency_duration_list.iter_children(None), self.list_value_match, (0,'hour(s)'))
+        if (option == 'edit'):
+            backup_target_url_parsed = self.get_parsed_url(self.dictionary_backup_target_url[model.get_value(iter,0)])
+            # Remove hour(s) from list if it's a cirrus backup service and the frequency is not already set to hour(s).
+            if '.' + self.system_anchor_domain in backup_target_url_parsed.hostname and model.get_value(iter,1).split(" ")[2] != 'hour(s)':
+                backup_frequency_duration_list.remove(hours_iter) if (hours_iter != None) else False
+
+        if (option == 'add'):
+            self.builder.get_object("addoreditBackupConfig_dialog_entry1").set_text('')
+            self.builder.get_object("addoreditBackupConfig_dialog_combobox2").set_active(1)
+            self.builder.get_object("addoreditBackupConfig_dialog_combobox3").set_active(0)
+            self.builder.get_object("addoreditBackupConfig_dialog_combobox4").set_active(0)
+            # Set default scheme to scheme of Primary Backup.
+            self.combobox_value_set(self.builder.get_object("addoreditBackupConfig_dialog_combobox4"), self.backup_default_scheme)
+            self.builder.get_object("addoreditBackupConfig_dialog_entry2").set_text('')
+            self.builder.get_object("addoreditBackupConfig_dialog_entry3").set_text('')
+            self.builder.get_object("addoreditBackupConfig_dialog_entry4").set_text('')
+            self.builder.get_object("addoreditBackupConfig_dialog_entry5").set_text('')
+            self.builder.get_object("addoreditBackupConfig_dialog_entry6").set_text('')
+            self.builder.get_object("addoreditBackupConfig_dialog_checkbox1").set_active(True)
+        elif (option == 'edit'):
+            self.builder.get_object("addoreditBackupConfig_dialog_entry1").set_text(model.get_value(iter,0))
+            # Update duration box before number box, as numbers get populated when duration gets selected.
+            self.combobox_value_set(self.builder.get_object("addoreditBackupConfig_dialog_combobox2"), model.get_value(iter,1).split(" ")[2])
+            self.combobox_value_set(self.builder.get_object("addoreditBackupConfig_dialog_combobox1"), model.get_value(iter,1).split(" ")[1])
+            self.combobox_value_set(self.builder.get_object("addoreditBackupConfig_dialog_combobox3"), model.get_value(iter,2))
+            self.combobox_value_set(self.builder.get_object("addoreditBackupConfig_dialog_combobox4"), model.get_value(iter,3))
+            # Since when value in scheme is changed, it sets target url entry to default (because of the changed signal emitted). 
+            self.builder.get_object("addoreditBackupConfig_dialog_entry2").set_text(model.get_value(iter,4))
+            self.builder.get_object("addoreditBackupConfig_dialog_entry2").set_text(backup_target_url_parsed.hostname if (backup_target_url_parsed.hostname != None) else '')
+            self.builder.get_object("addoreditBackupConfig_dialog_entry3").set_text(backup_target_url_parsed.port if (backup_target_url_parsed.port != None) else '')
+            self.builder.get_object("addoreditBackupConfig_dialog_entry4").set_text(backup_target_url_parsed.path if (backup_target_url_parsed.path != None) else '')
+            self.builder.get_object("addoreditBackupConfig_dialog_entry5").set_text(self.get_unquoted_string(backup_target_url_parsed.username) if (backup_target_url_parsed.username != None) else '')
+            self.builder.get_object("addoreditBackupConfig_dialog_entry6").set_text(self.get_unquoted_string(backup_target_url_parsed.password) if (backup_target_url_parsed.password != None) else '')
+            # Block and Unblock signals because if checkbox is already unchecked then we don't want the signal to emit and call the on_backup_active_toggled_callback
+            self.builder.get_object("addoreditBackupConfig_dialog_checkbox1").handler_block(self.backup_active_toggled_handler_id)
+            self.builder.get_object("addoreditBackupConfig_dialog_checkbox1").set_active(model.get_value(iter,6))
+            self.builder.get_object("addoreditBackupConfig_dialog_checkbox1").handler_unblock(self.backup_active_toggled_handler_id)
+            if '.' + self.system_anchor_domain in backup_target_url_parsed.hostname:
+                sensitivity = False
+
+        self.builder.get_object("addoreditBackupConfig_dialog_combobox4").set_sensitive(sensitivity)
+        self.builder.get_object("addoreditBackupConfig_dialog_entry2").set_sensitive(sensitivity)
+        self.builder.get_object("addoreditBackupConfig_dialog_entry3").set_sensitive(sensitivity)
+        self.builder.get_object("addoreditBackupConfig_dialog_entry4").set_sensitive(sensitivity)
+        self.builder.get_object("addoreditBackupConfig_dialog_entry5").set_sensitive(sensitivity)
+        self.builder.get_object("addoreditBackupConfig_dialog_entry6").set_sensitive(sensitivity)
+
+        while True:
+            response = self.builder.get_object("addoreditBackupConfig_dialog").run()
+            if response != 1:
+                self.builder.get_object("addoreditBackupConfig_dialog").hide()
+                break
+            elif response == 1:
+                message = ''
+                if (option == 'add'):
+                    profile_id = '#'
+                elif (option == 'edit'):
+                    profile_id = self.dictionary_backup_profile_id[model.get_value(iter,0)]
+                name = self.builder.get_object("addoreditBackupConfig_dialog_entry1").get_text().strip()
+                frequency_number = self.builder.get_object("addoreditBackupConfig_dialog_combobox1").get_active_text()
+                frequency_duration = self.builder.get_object("addoreditBackupConfig_dialog_combobox2").get_active_text()
+                time = self.builder.get_object("addoreditBackupConfig_dialog_combobox3").get_active_text()
+                scheme_name = self.builder.get_object("addoreditBackupConfig_dialog_combobox4").get_active_text()
+                scheme = self.get_parameter_from_scheme_name('scheme')
+                # Get label for location, username and password convert to lower case, and strip out last character ie colon (:)
+                location_label = self.builder.get_object("addoreditBackupConfig_dialog_label6").get_text()[:-1]
+                username_label = self.builder.get_object("addoreditBackupConfig_dialog_label9").get_text()[:-1]
+                password_label = self.builder.get_object("addoreditBackupConfig_dialog_label10").get_text()[:-1]
+                server = self.builder.get_object("addoreditBackupConfig_dialog_entry2").get_text()
+                port = self.builder.get_object("addoreditBackupConfig_dialog_entry3").get_text()
+                path = self.builder.get_object("addoreditBackupConfig_dialog_entry4").get_text() if (self.builder.get_object("addoreditBackupConfig_dialog_entry4").get_text() != '') else '/'
+                username = self.builder.get_object("addoreditBackupConfig_dialog_entry5").get_text()
+                password = self.builder.get_object("addoreditBackupConfig_dialog_entry6").get_text()
+                enabled = self.builder.get_object("addoreditBackupConfig_dialog_checkbox1").get_active()
+                snapshot = self.builder.get_object("addoreditBackupConfig_dialog_checkbox2").get_active()
+                if name == '':
+                    message = '\nPlease enter a service name.\n'
+                elif self.only_restricted_chars_callback(name, 'backup_name_final', ''):
+                    message = '\nSome characters in the chosen service name are restricted.\nPlease type in a new service name.\n'
+                elif (name in self.dictionary_backup_profile_id.keys() and profile_id != self.dictionary_backup_profile_id[name]):
+                    message = '\nThe service name is already taken. Please enter a new service name.\n'
+                elif frequency_number == '' or frequency_duration == '':
+                    message = '\nPlease select the frequency of backup.\n'
+                elif time == '':
+                    message = '\nPlease select the time to run backup.\n'
+                elif scheme_name == '':
+                    message = '\nPlease select the connection for the backup configuration.\n'
+                elif scheme == '':
+                    message = '\nThis connection is invalid, please select a different connection.\n'
+                elif server == '':
+                    message = '\nPlease enter the \'' + location_label + '\' for the backup configuration.\n'
+                elif ' ' in server:
+                    message = '\nThe \'' + location_label + '\' cannot contain spaces. Please enter a new \'' + location_label + '\'.\n'
+                elif not self.valid_host(server) and location_label.lower() == 'location':
+                    message = '\nCannot connect to the location specified. Please enter a new location.\n'
+                elif self.only_restricted_chars_callback(port, 'port_final', ''):
+                    message = '\nThe port can only container numbers. Please enter a new port.\n'
+                elif ' ' in path:
+                    message = '\nThe folder name cannot contain spaces. Please enter a new folder name.\n'
+                elif username == '':
+                    message = '\nPlease enter the \'' + username_label + '\' for the backup configuration.\n'
+                elif self.only_restricted_chars_callback(username, 'eprefix_final', ''):
+                    message = '\nThe \'' + username_label + '\' entered contains restricted characters. Please enter a new \'' + username_label + '\'.\n'                    
+                elif '.' + self.system_anchor_domain not in server and password == '':
+                    message = '\nPlease enter the \'' + password_label + '\' for the backup configuration.\n'
+                elif ' ' in password:
+                    message = '\nThe \'' + password_label + '\' cannot contain spaces. Please enter a new \'' + password_label + '\'.\n'
+                elif snapshot and not enabled:
+                    message = '\nThis service is disabled. Please enable this service before taking a snapshot.\n'
+                elif enabled and self.active_backup_profile_count >= self.trial_backup_profile_max_count and option == 'add':
+                    message = self.backup_limit_message
+                
+                if message != '':
+                    self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', message)
+                else:
+                    self.builder.get_object("addoreditBackupConfig_dialog").hide()
+                    target_url = scheme + '://' + self.get_quoted_string(username) + (':' + self.get_quoted_string(password) if password != '' else '') + '@' + server + (':' + port if port != '' else '') + (path if path.find('/') == 0 else '/' + path)
+                    self.submit_backupconfig(option, profile_id, name, 'Every ' + frequency_number + ' ' + frequency_duration, time, target_url, enabled, snapshot)
+                    self.show_response_dialog(False, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', '\nYour request is being processed.\n')
+                    break
+
+    # Callback for Delete Backup Config.
+    def on_deletebackupconfigButton_clicked_callback(self, widget, option=None):
+        if (self.check_cloud_user_status('both', True, True, False)):
+            return
+
+        message = ''
+        (model, iter) = self.backupview1.get_selection().get_selected()
+        if (iter == None):
+            message = '\nPlease select a backup configuration to Delete.\n'
+        elif self.check_backup_lock_file(self.dictionary_backup_profile_id[model.get_value(iter,0)]):
+            message = '\nThis backup service is currently running. Please try again later.\n'
+        elif '.' + self.system_anchor_domain in model.get_value(iter,4):
+            message = '\nSecure backup best practice requires a primary and secondary, and stored at separate locations.  These two basic services provided by Cirrus Open are encrypted at all times, and provided daily at no cost.\n\nYou should be aware that if you disable them, and you have any problems with your running solution, and have problems with any other backups you have, it will be IMPOSSIBLE to recover the information.  Therefore, these two basic services cannot be completely deleted..\n\nHowever, if you are willing to take the risk, you can turn them off by unchecking the Enabled field.\n'
+            
+        if message != '':
+            self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', message)
+            return
+
+        message = '\nAre you absolutely sure?\n\nThis will permanently DELETE this service from your cloud.  If you just wish to suspend it, click Cancel and then uncheck the Enabled field.\n'
+
+        result = self.show_response_dialog(True, 'BOTH', True, gtk.JUSTIFY_CENTER, 'Confirmation', message)
+
+        if result != gtk.RESPONSE_ACCEPT:
+            return
+        else:
+            self.submit_backupconfig('delete', self.dictionary_backup_profile_id[model.get_value(iter,0)], model.get_value(iter,0), model.get_value(iter,1), model.get_value(iter,2), self.dictionary_backup_target_url[model.get_value(iter,0)], model.get_value(iter,6), False)
+            self.show_response_dialog(False, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', '\nYour request is being processed.\n')
+
+    # Check if backup is running for a given profile_id.
+    def check_backup_lock_file(self, profile_id): 
+        return os.path.isfile(self.duply_tmp_folder + profile_id + "/lock")
+
+    # Callback for Snapshot Backup Config.
+    def on_snapshotbackupButton_clicked_callback(self, widget, option=None):
+        if (self.check_cloud_user_status('both', True, True, False)):
+            return
+
+        message = ''
+        (model, iter) = self.backupview1.get_selection().get_selected()
+        if (iter == None):
+            message = '\nPlease select a backup configuration first.\n'
+        elif self.check_backup_lock_file(self.dictionary_backup_profile_id[model.get_value(iter,0)]):
+            message = '\nThis backup service is already running.\n'
+        elif not model.get_value(iter,5):
+            message = '\nThis service is disabled. Please enable this service before taking a snapshot.\n'
+
+        if message != '':
+            self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', message)
+            return
+
+        message = '\nSometimes important information changes in less than a day, and is needed for in important purpose less than a day later.  Do you want this service to take a secure snapshot backup of your entire Intranet right now?\n'
+        result = self.show_response_dialog(True, 'BOTH', True, gtk.JUSTIFY_CENTER, 'Confirmation', message)
+
+        if result != gtk.RESPONSE_ACCEPT:
+            return
+        else:
+            self.submit_backupconfig('snapshot', self.dictionary_backup_profile_id[model.get_value(iter,0)], model.get_value(iter,0), model.get_value(iter,1), model.get_value(iter,2), self.dictionary_backup_target_url[model.get_value(iter,0)], model.get_value(iter,6), True)
+            self.show_response_dialog(False, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', '\nYour request is being processed.\n')
+        
+    # Send data for Backup Config.
+    def submit_backupconfig(self, option, profile_id, name, frequency, time, target_url, enabled, snapshot):
+        xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+        xml_value += '<msg><changeBackupConfig>'
+        xml_value += '<option>' + option + '</option>'
+        xml_value += '<profile_id>' + profile_id + '</profile_id>'
+        xml_value += '<name>' + name + '</name>'
+        xml_value += '<frequency_number>' + frequency.split(" ")[1] + '</frequency_number>'
+        xml_value += '<frequency_duration>' + frequency.split(" ")[2] + '</frequency_duration>'
+        xml_value += '<time>' + time + '</time>'
+        xml_value += '<target_url>' + target_url + '</target_url>'
+        xml_value += '<enabled>' + 't' + '</enabled>' if (enabled == True) else '<enabled>' + 'f' + '</enabled>'
+        xml_value += '<snapshot>' + 't' + '</snapshot>' if (snapshot == True) else '<snapshot>' + 'f' + '</snapshot>'
+        xml_value += '</changeBackupConfig></msg>'
+        contents = self.send_data(xml_value)
+
+    # Read the summary file for a given profile_id.
+    def read_backup_summary_file(self, profile_id):
+        return os.popen("cat " + self.duply_tmp_folder + profile_id + "/summary 2>/dev/null | sed -n '/.*Type of backup set:.*/,/^-----/{/.*Type of backup set:.*/d;/^-----/d;p;}' | awk '{ $1=$1\"\t\";$(NF-1)=$(NF-1)\"\t\"; print }'").read()
+
+    # Show the Backup Summary window.
+    def on_viewbackupsummaryButton_clicked_callback(self, widget, data=None):
+        (model, iter) = self.backupview1.get_selection().get_selected()
+        if (iter == None):
+            self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', '\nPlease select a backup configuration in order to view summary.\n')
+            return
+
+        backup_summary = self.read_backup_summary_file(self.dictionary_backup_profile_id[model.get_value(iter,0)])
+        if backup_summary == '':
+            self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', '\nThe selected backup configuration has no summary.\n')
+            return
+
+        self.builder.get_object("viewBackupSummary_window").set_title("Summary for " + model.get_value(iter,0))
+        # Prevent interaction with any other window except this (until closed).
+        self.builder.get_object("viewBackupSummary_window").set_modal(True)
+        # Keep window always on top.
+        self.builder.get_object("viewBackupSummary_window").set_keep_above(True)
+
+        self.backupmodel2.clear()
+        for line in backup_summary[:backup_summary.rfind('\n')].split('\n'):
+            self.backupmodel2.append(line.split('\t'))
+        self.builder.get_object("viewBackupSummary_window").show_all()
+
+    # Read the path_list file for a given profile_id.
+    def read_backup_path_list_file(self, profile_id):
+        return os.popen("cat " + self.duply_tmp_folder + profile_id + "/path_list 2>/dev/null | sed -n '/chaos/,/^---/{/^---/d;p}' | sed -e 's| chaos|\tdesktop|g' -e 's| hera|\tmail|g' -e '/ system/d' | grep -P '\tdesktop/"+os.environ['SUDO_USER']+"|\tmail/"+os.environ['SUDO_USER']+"'").read()
+
+    # Callback that generates path list
+    def show_backup_path_list_callback(self, widget, option=None):
+        if option == 'clear':
+            self.builder.get_object("restoreBackup_window_entry1").set_text('')
+
+        self.backupmodel3.clear()
+        for line in self.backup_path_list[:self.backup_path_list.rfind('\n')].split('\n'):
+            backup_path = line.split('\t')[1]
+            if option == 'search':
+                if self.builder.get_object("restoreBackup_window_entry1").get_text().lower() in backup_path.lower():
+                    self.backupmodel3.append([backup_path])
+            else:
+                self.backupmodel3.append([backup_path])
+
+    def check_backup_config(self, profile_id, show_error=False):
+        self.backup_summary = self.read_backup_summary_file(profile_id)
+        self.backup_path_list = self.read_backup_path_list_file(profile_id)
+        if self.backup_summary == '' or self.backup_path_list == '':
+            if show_error:
+                self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', '\nThe selected backup configuration has no backups.\n')
+            return False
+        return True
+        
+    def on_restoreBackup_window_combobox1_changed_callback(self, widget, data=None):        
+        if not self.check_backup_config(self.dictionary_backup_profile_id[self.builder.get_object("restoreBackup_window_combobox1").get_active_text()], True):
+            self.backupmodel3.clear()
+            self.builder.get_object("restoreBackup_window_combobox2").clear()
+            self.builder.get_object("restoreBackup_window_hbox2").set_sensitive(False)
+            self.builder.get_object("restoreBackup_window_scrolledwindow1").set_sensitive(False)
+            self.builder.get_object("restoreBackup_window_button2").set_sensitive(False)
+            return
+        else:
+            self.builder.get_object("restoreBackup_window_hbox2").set_sensitive(True)
+            self.builder.get_object("restoreBackup_window_scrolledwindow1").set_sensitive(True)
+            self.builder.get_object("restoreBackup_window_button2").set_sensitive(True)
+
+        # Set window title.
+        self.builder.get_object("restoreBackup_window").set_title("Restore from " + self.builder.get_object("restoreBackup_window_combobox1").get_active_text())
+        
+        self.combobox_model_set(self.builder.get_object("restoreBackup_window_combobox2"))
+        time_list = self.builder.get_object("restoreBackup_window_combobox2").get_model()        
+
+        last_index=-1
+        for line in self.backup_summary[:self.backup_summary.rfind('\n')].split('\n'):
+            time_list.append([line.split('\t')[1].lstrip()])
+            last_index+=1
+        self.builder.get_object("restoreBackup_window_combobox2").set_active(last_index)
+
+        self.show_backup_path_list_callback(None)
+
+    # Show the Restore Backup window.
+    def on_restorebackupButton_clicked_callback(self, widget, option=None):
+        self.combobox_model_set(self.builder.get_object("restoreBackup_window_combobox1"))
+        service_list = self.builder.get_object("restoreBackup_window_combobox1").get_model()
+
+        set_active_profile=0
+
+        if option == 'user':
+            self.dictionary_backup_profile_id = OrderedDict()
+            i=0
+            flag=0
+            for detail in self.root.xpath('/result/backup_user_details/detail'):
+                self.dictionary_backup_profile_id[detail.xpath('name')[0].text] =  detail.xpath('profile_id')[0].text
+                service_list.append([detail.xpath('name')[0].text])
+                if self.check_backup_config(detail.xpath('profile_id')[0].text) and flag == 0:
+                    set_active_profile = i
+                    flag=1
+                i+=1
+            self.builder.get_object("restoreBackup_window_combobox1").set_sensitive( True )
+        else:
+            (model, iter) = self.backupview1.get_selection().get_selected()
+            if (iter == None):
+                self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', '\nPlease select a backup configuration in order to restore.\n')
+                return
+            else:
+                service_list.append([model.get_value(iter,0)])
+                self.builder.get_object("restoreBackup_window_combobox1").set_sensitive( False )
+
+        # Set first item as Active for "user". If clicked from the Me tab, then the user would get a *list* of backup services in combobox1. But if clicked on the Backup tab, combobox1 would have just the selected backup service.
+        self.builder.get_object("restoreBackup_window_combobox1").set_active(set_active_profile)
+        if not self.check_backup_config(self.dictionary_backup_profile_id[self.builder.get_object("restoreBackup_window_combobox1").get_active_text()]):
+            return
+
+        # Prevent interaction with any other window except this (until closed).
+        self.builder.get_object("restoreBackup_window").set_modal(True)
+        # Set transient window to parent so that clicking on the parent does not hide the new smaller window.
+        self.builder.get_object("restoreBackup_window").set_transient_for(self.window1)
+        # Reset search entry box.
+        self.builder.get_object("restoreBackup_window_entry1").set_text('')
+
+        self.builder.get_object("restoreBackup_window").show_all()
+
+    def on_restorefilepathButton_clicked_callback(self, widget, data=None):
+        profile_id = self.dictionary_backup_profile_id[self.builder.get_object("restoreBackup_window_combobox1").get_active_text()]
+
+        (model, iter) = self.backupview3.get_selection().get_selected()
+        if (iter == None):
+            self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', '\nPlease select a file path to restore.\n')
+            return
+                
+        if self.check_backup_lock_file(profile_id):
+            self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', '\nThis backup service is currently backing up the system files and folders. Please try again later. \n')
+            return            
+
+        time = self.builder.get_object("restoreBackup_window_combobox2").get_active_text()
+        source = model.get_value(iter, 0)
+        source = re.sub(r'^desktop/', 'chaos/', source)
+        source = re.sub(r'^mail/', 'hera/', source)
+        destination = 'Restore/' + str(datetime.datetime.now().strftime('%FT%T')) + '/' + re.sub(r'^chaos/' + os.environ['SUDO_USER'] + '|^hera/' + os.environ['SUDO_USER'], '', source).split("/").pop()
+
+        xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+        xml_value += '<msg><restoreFilePath>'
+        xml_value += '<profile_id>' + profile_id + '</profile_id>'
+        xml_value += '<time>' + time + '</time>'
+        xml_value += '<source>' + source + '</source>'
+        xml_value += '<destination>' + destination + '</destination>'
+        xml_value += '</restoreFilePath></msg>'
+        contents = self.send_data(xml_value)
+
+        self.builder.get_object("restoreBackup_window").hide()
+        self.show_response_dialog(False, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', '\nYour request is being processed.\n\nYour files will be restored to your Home Folder under <b>' + destination + '</b>.\n')
+
+    # Updates the usermodel to use the server's most up-to-date list from the database        
+    def configure_users_tab(self):
+        # Manage items in add queue
+        contents_queue_add = '<result><queue_add_list></queue_add_list></result>'
+        if self.queue_add != '':
+            contents_queue_add = '<result><queue_add_list>'
+            for user in etree.fromstring('<queue>'+self.queue_add+'</queue>').xpath('/queue/msg/addUser'):
+                if self.contents_root.find('<email_prefix>'+user.xpath('desired_email_prefix')[0].text+'</email_prefix>') != -1:
+                    for line in self.queue_add.split('\n'):
+                        if line.find('<desired_email_prefix>'+user.xpath('desired_email_prefix')[0].text+'</desired_email_prefix>') != -1:
+                            self.queue_add = self.queue_add.replace(line+'\n','')
+                            self.construct_queue()
+                else:                                                                    
+                    contents_queue_add += '<detail><double_lock_option></double_lock_option><username>'+user.xpath('username')[0].text+'</username><email_prefix>'+user.xpath('desired_email_prefix')[0].text+'</email_prefix><first_name>'+user.xpath('firstname')[0].text+'</first_name><last_name>'+user.xpath('lastname')[0].text+'</last_name><real_email>'+user.xpath('email')[0].text+'</real_email><status>CREATE_QUEUED</status><timezone>TBD</timezone><type>'+user.xpath('type')[0].text+'</type></detail>'
+            contents_queue_add +='</queue_add_list></result>'
+        root_queue_add = etree.fromstring(contents_queue_add)
+        
+        self.usermodel.clear()
+        self.active_full_user_count = -1
+        self.new_active_full_user_count = -1
+        self.active_emailonly_user_count = 0
+        self.new_active_emailonly_user_count = 0
+        root = [self.root.xpath('/result/user_list/detail'), root_queue_add.xpath('/result/queue_add_list/detail')]
+        for i in range (len(root)):
+            for user in root[i]:
+                username = user.xpath('username')[0].text
+                email_prefix = user.xpath('email_prefix')[0].text
+                fname = user.xpath('first_name')[0].text
+                lname = user.xpath('last_name')[0].text
+                remail = user.xpath('real_email')[0].text
+                utype = user.xpath('type')[0].text
+                dloption = user.xpath('double_lock_option')[0].text
+                timezone = user.xpath('timezone')[0].text
+                if dloption == 'ON_LOCKED':
+                    dloption = 'LOCKED'
+                status = user.xpath('status')[0].text
+                for restore in etree.fromstring('<queue>'+self.queue_restore+'</queue>').xpath('/queue/msg/activateUser'):
+                    if restore.xpath('username')[0].text == username:
+                        if status == 'ACTIVE':
+                            for line in self.queue_restore.split('\n'):
+                                if line.find('<username>'+username+'</username>') != -1:
+                                    self.queue_restore = self.queue_restore.replace(line+'\n','')
+                                    self.construct_queue()
+                        else:
+                            status = 'RESTORE_QUEUED'
+
+                for u_type in etree.fromstring('<queue>'+self.queue_utype+'</queue>').xpath('/queue/msg/changeUserType'):
+                    if u_type.xpath('username')[0].text == username:
+                        if u_type.xpath('new_utype')[0].text == utype:
+                            for line in self.queue_utype.split('\n'):
+                                if line.find('<username>'+username+'</username>') != -1:
+                                    self.queue_utype = self.queue_utype.replace(line+'\n','')
+                                    self.construct_queue()
+                        else:
+                            utype = u_type.xpath('new_utype')[0].text
+                            status = 'UPDATE_QUEUED'
+
+                if (status == 'ACTIVE' or status == 'PROCESSING' or status == 'ARCHIVING' or status == 'ACTIVATING' or status == 'UPDATING') and utype == 'Full':
+                    self.active_full_user_count += 1
+                    self.new_active_full_user_count += 1
+                elif (status == 'ACTIVE' or status == 'PROCESSING' or status == 'ARCHIVING' or status == 'ACTIVATING' or status == 'UPDATING') and utype == 'Email Only':
+                    self.active_emailonly_user_count += 1
+                    self.new_active_emailonly_user_count += 1
+                elif (status == 'CREATE_QUEUED' or status == 'RESTORE_QUEUED' or status == 'UPDATE_QUEUED') and utype == 'Full':
+                    self.new_active_full_user_count += 1
+                elif (status == 'CREATE_QUEUED' or status == 'RESTORE_QUEUED' or status == 'UPDATE_QUEUED') and utype == 'Email Only':
+                    self.new_active_emailonly_user_count += 1
+
+                if status == 'CREATE_QUEUED' or status == 'RESTORE_QUEUED' or status == 'UPDATE_QUEUED':
+                    self.usermodel.append([email_prefix, username, fname + ' ' + lname, remail, timezone, dloption, utype, status, '#33CC66', True])
+                else:
+                    self.usermodel.append([email_prefix, username, fname + ' ' + lname, remail, timezone, dloption, utype, status, '#33CC66', False])
+
+    def on_userslist1_cursor_changed(self,widget):
+        (model, iter) = self.userview.get_selection().get_selected()
+        if iter == None:
+            return
+        username = self.usermodel.get_value(iter, 1)
+        status = self.usermodel.get_value(iter, 7)
+        if status == 'ACTIVE':
+            self.builder.get_object('restoreUser_button').set_sensitive( False )
+            if username == os.environ['SUDO_USER']:
+                self.builder.get_object('archiveUser_button').set_sensitive( False )
+                self.builder.get_object('changeUserPassword_button').set_sensitive( False )
+		self.builder.get_object('changeUserExternalEmail_button').set_sensitive( False )
+                self.builder.get_object('changeUserTimezone_button').set_sensitive( False )
+                self.builder.get_object('changeUserDoubleLockOption_button').set_sensitive( False )
+                self.builder.get_object('changeUserType_button').set_sensitive( False )
+            else:
+                self.builder.get_object('archiveUser_button').set_sensitive( True )	
+                self.builder.get_object('changeUserPassword_button').set_sensitive( True )
+		self.builder.get_object('changeUserExternalEmail_button').set_sensitive( True )
+                self.builder.get_object('changeUserTimezone_button').set_sensitive( True )
+                self.builder.get_object('changeUserDoubleLockOption_button').set_sensitive( True )
+                self.builder.get_object('changeUserType_button').set_sensitive( True )
+            self.builder.get_object('rebootUser_button').set_sensitive( True )
+        elif status == 'ARCHIVED':
+            self.builder.get_object('restoreUser_button').set_sensitive( True )
+            self.builder.get_object('archiveUser_button').set_sensitive( False )
+            self.builder.get_object('changeUserPassword_button').set_sensitive( False )
+            self.builder.get_object('rebootUser_button').set_sensitive( False )
+            self.builder.get_object('changeUserExternalEmail_button').set_sensitive( False )
+            self.builder.get_object('changeUserTimezone_button').set_sensitive( False )
+            self.builder.get_object('changeUserDoubleLockOption_button').set_sensitive( False )
+            self.builder.get_object('changeUserType_button').set_sensitive( False )
+        else:
+            self.builder.get_object('restoreUser_button').set_sensitive( False )
+            self.builder.get_object('archiveUser_button').set_sensitive( False )
+            self.builder.get_object('changeUserPassword_button').set_sensitive( False )
+            self.builder.get_object('rebootUser_button').set_sensitive( False )
+            self.builder.get_object('changeUserExternalEmail_button').set_sensitive( False )
+            self.builder.get_object('changeUserTimezone_button').set_sensitive( False )
+            self.builder.get_object('changeUserDoubleLockOption_button').set_sensitive( False )
+            self.builder.get_object('changeUserType_button').set_sensitive( False )
+        if status == 'CREATE_QUEUED' or status == 'RESTORE_QUEUED':
+            self.builder.get_object('archiveUser_button').set_sensitive( True )
+            self.builder.get_object('restoreUser_button').set_sensitive( True )
+        if status == 'UPDATE_QUEUED':
+            self.builder.get_object('changeUserType_button').set_sensitive( True )
+
+    # Activation function for addbutton
+    def on_adduserButton_clicked_callback(self, widget, data=None):
+        if self.check_cloud_user_status('cloud', True, True):
+            return        
+
+        # Reset entry boxes
+        self.builder.get_object("addUser_dialog_entry1").set_text("")
+        self.builder.get_object("addUser_dialog_entry2").set_text("")
+        self.builder.get_object("addUser_dialog_entry3").set_text("")
+        self.builder.get_object("addUser_dialog_entry4").set_text("")
+        self.builder.get_object("addUser_dialog_entry5").set_text("")
+        self.builder.get_object("addUser_dialog").show()
+        self.builder.get_object("addUser_dialog_label2").set_markup('@'+self.dc_email_domain)
+        self.builder.get_object("addUser_dialog").set_title('Add New User')
+
+        self.combobox_model_set(self.builder.get_object("addUser_dialog_combobox1"))
+        user_type_list = self.builder.get_object("addUser_dialog_combobox1").get_model()
+        for user_type in ['Full', 'Email Only']:
+            user_type_list.append([user_type])
+        self.builder.get_object("addUser_dialog_combobox1").set_active(0)
+
+        while True:
+            response = self.builder.get_object("addUser_dialog").run()            
+            if response != 1:
+                self.builder.get_object("addUser_dialog").hide()
+                break
+            elif response == 1:
+                deprefix = self.builder.get_object("addUser_dialog_entry1").get_text()
+                fname = self.builder.get_object("addUser_dialog_entry2").get_text()
+                lname = self.builder.get_object("addUser_dialog_entry3").get_text()
+                email = self.builder.get_object("addUser_dialog_entry4").get_text()
+                utype = self.builder.get_object("addUser_dialog_combobox1").get_active_text()
+                uname = self.builder.get_object("addUser_dialog_entry5").get_text()
+                message = ''
+                # Username validation
+                if uname == '':
+                    message = '\nPlease enter a username you wish to choose\n'
+                elif self.duplicate_email_address(uname, self.dc_email_domain):
+                    message = '\nThe username chosen is already taken.\nPlease choose another username.\n'
+                elif self.only_restricted_chars_callback(uname, 'uname_final', ''):
+                    message = '\nSome characters in the chosen username are restricted.\nPlease type in a new username.\n'
+                # Email prefix validation
+                elif deprefix == '':
+                    message = '\nPlease enter an email address you wish to choose\n'
+                elif self.duplicate_email_address(deprefix, self.dc_email_domain):
+                    message = '\nThe email address chosen is already taken.\nPlease choose another email address.\n'
+                elif self.valid_email_address(deprefix + '@' + self.dc_email_domain) == False:
+                    message = '\nThe email address chosen is not valid.\nPlease choose a valid email address.\n'
+                elif self.only_restricted_chars_callback(deprefix, 'eprefix_final', ''):
+                    message = '\nSome characters in the chosen email address are restricted.\nPlease type in a new email address.\n'
+                # Firstname validation
+                elif fname == '':
+                    message =  '\nPlease enter a firstname.\n'
+                elif self.only_restricted_chars_callback(fname, 'name_final', ''):
+                    message = '\nSome characters in the chosen firstname are restricted.\nPlease type in a new firstname.\n'
+                # Lastname validation
+                elif lname == '':
+                    message= '\nPlease enter a lastname.\n'
+                elif self.only_restricted_chars_callback(lname, 'name_final', ''):
+                    message = '\nSome characters in the chosen lastname are restricted.\nPlease type in a new lastname.\n'
+                # Notify address validation
+                elif email == '':
+                    message = '\nPlease enter a notify address.\n'
+                elif self.valid_email_address(email) == False:
+                    message = '\nPlease enter a valid notify address.\n'
+
+                if message != '':
+                    self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', message)
+                else:
+                    xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+                    xml_value += '<msg><addUser>'
+                    xml_value += '<username>' + uname.lower() + '</username>'
+                    xml_value += '<desired_email_prefix>' + deprefix.lower() + '</desired_email_prefix>'
+                    xml_value += '<firstname>' + fname + '</firstname>'
+                    xml_value += '<lastname>' + lname + '</lastname>'
+                    xml_value += '<email>' + email.lower() + '</email>'
+                    xml_value += '<type>' + utype + '</type>'
+                    xml_value += '</addUser></msg>'
+                    if self.queue_request(utype) == True:
+                        self.queue_add += xml_value + '\n' 
+                        self.construct_queue()
+                        message = self.user_limit_message
+                    else:
+                        contents = self.send_data(xml_value)
+                        message='\n<b>' + deprefix + '</b> has been added and is now being processed.\n\nYou will receive an email as soon as the update is complete.\n'
+                    self.builder.get_object("addUser_dialog").hide()
+                    self.show_response_dialog(False, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', message)
+                    break
+
+    # Activation function for archiveUser_button
+    def on_archiveuserButton_clicked_callback(self, widget, data=None):
+        if self.check_cloud_user_status('cloud', True, True):
+            return	
+
+        (model, iter) = self.userview.get_selection().get_selected()
+        username = self.usermodel.get_value(iter, 1)
+        status = self.usermodel.get_value(iter, 7)
+        if status == 'CREATE_QUEUED':
+            deprefix = self.usermodel.get_value(iter, 0)
+            for line in self.queue_add.split('\n'):
+                if line.find('<desired_email_prefix>'+deprefix+'</desired_email_prefix>') != -1:
+                    self.queue_add = self.queue_add.replace(line+'\n','')
+                    self.construct_queue()
+                    self.show_response_dialog(False, 'OK', False, gtk.JUSTIFY_CENTER, 'Confirmation', '\n<b>' + deprefix + '</b> creation has been cancelled.\n')
+        elif status == 'RESTORE_QUEUED':
+            for line in self.queue_restore.split('\n'):
+                if line.find('<username>'+username+'</username>') != -1:
+                    self.queue_restore = self.queue_restore.replace(line+'\n','')
+                    self.construct_queue()
+                    self.show_response_dialog(False, 'OK', False, gtk.JUSTIFY_CENTER, 'Confirmation', '\n<b>' + username + '</b> restoration has been cancelled.\n') 
+        elif status == 'ACTIVE':
+            xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+            xml_value += '<msg><archiveUser>'
+            xml_value += '<username>' + username + '</username>'
+            xml_value += '</archiveUser></msg>'
+            contents = self.send_data(xml_value)
+            self.show_response_dialog(False, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', '\n<b>' + username + '</b> has been archived.\n')
+        else:
+            return
+
+    # Activation function for restoreUser_button
+    def on_restoreuserButton_clicked_callback(self, widget, data=None):
+        if self.check_cloud_user_status('cloud', True, True):
+            return
+
+        (model, iter) = self.userview.get_selection().get_selected()
+        username = self.usermodel.get_value(iter, 1)
+        status = self.usermodel.get_value(iter, 7)
+        utype = self.usermodel.get_value(iter, 6)
+        if self.queue_request() != True and status == 'CREATE_QUEUED':
+            deprefix = self.usermodel.get_value(iter, 0)
+            for line in self.queue_add.split('\n'):
+                if line.find('<desired_email_prefix>'+deprefix+'</desired_email_prefix>') != -1:
+                    xml_value = '<?xml version="1.0" encoding="UTF-8"?>' + line
+                    self.queue_add = self.queue_add.replace(line+'\n','')
+                    self.construct_queue()
+                    contents = self.send_data(xml_value)
+                    self.show_response_dialog(False, 'OK', False, gtk.JUSTIFY_CENTER, 'Confirmation', '\n<b>' + deprefix + '</b> has been added and is now being processed.\n')
+        if self.queue_request() != True and status == 'RESTORE_QUEUED':
+            for line in self.queue_restore.split('\n'):
+                if line.find('<username>'+username+'</username>') != -1:
+                    xml_value = '<?xml version="1.0" encoding="UTF-8"?>' + line
+                    self.queue_restore = self.queue_restore.replace(line+'\n','')
+                    self.construct_queue()
+                    contents = self.send_data(xml_value)
+                    self.show_response_dialog(False, 'OK', False, gtk.JUSTIFY_CENTER, 'Confirmation', '\n<b>' + username + '</b> has been restored.\n')
+        elif status == 'ARCHIVED':
+            xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+            xml_value += '<msg><activateUser>'
+            xml_value += '<username>' + username + '</username>'
+            xml_value += '</activateUser></msg>'
+            if self.queue_request(utype) == True:
+            	self.queue_restore += xml_value + '\n'
+            	self.construct_queue()
+                message = self.user_limit_message
+            else:
+            	contents = self.send_data(xml_value)
+            	message='\n<b>' + username + '</b> has been restored.\n'
+            self.show_response_dialog(False, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', message)
+        else:
+            return
+
+    # Activation function for rebootUser_button
+    def on_rebootuserButton_clicked_callback(self, widget, data=None):
+        if self.check_cloud_user_status('cloud', True, True):
+            return
+
+        (model, iter) = self.userview.get_selection().get_selected()
+        username = self.usermodel.get_value(iter, 1)
+        xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+        xml_value += '<msg><rebootUser>'
+        xml_value += '<username>' + username + '</username>'
+        xml_value += '</rebootUser></msg>'
+        contents = self.send_data(xml_value)
+        self.show_response_dialog(False, 'OK', False, gtk.JUSTIFY_CENTER, 'Confirmation', '\n<b>' + username + '</b> has been rebooted.\n')
+
+    # Generates and displays a dialog for entering a new password. Returns a tubple of: The response ID from the dialog (should be one of gtk.RESPONSE_REJECT, gtk.RESPONSE_ACCEPT or gtk.RESPONSE_DELETE)
+    def show_changePassword_dialog(self):
+        dl = gtk.Dialog('Change User Password', self.window1, gtk.DIALOG_MODAL)
+        reset_button = dl.add_button("Reset Password", gtk.RESPONSE_YES)
+        cancel_button = dl.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT)
+        self.ok_button = dl.add_button("Save New Password", gtk.RESPONSE_ACCEPT)
+        self.ok_button.set_sensitive( False )
+        dl.resize(300,175)
+
+        table=gtk.Table(3,4)
+
+        pw_label = gtk.Label('New Password:')
+        table.attach(pw_label,0, 2, 0, 1)
+        self.pw_entry = gtk.Entry()
+        self.pw_entry.set_max_length(32)
+        self.pw_entry.set_visibility(False)
+        self.pw_entry.connect("changed",self.check_passwords_callback, None)
+        table.attach(self.pw_entry,2, 4, 0, 1)
+
+        cpw_label = gtk.Label('Confirm New Password:')
+        table.attach(cpw_label,0, 2, 1, 2)
+        self.cpw_entry = gtk.Entry()
+        self.cpw_entry.set_max_length(32)
+        self.cpw_entry.set_visibility(False)
+        self.cpw_entry.connect("changed",self.check_passwords_callback, None)
+        table.attach(self.cpw_entry, 2, 4, 1, 2)
+	
+        self.match_label = gtk.Label()
+        self.match_label.set_markup('<small><b><span foreground="red">\t\t\t\t</span></b></small>')
+        table.attach(self.match_label, 0, 4, 2, 3)
+
+        dl.vbox.add(table)
+        table.show()
+
+        pw_label.show()
+        self.pw_entry.show()
+        cpw_label.show()
+        self.cpw_entry.show()
+        self.match_label.show()
+
+        result = dl.run()
+
+        pw = self.pw_entry.get_text()
+
+        dl.destroy()
+        return (result, pw)
+
+    # Activation function for changeUserPassword_button
+    def on_changeuserpasswordButton_clicked_callback(self, widget, data=None):
+        (result, password) = self.show_changePassword_dialog()
+        if self.check_cloud_user_status('cloud', True, True):
+            return
+
+        (model, iter) = self.userview.get_selection().get_selected()
+        username = self.usermodel.get_value(iter, 1)
+        status = self.usermodel.get_value(iter, 7)
+        if status != 'ACTIVE':
+            return
+        if result != gtk.RESPONSE_ACCEPT and result != gtk.RESPONSE_YES:
+            return
+        if password == username:
+            self.show_response_dialog(True, 'OK', False, gtk.JUSTIFY_CENTER, 'Error', '\nThe password cannot be the same as the username.\n')
+            return
+
+        if result == gtk.RESPONSE_ACCEPT:
+            self.submit_userpassword(False, password, username)
+        else:
+            self.submit_userpassword(True, '', username)
+
+        if result == gtk.RESPONSE_YES:
+            message = '\nThe password for <b>' + username + '</b> has been reset.\n'
+        else:
+            message = '\nThe password for <b>' + username + '</b> has been changed.\n'
+        self.show_response_dialog(False, 'OK', False, gtk.JUSTIFY_CENTER, 'Confirmation', message)
+
+   # Send C3 request for new password 
+    def submit_userpassword(self, reset, password, username=None):
+        xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+        xml_value += '<msg><resetUser>'
+        if username:
+            xml_value += '<username>' + username + '</username>'
+        if reset == False:
+            xml_value += '<password>' + password + '</password>'
+        xml_value += '</resetUser></msg>'
+        contents = self.send_data(xml_value)
+
+    # Generates and displays a dialog for entering a new External E-mail. Returns a tubple of: The response ID from the dialog (should be one of gtk.RESPONSE_REJECT, gtk.RESPONSE_ACCEPT or gtk.RESPONSE_DELETE)
+    def show_changeExternalEmail_dialog(self):        
+        dl = gtk.Dialog('Change Notify Address', self.window1, gtk.DIALOG_MODAL)
+        cancel_button = dl.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT)
+        ok_button = dl.add_button(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
+        dl.resize(600,100)
+        
+        (model, iter) = self.userview.get_selection().get_selected()
+        currentEmail = self.usermodel.get_value(iter, 3)
+        
+        email_hbox = gtk.HBox()
+        
+        email_label = gtk.Label('New Notify Address:')
+        email_hbox.add(email_label)
+        email_entry = gtk.Entry()
+        email_hbox.add(email_entry)
+        email_entry.set_max_length(128)
+        email_entry.set_text(currentEmail)
+        dl.vbox.add(email_hbox)
+        
+        email_hbox.show()
+        email_label.show()
+        email_entry.show()
+        
+        while True:
+            result = dl.run()
+            email = email_entry.get_text()
+            message = ''
+            # Notify address validation
+            if email == '':
+                message = '\nPlease enter a notify address.\n'
+            elif self.valid_email_address(email) == False:
+                message = '\nPlease enter a valid notify address.\n'
+                
+            if result != gtk.RESPONSE_ACCEPT or message == '':
+                dl.destroy()
+                break
+            else:
+                self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', message)
+        
+        dl.destroy()
+        return (result, email)
+
+    # Activation function for Change External Email button
+    def on_changeuserexternalemailButton_clicked_callback(self, widget, data=None):
+        (result, new_external_email) = self.show_changeExternalEmail_dialog()
+        if result != gtk.RESPONSE_ACCEPT:
+            return
+
+        if self.check_cloud_user_status('cloud', True, True):
+            return
+
+        (model, iter) = self.userview.get_selection().get_selected()
+        username = self.usermodel.get_value(iter, 1)
+        old_external_email = self.usermodel.get_value(iter, 3)
+        if old_external_email != new_external_email:
+            self.submit_userexternalemail(new_external_email, username)
+        self.show_response_dialog(False, 'OK', False, gtk.JUSTIFY_CENTER, 'Confirmation', '\nThe Notify Address for <b>' + username + '</b> has been changed.\n')
+
+    # Send C3 request for new external email
+    def submit_userexternalemail(self, email, username=None):
+        xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+        xml_value += '<msg><changeExternalEmail>'
+        if username:
+            xml_value += '<username>' + username + '</username>'
+        xml_value += '<email>' + email.lower() + '</email>'
+        xml_value += '</changeExternalEmail></msg>'
+        contents = self.send_data(xml_value)
+
+    # Generates and displays a dropdown for setting a new Timezone for user. Returns a tubple of: The response ID from the dialog (should be one of gtk.RESPONSE_REJECT, gtk.RESPONSE_ACCEPT or gtk.RESPONSE_DELETE)
+    def show_changeUserTimezone_dialog(self):        
+        dl = gtk.Dialog('Change User Timezone', self.window1, gtk.DIALOG_MODAL)
+        cancel_button = dl.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT)
+        ok_button = dl.add_button(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
+        ok_button.set_sensitive( False )
+        dl.resize(600,100)
+        
+        (model, iter) = self.userview.get_selection().get_selected()
+        currentUserTimezone = self.usermodel.get_value(iter, 4)
+ 
+        timezone_hbox = gtk.HBox()
+
+        timezone_label = gtk.Label('New User Timezone:')
+        timezone_hbox.add(timezone_label)
+        
+        timezone_combo = self.generate_timezone_combo(currentUserTimezone, None, ok_button)
+
+        timezone_hbox.add(timezone_combo)
+        dl.vbox.add(timezone_hbox)
+             
+        timezone_hbox.show()
+        timezone_label.show()
+        timezone_combo.show()
+        
+        result = dl.run()
+
+        new_timezone = self.get_selected_timezone(timezone_combo)
+                        
+        dl.destroy()
+        return (result, new_timezone)
+
+    # Activation function for Change User Timezone button
+    def on_changeusertimezoneButton_clicked_callback(self, widget, data=None):
+        if self.check_cloud_user_status('cloud', True, True):
+            return
+
+        (result, new_timezone) = \
+            self.show_changeUserTimezone_dialog()
+        if result != gtk.RESPONSE_ACCEPT:
+            return
+        (model, iter) = self.userview.get_selection().get_selected()
+        username = self.usermodel.get_value(iter, 1)
+        old_timezone = self.usermodel.get_value(iter, 4)
+        if old_timezone != new_timezone:
+            self.submit_timezone(new_timezone, 'user', username)
+        self.show_response_dialog(False, 'OK', False, gtk.JUSTIFY_CENTER, 'Confirmation', '\nThe timezone for <b>' + username + '</b> is being changed to ' + new_timezone + '.\n')
+
+    # Generates and displays a dialog for changing the user type. Returns a tubple of: The response ID from the dialog (should be one of gtk.RESPONSE_REJECT, gtk.RESPONSE_ACCEPT or gtk.RESPONSE_DELETE)
+    def show_changeDoubleLockOption_dialog(self):
+        dl = gtk.Dialog('Change 2-Factor Auth', self.window1, gtk.DIALOG_MODAL)
+        cancel_button = dl.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT)
+        ok_button = dl.add_button(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
+        dl.resize(600,100)
+
+        (model, iter) = self.userview.get_selection().get_selected()
+
+        table=gtk.Table(1,4)
+
+        dloption_label = gtk.Label('2-Factor Auth:')
+        table.attach(dloption_label,0, 2, 0, 1)
+
+        dloption_combobox = gtk.ComboBox()
+
+        self.combobox_model_set(dloption_combobox)
+        dloption_list= dloption_combobox.get_model()
+
+        for dloption in ['ON', 'OFF', 'LOCKED']:
+            dloption_list.append([dloption])
+        
+        self.combobox_value_set(dloption_combobox, model.get_value(iter,5))
+
+        table.attach(dloption_combobox, 2, 4, 0, 1)
+
+        dl.vbox.add(table)
+        table.show()
+
+        dloption_label.show()
+        dloption_combobox.show()
+
+        result = dl.run()
+
+        dloption = dloption_combobox.get_active_text()
+
+        dl.destroy()
+        return (result, dloption)
+
+    # Activation function for Change double lock option button
+    def on_changeuserdoublelockoptionButton_clicked_callback(self, widget, data=None):
+        (result, new_dloption) = self.show_changeDoubleLockOption_dialog()
+        if result != gtk.RESPONSE_ACCEPT:
+            return
+
+        if self.check_cloud_user_status('cloud', True, True):
+            return
+
+        (model, iter) = self.userview.get_selection().get_selected()
+        username = self.usermodel.get_value(iter, 1)
+        old_dloption = self.usermodel.get_value(iter, 5)
+
+        if new_dloption == old_dloption:
+            return
+    
+        if new_dloption == 'LOCKED':
+            new_dloption = 'ON_LOCKED'
+
+        self.submit_dloption(new_dloption, username)
+        self.show_response_dialog(False, 'OK', False, gtk.JUSTIFY_CENTER, 'Confirmation', '\nThe 2-factor password option for <b>' + username + '</b> has been changed.\n')
+
+    def submit_dloption(self, dloption, username=None):
+        xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+        xml_value += '<msg><changeDLOption>'
+        xml_value += '<username>' + username + '</username>' if (username != None) else ''
+        xml_value += '<dloption>' + dloption + '</dloption>'
+        xml_value += '</changeDLOption></msg>'
+        contents = self.send_data(xml_value)
+
+    # Generates and displays a dialog for changing the user type. Returns a tubple of: The response ID from the dialog (should be one of gtk.RESPONSE_REJECT, gtk.RESPONSE_ACCEPT or gtk.RESPONSE_DELETE)
+    def show_changeUserType_dialog(self):
+        dl = gtk.Dialog('Change User Type', self.window1, gtk.DIALOG_MODAL)
+        cancel_button = dl.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT)
+        ok_button = dl.add_button(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
+        dl.resize(600,100)
+
+        (model, iter) = self.userview.get_selection().get_selected()
+
+        table=gtk.Table(1,4)
+
+        utype_label = gtk.Label('Type:')
+        table.attach(utype_label,0, 2, 0, 1)
+
+        utype_combobox = gtk.ComboBox()
+
+        self.combobox_model_set(utype_combobox)
+        utype_list= utype_combobox.get_model()
+
+        for utype in ['Full', 'Email Only']:
+            utype_list.append([utype])            
+
+        self.combobox_value_set(utype_combobox, model.get_value(iter,6))
+
+        table.attach(utype_combobox, 2, 4, 0, 1)
+
+        dl.vbox.add(table)
+        table.show()
+
+        utype_label.show()
+        utype_combobox.show()
+
+        result = dl.run()
+
+        utype = utype_combobox.get_active_text()
+
+        dl.destroy()
+        return (result, utype)
+
+    # Activation function for Change user type button
+    def on_changeusertypeButton_clicked_callback(self, widget, data=None):
+        (result, new_utype) = self.show_changeUserType_dialog()
+        if result != gtk.RESPONSE_ACCEPT:
+            return
+
+        if self.check_cloud_user_status('cloud', True, True):
+            return
+
+        (model, iter) = self.userview.get_selection().get_selected()
+        username = self.usermodel.get_value(iter, 1)
+        old_utype = self.usermodel.get_value(iter, 6)
+        status = self.usermodel.get_value(iter, 7)
+
+        if status == 'UPDATE_QUEUED':
+            for u_type in etree.fromstring('<queue>'+self.queue_utype+'</queue>').xpath('/queue/msg/changeUserType'):
+                if u_type.xpath('username')[0].text == username:
+                    # Grab the actually user type as in the database
+                    old_utype = u_type.xpath('old_utype')[0].text
+                    # Since we are removing from queue, we need to decrease the number of active full and email only users
+                    if u_type.xpath('new_utype')[0].text == 'Full':
+                        self.new_active_full_user_count -= 1
+                    elif u_type.xpath('new_utype')[0].text == 'Email Only':
+                        self.new_active_emailonly_user_count -= 1
+                    for line in self.queue_utype.split('\n'):
+                        if line.find('<username>'+username+'</username>') != -1:
+                            self.queue_utype = self.queue_utype.replace(line+'\n','')
+                            self.construct_queue()
+
+        message = '\nThe user type for <b>' + username + '</b> has been changed.\n'                    
+        if old_utype != new_utype:
+            xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+            xml_value += '<msg><changeUserType>'
+            xml_value += '<username>' + username + '</username>'
+            xml_value += '<old_utype>' + old_utype + '</old_utype>'
+            xml_value += '<new_utype>' + new_utype + '</new_utype>'
+            xml_value += '</changeUserType></msg>'
+            if self.cloud_type == 'subscription' and new_utype == 'Email Only':
+                contents = self.send_data(xml_value)
+            elif self.queue_request(new_utype) == True:
+                self.queue_utype += xml_value + '\n'
+                self.construct_queue()
+                message = self.user_limit_message
+            else:
+                contents = self.send_data(xml_value)
+        self.show_response_dialog(False, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', message)
+
+    # Get the details for the user
+    def configure_me_tab(self):
+        old_firstname = self.root.xpath('/result/user_first_name')[0].text
+        old_lastname = self.root.xpath('/result/user_last_name')[0].text
+        old_eprefix = self.root.xpath('/result/user_email_prefix')[0].text
+        domain = self.root.xpath('/result/user_email_domain')[0].text
+        old_external_email = self.root.xpath('/result/user_real_email')[0].text
+        old_timezone = self.root.xpath('/result/user_timezone')[0].text
+        old_dloption = self.root.xpath('/result/user_dl_option')[0].text
+
+        # Current Info
+        self.builder.get_object("currentInfo_label2").set_markup('<u>'+old_firstname+' '+old_lastname+'</u>, <u>'+old_eprefix+'@'+domain+'</u>')
+        # Firstname
+        self.builder.get_object("newFirstName_entry").set_text(old_firstname)
+        self.builder.get_object("newFirstName_entry").modify_base(gtk.STATE_NORMAL, self.color_bg_entrybox)
+        # Lastname
+        self.builder.get_object("newLastName_entry").set_text(old_lastname)
+        self.builder.get_object("newLastName_entry").modify_base(gtk.STATE_NORMAL, self.color_bg_entrybox)
+        # Email Address
+        self.builder.get_object("newEmailAddress_entry").set_text(old_eprefix)
+        self.builder.get_object("newEmailAddress_entry").modify_base(gtk.STATE_NORMAL, self.color_bg_entrybox)
+        self.builder.get_object("newEmailAddress_label2").set_text('@'+domain)
+        self.builder.get_object("newEmailAddress_checkbox").set_active( False )
+        # Password and Confirm Password
+        self.builder.get_object("newPassword_entry").set_text('')
+        self.builder.get_object("newPassword_entry").modify_base(gtk.STATE_NORMAL, self.color_bg_entrybox)
+        self.builder.get_object("confirmNewPassword_entry").set_text('')
+        self.builder.get_object("confirmNewPassword_entry").modify_base(gtk.STATE_NORMAL, self.color_bg_entrybox)
+        # External Email
+        self.builder.get_object("newExternalEmail_entry").set_text(old_external_email)
+        self.builder.get_object("newExternalEmail_entry").modify_base(gtk.STATE_NORMAL, self.color_bg_entrybox)
+        self.user_timezone_combo = self.generate_timezone_combo(old_timezone, self.builder.get_object("user_timezone_combo"), None)
+        # 2-Factor Auth
+        self.builder.get_object("doubleLockOption_checkbox").set_active(True if (old_dloption == 'ON' or old_dloption =='ON_LOCKED') else False)
+
+        # If superuser
+        if self.admin:
+            self.builder.get_object("newEmailAddress_entry").set_sensitive( False )
+            self.builder.get_object("newEmailAddress_checkbox").set_sensitive( False )
+
+    def on_saveUserChangesButton_clicked_callback(self, widget, data=None):
+        # Cloud is already processing
+        if self.check_cloud_user_status('cloud', True, True):
+            return
+
+        old_firstname = self.root.xpath('/result/user_first_name')[0].text
+        old_lastname = self.root.xpath('/result/user_last_name')[0].text
+        old_eprefix = self.root.xpath('/result/user_email_prefix')[0].text
+        domain = self.root.xpath('/result/user_email_domain')[0].text
+        old_external_email = self.root.xpath('/result/user_real_email')[0].text
+        old_timezone = self.root.xpath('/result/user_timezone')[0].text
+        old_dloption = self.root.xpath('/result/user_dl_option')[0].text
+
+        new_firstname = self.builder.get_object("newFirstName_entry").get_text()
+        new_lastname = self.builder.get_object("newLastName_entry").get_text()
+        new_eprefix = self.builder.get_object("newEmailAddress_entry").get_text()
+        new_emailaddress_addalias = self.builder.get_object("newEmailAddress_checkbox").get_active()
+        new_password = self.builder.get_object("newPassword_entry").get_text()
+        new_confirm_password = self.builder.get_object("confirmNewPassword_entry").get_text()
+        new_external_email = self.builder.get_object("newExternalEmail_entry").get_text()
+        new_timezone = self.get_selected_timezone(self.user_timezone_combo)
+        new_dloption = self.builder.get_object("doubleLockOption_checkbox").get_active()
+
+        # Form validation
+        message = ''
+        # Firstname validation
+        if new_firstname == '':
+            message =  '\nPlease enter a firstname.\n'
+        elif self.only_restricted_chars_callback(new_firstname, 'name_final', ''):
+            message = '\nSome characters in the chosen firstname are restricted.\nPlease type in a new firstname.\n'
+        # Lastname validation
+        elif new_lastname == '':
+            message= '\nPlease enter a lastname.\n'
+        elif self.only_restricted_chars_callback(new_lastname, 'name_final', ''):
+            message = '\nSome characters in the chosen lastname are restricted.\nPlease type in a new lastname.\n'
+        # Email Address validation
+        elif new_eprefix == '':
+            message = '\nPlease enter an email address you wish to choose.\n'
+        elif old_eprefix != new_eprefix and self.duplicate_email_address(new_eprefix, domain):
+            message = '\nThe email address chosen is already taken.\nPlease choose another email address.\n'
+        elif self.valid_email_address(new_eprefix + '@' + domain) == False:
+            message = '\nThe email address chosen is not valid.\nPlease choose a valid email address.\n'
+        elif self.only_restricted_chars_callback(new_eprefix, 'eprefix_final', ''):
+            message = '\nSome characters in the chosen email address are restricted.\nPlease type in a new email address.\n'
+        # Password validation
+        elif new_password != new_confirm_password:
+            message = '\nThe passwords entered do not match. Please retype password.\n'
+        elif (' ' in new_password) or (' ' in new_confirm_password):
+            message = '\nPasswords cannot contain spaces. Please retype password.\n'
+        # Notify Address validation
+        elif new_external_email == '':
+            message = '\nPlease enter a notify address.\n'
+        elif self.valid_email_address(new_external_email) == False:
+            message = '\nPlease enter a valid notify address.\n'
+        # 2-Factor Auth validation
+        elif old_dloption == 'ON_LOCKED' and new_dloption == False:
+            message = '\nThe 2-Factor Auth option cannot be changed as it has been set "ON" by the superuser.\n'
+            self.builder.get_object("doubleLockOption_checkbox").set_active(True)
+
+        # Error
+        if message != '':
+            self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Error', message)
+            return
+
+        # Proceed with submit
+        if (old_firstname != new_firstname) or (old_lastname != new_lastname):
+            self.submit_userfullname(old_firstname, old_lastname, new_firstname, new_lastname)
+
+        # Superuser cannot change his email address
+        if not self.admin:
+            if old_eprefix != new_eprefix:            
+                self.submit_userprimaryemail(old_eprefix + '@' + domain, new_eprefix + '@' + domain)
+                if new_emailaddress_addalias==True:
+                    self.submit_addordeletealias('add', old_eprefix + '@' + domain)
+
+        if new_password != '':
+            self.submit_userpassword(False, new_password)
+
+        if old_external_email != new_external_email:
+            self.submit_userexternalemail(new_external_email)
+
+        if old_timezone != new_timezone:
+            self.submit_timezone(new_timezone, 'user')
+            
+        if (True if (old_dloption == 'ON' or old_dloption =='ON_LOCKED') else False) != new_dloption:
+            self.submit_dloption('ON' if (new_dloption == True) else 'OFF')
+        
+        self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', '\nYour request is being processed.\n\nYou will receive an email once the update is complete.\n')
+
+    def duplicate_email_address(self, eprefix, domain):
+        eprefix_mail_ldapsearch = os.popen('ldapsearch "(&(objectClass=*)(|(|(mail=' + eprefix + '@' + domain + ')(eseriMailAlternateAddress=' + eprefix + '@' + domain + '))(eseriMailSenderAddress=' + eprefix + '@' + domain + ')))" "uid" 2>/dev/null | grep "uid:" | awk \'{print $2}\'').read()
+        eprefix_uid_ldapsearch = os.popen('ldapsearch "(&(objectClass=*)(uid=' + eprefix + '))" "uid" 2>/dev/null | grep "uid:" | awk \'{print $2}\'').read()
+        if eprefix_mail_ldapsearch != '' or eprefix_uid_ldapsearch != '':
+            return True
+        return False       
+
+    # Send C3 request for new primary email
+    def submit_userprimaryemail(self, old_email, new_email):
+        xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+        xml_value += '<msg><changeUserPrimaryEmailConfig>'
+        xml_value += '<old_email>' + old_email.lower() + '</old_email>'
+        xml_value += '<new_email>' + new_email.lower() + '</new_email>'
+        xml_value += '</changeUserPrimaryEmailConfig></msg>'
+        contents = self.send_data(xml_value)
+
+    # Send C3 request for user full name
+    def submit_userfullname(self, old_firstname, old_lastname, new_firstname, new_lastname, username=None):
+        xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+        xml_value += '<msg><changeUserFullnameConfig>'
+        xml_value += '<old_firstname>' + old_firstname + '</old_firstname>'
+        xml_value += '<old_lastname>' + old_lastname + '</old_lastname>'
+        xml_value += '<new_firstname>' + new_firstname + '</new_firstname>'
+        xml_value += '<new_lastname>' + new_lastname + '</new_lastname>'
+        xml_value += '</changeUserFullnameConfig></msg>'
+        contents = self.send_data(xml_value)
+         
+if __name__ == "__main__":
+    pids = os.popen('ps -C CirrusOpenCloudManager -o pid= -o ruser= | grep root | awk \'{print $1}\'').read()
+    pid_of_self = os.getpid()
+    for pid in pids[:pids.rfind('\n')].split('\n'):
+        user = os.popen('ls -l /proc/' + pid + '/cwd | awk \'{print $NF}\' | sed \'s|/home/||\'').read()
+        user = user[:pids.rfind('\n')].split('\n')[0]
+        if os.environ['SUDO_USER'] == user and int(pid) != pid_of_self:
+            print "Another instance already running... exiting..."
+            sys.exit()
+    app = AccountManager()
+    gtk.main()

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Folder Sync
+Categories=Internet
+Exec=firefox "syncthing.[-DOMAIN-]:$(sed -n 's|.*<address>.*:\(.*\)</address>|\1|p' /home/$USER/.config/syncthing/config.xml)"
+Icon=syncthing
+StartupNotify=false
+Terminal=false
+Type=Application
+Comment=Folder Sync Application

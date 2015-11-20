@@ -1,0 +1,41 @@
+<VirtualHost [-IP_ADDRESS-]:80>
+    ServerAdmin webmaster@[-DOMAIN-]
+    ServerName nuxeo.[-DOMAIN-]
+    ServerAlias nuxeo.[-DOMAIN-]
+
+    ProxyRequests Off
+
+    <Proxy *>
+        Order allow,deny
+        Allow from all
+        AuthType Kerberos
+        AuthName "Nuxeo"
+        KrbAuthRealms [-REALM-]
+        Krb5Keytab /etc/apache2/apache2.keytab
+        KrbMethodNegotiate on
+        KrbMethodK5Passwd on
+        Require valid-user
+    </Proxy>
+
+    <Location /nuxeo/restAPI>
+        Satisfy any
+    </Location>
+
+    ProxyVia On
+
+    RewriteEngine On
+    RewriteCond %{LA-U:REMOTE_USER} (.+)@(.+)
+    RewriteRule . - [E=RU:%1]
+    RequestHeader set eseriuser %{RU}e env=RU
+
+    ProxyPass /nuxeo/ ajp://cronus.[-DOMAIN-]:8009/nuxeo/
+    ProxyPassReverse /nuxeo/ http://%{SERVER_NAME}/nuxeo/
+
+    RewriteRule ^/$ http://%{SERVER_NAME}/nuxeo/ [R,L]
+    RewriteRule ^/nuxeo$ http://%{SERVER_NAME}/nuxeo/ [R,L]
+
+    # Possible values include: debug, info, notice, warn, error, crit, alert, emerg.
+    LogLevel warn
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log combined
+</VirtualHost>

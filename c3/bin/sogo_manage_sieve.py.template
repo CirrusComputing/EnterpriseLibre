@@ -1,0 +1,49 @@
+#!/usr/bin/python 
+# 
+# sogo_manage_sieve.py.template v1.3
+#
+# The Dovecot sieve on Hera is initialized by Sogo preferences 'save,close'.
+# Sogo calls managesieve on Gaia which proxies to Hera's managesieve.
+#
+# The managesieve initialization used to be driven by Sikuli, though not reliably.
+# Now it is just a Curl call to Sogo from chaos.
+#
+# Created by Rick Leir <rleir@cirruscomputing.com>
+# Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2013 Free Open Source Solutions Inc.
+# All Rights Reserved 
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+import subprocess
+import pycurl
+
+username='[-USERNAME-]'
+alias_domain='[-ALIAS_DOMAIN-]'
+
+# Write mozmill test to js file
+f = open('/home/'+username+'/openSOGo.js', 'w+')
+f.write('var setupModule = function(module){ controller = mozmill.getBrowserController(); }; var testRecorded = function(){ controller.open("http://webmail.'+alias_domain+'/"); controller.waitForPageLoad(); controller.sleep(500); }')
+f.close()
+
+# Open SOGo in browser and wait for page to load completely, then delete js file
+p = subprocess.Popen('mozmill -t /home/'+username+'/openSOGo.js -P $((30000+$(id -u))); rm /home/'+username+'/openSOGo.js', shell=True, stdout=None, stderr=None)
+p.wait()
+
+# Simulate POST request
+xml_value = '<?xml version="1.0" encoding="UTF-8"?>'
+xml_value += '<msg>'
+xml_value += '</msg>'
+c = pycurl.Curl()
+c.setopt(c.URL, 'webmail.'+alias_domain+'/SOGo/so/'+username+'/preferences')
+c.setopt(c.USERPWD, ':')
+c.setopt(c.HTTPAUTH, c.HTTPAUTH_GSSNEGOTIATE)
+c.setopt(c.HTTPHEADER, ['Content-Type: text/xml'])
+c.setopt(c.POSTFIELDS, xml_value)
+c.perform()
+
+# end

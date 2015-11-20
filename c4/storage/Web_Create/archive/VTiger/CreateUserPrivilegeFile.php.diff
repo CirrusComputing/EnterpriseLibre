@@ -1,0 +1,12 @@
+--- vtigercrm/modules/Users/CreateUserPrivilegeFile.php	2008-03-10 08:54:31.000000000 -0400
++++ /var/lib/vtigercrm/modules/Users/CreateUserPrivilegeFile.php	2009-01-14 01:20:10.000000000 -0500
+@@ -1283,6 +1283,9 @@
+        		$code .= ')';
+        		return $code;
+    	}
++	else{
++		return "''";
++	}
+ }
+ 
+ /** Converts the input array  to a single string to facilitate the writing of the input array in a flat file 

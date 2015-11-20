@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c4:boot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:c4="http://www.eseri.com/C4" xsi:schemaLocation="http://lucid-mirror.wan.virtualorgs.net/schema/C4/Boot.xsd">
+	<name></name>
+	<host></host>
+	<deploy>
+<!--
+Valid variables to use are:
+short_name
+long_name
+domain
+short_domain
+country
+province
+timezone
+network
+veid_base
+vz_base_path
+bridge
+hardware_host
+wan_ip_ip
+manager_username
+manager_firstname
+manager_lastname
+manager_phonenumber
+manager_external_email
+document_type
+email_domain (optional, may not be available)
+-->
+		<arg></arg>
+	</deploy>
+	<certificates>
+		<cert host="" type="RSA" />
+		<cert host="" type="DSA" />
+	</certificates>
+	<passwords>
+		<password host="" entity="" type="system" />
+	</passwords>
+	<kerberos_keys>
+		<service></service>
+	</kerberos_keys>
+	<deployment_files>
+		<file service="" file="" />
+	</deployment_files>
+</c4:boot>

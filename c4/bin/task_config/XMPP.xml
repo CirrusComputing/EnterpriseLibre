@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c4:boot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:c4="http://www.eseri.com/C4" xsi:schemaLocation="http://lucid-mirror.wan.virtualorgs.net/schema/C4/Boot.xsd">
+	<name>XMPP</name>
+	<host>erato</host>
+	<deploy>
+	</deploy>
+	<certificates>
+		<cert host="xmpp" type="RSA" />
+		<cert host="xmpp" type="DSA" />
+	</certificates>
+	<passwords>
+		<password host="aphrodite" entity="xmpp" name="LDAP_PASSWORD_OPENFIRE"><always/></password>
+		<password host="pgsql" entity="openfire" name="DB_PASSWORD_OPENFIRE" ><always/></password>
+		<password host="erato" entity="Java Keystore" name="OPENFIRE_SYSTEM_KEYPASS" ><always/></password>
+		<password host="erato" entity="XMPP Keystore" name="OPENFIRE_KEYPASS" ><always/></password>
+	</passwords>
+	<kerberos_keys>
+		<service>openfire</service>
+	</kerberos_keys>
+	<deployment_files>
+	</deployment_files>
+	<package>
+		<required>InstantMessaging</required>
+	</package>
+</c4:boot>

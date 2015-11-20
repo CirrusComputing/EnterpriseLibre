@@ -1,0 +1,6 @@
+<html>
+ <body>
+  <p>C3 has reported a method error for cloud [% network_name %].</p>
+  <p>[% error_message %]</p>
+ </body>
+</html>

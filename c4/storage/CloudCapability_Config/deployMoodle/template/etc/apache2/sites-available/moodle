@@ -1,0 +1,40 @@
+<VirtualHost [-IP-]:80>
+    ServerAdmin webmaster@[-DOMAIN-]
+    ServerName moodle.[-DOMAIN-]
+    ServerAlias moodle.[-ALIAS_DOMAIN-]
+
+    DocumentRoot /var/lib/moodle
+
+    <Directory /var/lib/moodle/>
+        Options Indexes FollowSymLinks MultiViews
+      	AllowOverride All
+      	order allow,deny
+      	allow from all
+      	RewriteEngine on
+      	RewriteBase /
+      	RewriteCond %{REQUEST_FILENAME} !-f
+      	RewriteCond %{REQUEST_FILENAME} !-d
+      	RewriteRule ^(.*)$ index.php?q=$1 [L,QSA]
+    </Directory>
+
+    <Location />
+        AuthType Kerberos
+        AuthName "Moodle"
+       	KrbAuthRealms [-REALM-]
+       	Krb5Keytab /etc/apache2/apache2.keytab
+       	KrbMethodNegotiate on
+       	KrbMethodK5Passwd on
+       	require valid-user
+    </Location>
+
+    # Make the apache proxy work at the superuser defined third level domain.
+    # Moodle doesn't work properly if the HOST is not set to the X-FORWARDED-SERVER header
+    SetEnvIf X-Forwarded-Host (.+) MY_NEW_HOST=$1
+    RequestHeader set Host "%{MY_NEW_HOST}e" env=MY_NEW_HOST
+
+    # Possible values include: debug, info, notice, warn, error, crit, alert, emerg.
+    LogLevel warn
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log combined
+    ServerSignature Off
+</VirtualHost>

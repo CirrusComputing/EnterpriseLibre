@@ -1,0 +1,12 @@
+# /etc/fstab: static file system information.
+#
+# Use 'vol_id --uuid' to print the universally unique identifier for a
+# device; this may be used with UUID= as a more robust way to name devices
+# that works even if disks are added and removed. See fstab(5).
+#
+# <file system> <mount point>   <type>  <options>       <dump>  <pass>
+proc	/proc		proc	defaults		0	0
+none	/dev/pts	devpts	rw			0	0
+none	/var/run	tmpfs	rw,nosuid,mode=0755	0	0
+none	/var/lock	tmpfs	rw,noexec,nosuid,nodev	0	0
+none	/dev/shm	tmpfs	rw,nosuid,nodev		0	0

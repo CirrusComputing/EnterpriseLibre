@@ -1,0 +1,15 @@
+#
+# ssl.domainneverused.net.cnf
+#
+
+[ req ]
+prompt                  = no
+distinguished_name      = ssl.domainneverused.net
+
+[ ssl.domainneverused.net ]
+commonName              = ssl.domainneverused.net
+stateOrProvinceName     = ON
+countryName             = CA
+emailAddress            = hostmaster@domainneverused.net
+organizationName        = domainneverused
+organizationalUnitName  = IT Department

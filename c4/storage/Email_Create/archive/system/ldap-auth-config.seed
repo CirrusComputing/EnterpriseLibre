@@ -1,0 +1,7 @@
+ldap-auth-config	ldap-auth-config/override	boolean	false
+ldap-auth-config	ldap-auth-config/ldapns/ldap_version	select	3
+ldap-auth-config	ldap-auth-config/dblogin	boolean	false
+ldap-auth-config	ldap-auth-config/move-to-debconf	boolean	true
+ldap-auth-config	ldap-auth-config/ldapns/ldap-server	string	ldapi:///
+ldap-auth-config	ldap-auth-config/ldapns/base-dn	string	dc=example,dc=net
+ldap-auth-config	ldap-auth-config/dbrootlogin	boolean	false

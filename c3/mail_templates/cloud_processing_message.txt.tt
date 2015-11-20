@@ -1,0 +1,6 @@
+Dear [% first_name %] [% last_name %]
+A "[% error_message %]" request was received. This could not be completed as your cloud was still being configured at that instant. Please check back later.
+Enjoy!
+The Cirrus Open Team
+---
+You received this email because you just changed the settings of your Cirrus Open cloud. If this email reached you in error for any reason, please let us know immediately.

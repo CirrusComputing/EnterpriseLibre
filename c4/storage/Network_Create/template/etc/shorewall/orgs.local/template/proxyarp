@@ -1,0 +1,3 @@
+###############################################################################
+#ADDRESS        INTERFACE       EXTERNAL        HAVEROUTE       PERSISTENT
+PUBLICIP	venet0          eth0	        no              yes

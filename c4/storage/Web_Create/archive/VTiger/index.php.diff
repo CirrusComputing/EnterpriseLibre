@@ -1,0 +1,25 @@
+--- index.php	2009-12-12 23:40:39.000000000 -0500
++++ index.php	2009-12-12 23:42:04.000000000 -0500
+@@ -252,9 +252,19 @@
+ 	if($_REQUEST['action'] != 'Logout' && $_REQUEST['action'] != 'Login'){
+ 		$_SESSION['lastpage'] = $_SERVER['argv'];
+ 	}
+-	$log->debug("The current user does not have a session.  Going to the login page");	
+-	$action = "Login";
+-	$module = "Users";
++	$somevar = $_SERVER['REMOTE_USER'];
++	$log->debug("Remote user appears to be $somevar");
++	if(isset($_SERVER['REMOTE_USER'])){
++		$log->debug("The current user does not have a session, but has been authenticated by Apache");
++		$action = "Authenticate";
++		$module = "Users";
++	}
++	else {
++		$log->debug("The current user does not have a session.  Going to the login page");      
++		$action = "Login";
++		$module = "Users";
++	}
++
+ }
+ 
+ 

@@ -1,0 +1,29 @@
+<VirtualHost [-IP_ADDRESS-]:80>
+    ServerAdmin webmaster@[-DOMAIN-]
+    ServerName trac.[-DOMAIN-]
+    ServerAlias trac.[-DOMAIN-]
+   
+    WSGIScriptAlias / /var/lib/trac/[-ORG-]/apache/trac.wsgi
+
+    <Directory /var/lib/trac/[-ORG-]/apache>
+        WSGIApplicationGroup %{GLOBAL}
+       	Order deny,allow
+       	Allow from all
+    </Directory>
+
+    <Location "/">
+        AuthType Kerberos
+        AuthName "Trac"
+        KrbAuthRealms [-REALM-]
+        Krb5Keytab /etc/apache2/apache2.keytab
+        KrbMethodNegotiate on
+        KrbMethodK5Passwd on
+        Require valid-user
+    </Location>
+
+    # Possible values include: debug, info, notice, warn, error, crit, alert, emerg.
+    LogLevel warn
+    ErrorLog /var/log/apache2/trac.log
+    CustomLog /var/log/apache2/access.log combined
+    ServerSignature Off
+</VirtualHost>

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Name=Mind Mapping
+Comment=Strategy, planning, management
+Exec=/usr/bin/freemind
+Terminal=false
+Icon=/usr/share/pixmaps/FreeMindWindowIcon.xpm
+Type=Application
+MimeType=application/x-freemind
+Categories=Application;Office;
+GenericName=FreeMind

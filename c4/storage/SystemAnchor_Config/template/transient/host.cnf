@@ -1,0 +1,15 @@
+#
+# [-HOST-].cnf
+#
+
+[ req ]
+prompt                  = no
+distinguished_name      = [-HOST-]
+
+[ [-HOST-] ]
+commonName              = [-HOST-]
+stateOrProvinceName     = ON
+countryName             = CA
+emailAddress            = hostmaster@[-SYSTEM_ANCHOR_DOMAIN-]
+organizationName        = [-SHORT_DOMAIN-]
+organizationalUnitName  = IT Department

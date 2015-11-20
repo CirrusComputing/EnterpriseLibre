@@ -1,0 +1,2 @@
+-- Set configuration table to use parameters we want it to use
+UPDATE timesheet_config SET LDAPUsernameAttribute='uid', LDAPSearchScope='subtree', LDAPProtocolVersion=3, LDAPScheme='ldaps', LDAPHost='aphrodite.[-DOMAIN-]', LDAPPort=636, LDAPBaseDN='ou=people,[-LDAP_BASE_DN-]', LDAPBindUsername='cn=timesheet,ou=applications,ou=system,[-LDAP_BASE_DN-]', LDAPBindPassword='[-LDAP_PASSWORD_TIMESHEET-]', LDAPBindByUser=1, useLDAP=1, timezone='[-TIMEZONE-]', locale='en_CA' WHERE config_set_id=1;

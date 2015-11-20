@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Customer Relationship Management
+Comment=Customer Relationship Management
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=firefox "http://vtiger.[-DOMAIN-]/"
+Terminal=false
+StartupNotify=true
+Icon=vtiger

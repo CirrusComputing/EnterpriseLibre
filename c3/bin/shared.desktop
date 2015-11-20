@@ -1,0 +1,9 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Type=Link
+Icon[en_CA]=inode-directory
+Name[en_CA]=Shared Folder
+URL=file:///srv/shared
+Name=Shared Folder

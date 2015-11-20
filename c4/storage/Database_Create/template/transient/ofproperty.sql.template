@@ -1,0 +1,139 @@
+--
+-- PostgreSQL database dump
+--
+
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = off;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+SET escape_string_warning = off;
+
+SET search_path = public, pg_catalog;
+
+--
+-- Data for Name: ofproperty; Type: TABLE DATA; Schema: public; Owner: openfire
+--
+
+INSERT INTO ofproperty (name, propvalue) VALUES ('provider.auth.className', 'org.jivesoftware.openfire.ldap.LdapAuthProvider');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.host', 'aphrodite.[-DOMAIN-]');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.port', '636');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.usernameField', 'uid');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.baseDN', '[-LDAP_BASE_DN-]');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.nameField', 'cn');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.emailField', 'mail');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.searchFilter', '(|(&(objectClass=organizationalPerson)(ou:dn:=people))(&(cn:dn:=xmpp)(ou:dn:=applications)))');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.groupSearchFilter', '(&(objectClass=groupOfNames)(ou:dn:=chatgroups))');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.adminDN', 'cn=xmpp,ou=applications,ou=system,[-LDAP_BASE_DN-]');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.adminPassword', '[-LDAP_PASSWORD_OPENFIRE-]');
+INSERT INTO ofproperty (name, propvalue) VALUES ('provider.user.className', 'org.jivesoftware.openfire.ldap.LdapUserProvider');
+INSERT INTO ofproperty (name, propvalue) VALUES ('xmpp.session.conflict-limit', '0');
+INSERT INTO ofproperty (name, propvalue) VALUES ('provider.group.className', 'org.jivesoftware.openfire.ldap.LdapGroupProvider');
+INSERT INTO ofproperty (name, propvalue) VALUES ('update.lastCheck', '1258085260257');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.connectionPoolEnabled', 'true');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.sslEnabled', 'true');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.ldapDebugEnabled', 'false');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.autoFollowReferrals', 'false');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.autoFollowAliasReferrals', 'true');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.vcard-mapping', '<![CDATA[
+<vCard xmlns="vcard-temp">
+  <N>
+    <GIVEN>{cn}</GIVEN>
+  </N> 
+  <EMAIL>
+    <INTERNET/> 
+    <USERID>{mail}</USERID>
+  </EMAIL> 
+  <FN>{displayName}</FN> 
+  <NICKNAME>{uid}</NICKNAME> 
+  <PHOTO>
+    <TYPE>image/jpeg</TYPE> 
+    <BINVAL>{jpegPhoto}</BINVAL>
+  </PHOTO> 
+  <ADR>
+    <HOME/> 
+    <STREET>{homePostalAddress}</STREET>
+  </ADR> 
+  <ADR>
+    <WORK/> 
+    <STREET>{postalAddress}</STREET> 
+    <LOCALITY>{l}</LOCALITY> 
+    <REGION>{st}</REGION> 
+    <PCODE>{postalCode}</PCODE>
+  </ADR> 
+  <TEL>
+    <HOME/> 
+    <VOICE/> 
+    <NUMBER>{homePhone}</NUMBER>
+  </TEL> 
+  <TEL>
+    <WORK/> 
+    <VOICE/> 
+    <NUMBER>{telephoneNumber}</NUMBER>
+  </TEL> 
+  <TEL>
+    <WORK/> 
+    <CELL/> 
+    <NUMBER>{mobile}</NUMBER>
+  </TEL> 
+  <TEL>
+    <WORK/> 
+    <PAGER/> 
+    <NUMBER>{pager}</NUMBER>
+  </TEL> 
+  <TITLE>{title}</TITLE> 
+  <ORG>
+    <ORGUNIT>{departmentNumber}</ORGUNIT>
+  </ORG>
+</vCard>]]>');
+INSERT INTO ofproperty (name, propvalue) VALUES ('provider.vcard.className', 'org.jivesoftware.openfire.ldap.LdapVCardProvider');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.override.avatar', 'false');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.groupNameField', 'cn');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.groupMemberField', 'member');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.groupDescriptionField', 'description');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.posixMode', 'false');
+INSERT INTO ofproperty (name, propvalue) VALUES ('xmpp.domain', 'xmpp');
+INSERT INTO ofproperty (name, propvalue) VALUES ('ldap.debugEnabled', 'false');
+INSERT INTO ofproperty (name, propvalue) VALUES ('admin.authorizedJIDs', 'xmpp@xmpp');
+INSERT INTO ofproperty (name, propvalue) VALUES ('update.service-enabled', 'false');
+INSERT INTO ofproperty (name, propvalue) VALUES ('update.notify-admins', 'false');
+INSERT INTO ofproperty (name, propvalue) VALUES ('update.proxy.port', '-1');
+INSERT INTO ofproperty (name, propvalue) VALUES ('register.inband', 'false');
+INSERT INTO ofproperty (name, propvalue) VALUES ('register.password', 'false');
+INSERT INTO ofproperty (name, propvalue) VALUES ('xmpp.auth.anonymous', 'false');
+INSERT INTO ofproperty (name, propvalue) VALUES ('xmpp.privateStorageEnabled', 'false');
+INSERT INTO ofproperty (name, propvalue) VALUES ('xmpp.socket.ssl.active', 'false');
+INSERT INTO ofproperty (name, propvalue) VALUES ('xmpp.client.tls.policy', 'required');
+INSERT INTO ofproperty (name, propvalue) VALUES ('xmpp.server.tls.enabled', 'true');
+INSERT INTO ofproperty (name, propvalue) VALUES ('xmpp.server.dialback.enabled', 'false');
+INSERT INTO ofproperty (name, propvalue) VALUES ('xmpp.server.certificate.accept-selfsigned', 'false');
+INSERT INTO ofproperty (name, propvalue) VALUES ('mediaproxy.idleTimeout', '60000');
+INSERT INTO ofproperty (name, propvalue) VALUES ('mediaproxy.lifetime', '9000');
+INSERT INTO ofproperty (name, propvalue) VALUES ('mediaproxy.enabled', 'false');
+INSERT INTO ofproperty (name, propvalue) VALUES ('mediaproxy.portMin', '10000');
+INSERT INTO ofproperty (name, propvalue) VALUES ('mediaproxy.portMax', '20000');
+INSERT INTO ofproperty (name, propvalue) VALUES ('mediaproxy.echoPort', '10020');
+INSERT INTO ofproperty (name, propvalue) VALUES ('xmpp.socket.ssl.keypass', '[-OPENFIRE_KEYPASS-]');
+INSERT INTO ofproperty (name, propvalue) VALUES ('xmpp.socket.ssl.trustpass', '[-OPENFIRE_KEYPASS-]');
+
+
+insert into public.ofproperty (name, propvalue) VALUES ('cache.group.expirationTime', '300000');
+insert into public.ofproperty (name, propvalue) VALUES ('cache.ldap.expirationTime', '300000');
+insert into public.ofproperty (name, propvalue) VALUES ('cache.listsCache.expirationTime', '300000');
+insert into public.ofproperty (name, propvalue) VALUES ('cache.multicast.expirationTime', '300000');
+insert into public.ofproperty (name, propvalue) VALUES ('cache.remoteUsersCache.expirationTime', '300000');
+insert into public.ofproperty (name, propvalue) VALUES ('cache.roster.expirationTime', '300000');
+insert into public.ofproperty (name, propvalue) VALUES ('cache.userCache.expirationTime', '300000');
+insert into public.ofproperty (name, propvalue) VALUES ('cache.userGroup.expirationTime', '300000');
+insert into public.ofproperty (name, propvalue) VALUES ('cache.username2roster.expirationTime', '300000');
+insert into public.ofproperty (name, propvalue) VALUES ('cache.vcardCache.expirationTime', '300000');
+
+
+insert into public.ofproperty (name, propvalue) VALUES ('sasl.gssapi.config', '/etc/openfire/gss.conf');
+insert into public.ofproperty (name, propvalue) VALUES ('sasl.mechs', 'GSSAPI');
+insert into public.ofproperty (name, propvalue) VALUES ('sasl.realm', '[-REALM-]');
+insert into public.ofproperty (name, propvalue) VALUES ('sasl.gssapi.useSubjectCredsOnly', 'false');
+
+--
+-- PostgreSQL database dump complete
+--
+

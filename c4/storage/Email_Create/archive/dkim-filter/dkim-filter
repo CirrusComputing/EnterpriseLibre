@@ -1,0 +1,10 @@
+# Command-line options specified here will override the contents of
+# /etc/dkim-filter.conf. See dkim-filter(8) for a complete list of options.
+DAEMON_OPTS="-l -i /etc/dkim.InternalSigningHosts.conf"
+#
+# Uncomment to specify an alternate socket
+# Note that setting this will override any Socket value in dkim-filter.conf
+#SOCKET="local:/var/run/dkim-filter/dkim-filter.sock" # Debian default
+#SOCKET="inet:54321" # listen on all interfaces on port 54321
+SOCKET="inet:8891@localhost" # Ubuntu default - listen on loopback on port 8891
+#SOCKET="inet:12345@192.0.2.1" # listen on 192.0.2.1 on port 12345

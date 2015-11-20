@@ -1,0 +1,31 @@
+<component name="eseri.auth.Mod_sso">
+   <require>org.nuxeo.ecm.platform.ui.web.auth.defaultConfig</require>
+   <require>org.nuxeo.ecm.platform.login.Proxy</require>
+
+   <extension
+      target="org.nuxeo.ecm.platform.ui.web.auth.service.PluggableAuthenticationService"
+      point="authenticators">
+      <authenticationPlugin
+              name="PROXY_AUTH">
+       <loginModulePlugin>Trusting_LM</loginModulePlugin>
+       <parameters>
+         <!-- configure here the name of the http header that is used to retrieve user identity -->
+         <parameter name="ssoHeaderName">eseriuser</parameter>
+       </parameters>
+      </authenticationPlugin>
+  </extension>
+
+   <!-- Include Proxy Auth into authentication chain -->
+    <extension
+      target="org.nuxeo.ecm.platform.ui.web.auth.service.PluggableAuthenticationService"
+      point="chain">
+    <authenticationChain>
+      <plugins>
+        <!--  Keep basic Auth at top of Auth chain to support RSS access via BasicAuth -->
+        <plugin>FORM_AUTH</plugin>
+        <plugin>PROXY_AUTH</plugin>
+        <plugin>BASIC_AUTH</plugin>
+      </plugins>
+    </authenticationChain>
+  </extension>
+ </component>

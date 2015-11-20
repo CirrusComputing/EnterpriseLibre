@@ -1,0 +1,11 @@
+./*/.xsession-errors
+./*/.evolution/cache/tmp
+./*/.evolution/mail/imap/*.[-SYSTEM_ANCHOR_DOMAIN-]
+./*/.local/share/gvfs-metadata/*.log
+./*/.mozilla/firefox/*.default/Cache
+./*/.mozilla/firefox/*.default/urlclassifier.pset
+./*/.mozilla/firefox/*.default/urlclassifier3.sqlite
+./*/.mozilla/firefox/*.default/cookies.sqlite*
+./*/.nx
+./*/.cache
+./*/VTBackup

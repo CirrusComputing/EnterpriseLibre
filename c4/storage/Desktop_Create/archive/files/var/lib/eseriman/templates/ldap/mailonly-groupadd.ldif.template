@@ -1,0 +1,4 @@
+dn: cn=mailonly,ou=group,[-LDAP_BASE-]
+changetype: modify
+add: memberuid
+memberuid: [-USERNAME-]

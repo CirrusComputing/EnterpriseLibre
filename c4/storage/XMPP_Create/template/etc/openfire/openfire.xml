@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<jive>
+  <setup>true</setup>
+  <adminConsole>
+    <!-- Disable either port by setting the value to -1 -->
+    <port>9090</port>
+    <securePort>9091</securePort>
+  </adminConsole>
+  <locale>en</locale>
+  <!--
+    <network>
+        <interface></interface>
+    </network>
+    -->
+  <connectionProvider>
+    <className>org.jivesoftware.database.DefaultConnectionProvider</className>
+  </connectionProvider>
+  <database>
+    <defaultProvider>
+      <driver>org.postgresql.Driver</driver>
+      <serverURL>jdbc:postgresql://pgsql.[-DOMAIN-]:5432/openfire</serverURL>
+      <username>openfire</username>
+      <password>[-DB_PASSWORD_OPENFIRE-]</password>
+      <testSQL>select 1</testSQL>
+      <testBeforeUse>true</testBeforeUse>
+      <testAfterUse>true</testAfterUse>
+      <minConnections>5</minConnections>
+      <maxConnections>25</maxConnections>
+      <connectionTimeout>1.0</connectionTimeout>
+    </defaultProvider>
+  </database>
+</jive>

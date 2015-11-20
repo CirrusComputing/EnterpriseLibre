@@ -1,0 +1,8 @@
+ssmtp	ssmtp/rewritedomain	string
+ssmtp	ssmtp/overwriteconfig	boolean true
+ssmtp	ssmtp/hostname	string	localhost.localdomain
+ssmtp	ssmtp/mailname	string
+ssmtp	ssmtp/root	string	sysadmin
+ssmtp	ssmtp/port	string
+ssmtp	ssmtp/mailhub	string	smtp
+ssmtp	ssmtp/fromoverride	boolean	false

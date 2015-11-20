@@ -1,0 +1,2 @@
+C3 has reported an error while creating [% username %] with email prefix [% email_prefix %] for cloud [% network_name %].
+[% email_message %]

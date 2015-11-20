@@ -1,0 +1,30 @@
+<VirtualHost [-IP-]:80>
+    ServerAdmin webmaster@[-DOMAIN-]
+    ServerName scheduleit.[-DOMAIN-]
+    ServerAlias scheduleit.[-DOMAIN-]
+
+    DocumentRoot /var/lib/phpscheduleit
+
+    <Directory /var/lib/phpscheduleit/>
+        Options Indexes FollowSymLinks MultiViews
+      	AllowOverride All
+      	order allow,deny
+      	allow from all
+    </Directory>
+
+    <Location />
+        AuthType Kerberos
+       	AuthName "PHPScheduleIt"
+       	KrbAuthRealms [-REALM-]
+       	Krb5Keytab /etc/apache2/apache2.keytab
+       	KrbMethodNegotiate on
+       	KrbMethodK5Passwd on
+       	Require valid-user
+    </Location>
+
+    # Possible values include: debug, info, notice, warn, error, crit, alert, emerg.
+    LogLevel warn
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log combined
+    ServerSignature Off
+</VirtualHost>

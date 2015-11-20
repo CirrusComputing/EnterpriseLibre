@@ -1,0 +1,60 @@
+--- orig/simple.properties	2009-09-28 21:43:22.000000000 -0400
++++ new/simple.properties	2010-02-09 11:26:29.000000000 -0500
+@@ -1,39 +1,37 @@
+ 
+ 
+ simple.text= \
+-<P><H4>{0}: Uniquely Simple</H4></P> \
++<P><H4>WebHuddle: Uniquely Simple</H4></P> \
+ <P>Starting and running \
+-meetings in {0} is so easy that mastering it takes only a few \
++meetings in WebHuddle is so easy that mastering it takes only a few \
+ minutes. Joining meetings is even easier. \
+ </P> \
+-<P>{0}&rsquo;s meeting \
+-scheduling function is so simple... it doesn&rsquo;t exist! Instead of \
+-trying to reinvent the wheel, {0} leaves scheduling to \
+-scheduling software. In other words, schedule a {0} meeting the \
+-same way you schedule lunch or any other face-to-face meeting. \
+-{0} is your personal meeting room, and to start a meeting you \
++<P>\
++\
++WebHuddle leaves scheduling to your usual \
++scheduling software. In other words, schedule a conference the \
++same way you schedule lunch or any other face-to-face meeting, \
++with your email/calendar application. WebHuddle is your personal \
++meeting room, and to start a meeting you \
+ need only go there and have people to join you. \
+ </P> \
+ <P>To open your meeting \
+-room, sign in to {0} and click the Begin button. All you have \
+-to do is give the meeting a name and choose options such as \
+-voice-over-IP or whether or not to record the meeting, and the \
+-meeting starts. You will receive an email that contains a link \
+-for joining the meeting -- forward it to anyone you want to \
+-invite to your meeting.  People join by simply clicking the link and entering their name. \
+-Or you can tell them to click the <A HREF={1}>Join Meeting link.</A> \
+-and clicking the Join Meeting button. To enter your meeting they \
+-simply enter their email, your email, and the meeting password. That&rsquo;s it!</P> \
++room, sign in to WebHuddle and click the Begin button. All you have \
++to do is give the meeting a name and password, and \
++whether or not to record the meeting, and the \
++meeting starts. You see a pop-up that contains a link \
++for joining the meeting -- email it to anyone you want to \
++invite to your meeting.  People join by simply clicking the link and entering their email address and the meeting password. That's it!</P> \
+ <P>Once in the meeting, \
+-you will notice the very simple user interface. The {0} client \
++you will notice the very simple user interface. The WebHuddle client \
+ has no menus, no right-clicking, and no pop-up windows. A single, \
+ resizeable window displays all content. The tool area can be hidden \
+ completely, allowing users to see more of the content area.</P> \
+ <P>The moderator may pass \
+ full control of the meeting to any other participant at any time. You \
+ don&rsquo;t need to specify ahead of time who will be "co-moderators." \
+-You don&rsquo;t need to have anyone install a special {0} "host" \
++You don&rsquo;t need to have anyone install a special WebHuddle "host" \
+ plugin or client. There is no special moderator client or participant \
+-client but only the same, single {0} client and user interface \
++client but only the same, single WebHuddle client and user interface \
+ for everyone in the meeting. \
+ </P>

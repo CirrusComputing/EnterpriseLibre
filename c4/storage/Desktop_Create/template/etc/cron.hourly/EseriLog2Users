@@ -1,0 +1,36 @@
+#!/bin/sh
+#
+# Eseri Usage Log to Admins - v1.0
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+#
+# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+for USERNAME in [-IT_MAN_USER-] ; do
+	DESTINATION_FILE=/home/$USERNAME/Documents/EseriUsage.log
+
+	LOGS="/var/log/eseri.log"
+	[ -f "/var/log/eseri.log.0" ] && LOGS="/var/log/eseri.log.0 $LOGS"
+
+	ZLOGS=""
+	for LOGNAME in $(find /var/log/ -name eseri.log.*.gz 2>/dev/null | sort 2>/dev/null); do
+        	ZLOGS="$LOGNAME $ZLOGS"
+	done
+
+	if [ -z "$ZLOGS" ]; then
+	        cat $LOGS > $DESTINATION_FILE 2>/dev/null
+	else
+        	zcat $ZLOGS | cat - $LOGS > $DESTINATION_FILE 2>/dev/null
+	fi
+
+	chown $USERNAME:$USERNAME $DESTINATION_FILE >/dev/null 2>&1
+	chmod 600 $DESTINATION_FILE >/dev/null 2>&1
+done
+
+exit 0

@@ -1,0 +1,11 @@
+dn: [-LDAP_BASE_DN-]
+objectClass: top
+objectClass: dcObject
+objectClass: organization
+o: [-DOMAIN-]
+dc: [-LDAP_FIRST_DC-]
+
+# Organization Unit: People
+dn: ou=people,[-LDAP_BASE_DN-]
+objectClass: organizationalUnit
+ou: people

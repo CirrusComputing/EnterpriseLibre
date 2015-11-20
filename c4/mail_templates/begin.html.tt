@@ -1,0 +1,6 @@
+<html><body>
+<p>Dear [%=firstname%] [%=lastname%],</p>
+<p>Your Cloud is now being created at CirrusComputing! You can expect to log in to your new Cloud within a few hours. You will receive a welcome e-mail with details on your account when your Cloud is ready.</p>
+<p>Sincerely,</p>
+<p>The CirrusComputing Team</p>
+</body></html>

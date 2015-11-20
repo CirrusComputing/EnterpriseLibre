@@ -1,0 +1,81 @@
+$TTL 300
+$ORIGIN [-DOMAIN-].
+;
+@       IN      SOA     ns1.[-DOMAIN-]. hostmaster.[-DOMAIN-]. (
+                        [-DEPLOY_TIME-]		; serial number (YYYYMMDD##)
+                        1d                      ; refresh = 1 days (we are using notify, so this is just a backup)
+                        15M                     ; update retry = 15 minutes
+                        1W                      ; expiry = 1 week
+                        1h                      ; minimum = 1 hour
+                        )
+;
+; Name Servers
+;
+@			IN	NS	ns1
+@			IN	NS	ns2
+;
+; A records
+;
+@                       IN      A       [-WAN_IP-]
+ns1			IN	A	[-WAN_IP-]
+ns2			IN	A	[-WAN_IP-]
+mail1			IN	A	[-WAN_IP-]
+mail2			IN	A	[-WAN_IP-]
+;
+; CNAME records
+;
+desktop                 IN      CNAME   @[-DELETE_UNLESS_Desktop-]
+;
+; A & CNAME records for external capabilities
+;
+$INCLUDE "/etc/bind/db.externalcapabilities"
+;
+; Website records
+;
+;www                     IN      A       [-WAN_IP]
+;www                     IN      TXT     "v=spf1 -all"
+;
+; MX records
+;
+@			IN	MX	10	mail1
+@			IN	MX	20	mail2
+;
+; SPF
+;
+@                       IN      TXT     "v=spf1 mx a -all"
+@                       IN      SPF     "v=spf1 mx a -all"
+@                       IN      TXT     "v=spf2.0/pra"
+;
+; DomainKey
+;
+_domainkey                      TXT     "o=-; r=postmaster@[-DOMAIN-]"
+mail._domainkey                 TXT     "k=rsa; p=[-DOMAIN_KEY-]"
+;
+;
+;
+$ORIGIN lists.[-DOMAIN-].
+;
+;
+;
+; A records
+;
+@                       IN      A       [-WAN_IP-]
+mail1			IN	A	[-WAN_IP-]
+mail2			IN	A	[-WAN_IP-]
+;
+; MX records
+;
+@			IN	MX	10	mail1
+@			IN	MX	20	mail2
+;
+; SPF
+;
+@                       IN      TXT     "v=spf1 mx a -all"
+@                       IN      SPF     "v=spf1 mx a -all"
+@                       IN      TXT     "v=spf2.0/pra"
+;
+; DomainKey
+;
+_domainkey                      TXT     "o=-; r=postmaster@[-DOMAIN-]"
+mail._domainkey                 TXT     "k=rsa; p=[-DOMAIN_KEY-]"
+;

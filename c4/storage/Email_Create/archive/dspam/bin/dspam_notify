@@ -1,0 +1,266 @@
+#!/usr/bin/perl
+#
+# $Id: dspam_notify,v 1.06 2011/11/03 11:58:15 sbajic Exp $
+
+use Net::SMTP;
+
+# Enter the location of you dspam.conf, dspam binary and path to dspam_admin/dspam_stats.
+$DSPAMCONF = '/etc/dspam/dspam.conf';
+$DSPAM_BINARY = '/usr/bin/dspam';
+$BINDIR = '/usr/bin';
+
+# Who will the notifications be sent from?
+$FROM_EMAIL = 'dspam@example.org';
+$FROM_NAME = 'DSPAM Filter';
+  
+# What will the notification subject be?
+$SUBJECT = 'Daily Spam Quarantine Summary';
+
+# What text to display in the body?
+$BODY = qq!<p>This report has been sent to you from the Anti-Spam service hosted at example.org. Below is a list of items in your quarantine area. You can view or release a message by clicking on the links (right). If you no longer wish to receive these reports then you may change the option on the 'Preferences' page.</p>!;
+
+# Quarantine URL
+$DSPAM_URL = 'https://dspam.example.org';
+
+# Maximum of entries to show in mail
+$MAX_ITEMS = 200;
+
+# Address of your SMTP server? localhost should be fine.
+$SERVER = 'localhost';
+
+# Port of your SMTP server? 25 should be fine
+$PORT = '25';
+
+# Enable User Preference Checking (Very CPU Intensive!!!) Not Recommended for more than 500 email accounts.
+$PREF_CHECK = 0;
+
+######################################
+# No need to config below this point.#
+######################################
+
+
+#Build the Quarantine URL
+$QUARANTINE_URL = $DSPAM_URL . '/dspam.cgi?template=quarantine';
+
+# Autodetect scale and preference extension support
+$LARGE_SCALE = 0;
+$DOMAIN_SCALE = 0;
+$PREFERENCES_EXTENSION = 0;
+do {
+  my $x = `$DSPAM_BINARY --version`;
+  $PREFERENCES_EXTENSION = 1 if ($x =~ /--enable-preferences-extension/);
+  $LARGE_SCALE = 1 if ($x =~ /--enable-large-scale/);
+  $DOMAIN_SCALE = 1 if ($x =~ /--enable-domain-scale/) ;
+};
+
+# Date Formatting
+my ($SEC,$MIN,$HOUR,$MDAY,$MON,$YEAR,$WDAY,$YDAY,$ISDST) = localtime(time);
+  
+# Array containing Days of the week abreviations
+@WEEKDAYS = ('Sun','Mon','Tue','Wed','Thu','Fri','Sat');
+    
+# Array containing Month abreviations
+@MONTHS = ('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec');
+    
+$D = (localtime)[6];
+$M = (localtime)[4];
+
+$DAY_ABR = $WEEKDAYS[$D];
+$MONTH_ABR = $MONTHS[$M];
+$DAY_NUM = $MDAY; 
+$YEAR += 1900;
+
+$TODAY = $DAY_ABR . " " . $MONTH_ABR . " " . sprintf("%2s", $DAY_NUM);
+
+# Get the location of DSPAM home and if AllowOverride is set for dailyQuarantineSummary
+$DSPAMHOME = "";
+$ALLOW_OVERRIDE = "";
+$DEFAULT_PREF = "";
+open(DCONF, $DSPAMCONF) || die("Could not open " . $DSPAMCONF . " file!");
+while(<DCONF>) {
+  chomp;
+  my($directive, $value) = split(/\s+/);
+  $DSPAMHOME = $value if ($directive eq "Home");
+  $ALLOW_OVERRIDE = "on" if ($directive eq "AllowOverride" && $value eq "dailyQuarantineSummary");
+  if ($directive eq "Preference") {
+    if ($value =~ /^\s*[\"\']?dailyQuarantineSummary[\t ]*=[\t ]*on[\"\']?/) {
+      $DEFAULT_PREF = "on";
+    } else {
+      $DEFAULT_PREF = "off";
+    }
+  }
+  last if($DSPAMHOME ne "" && $ALLOW_OVERRIDE ne "" && $DEFAULT_PREF ne "");
+}
+close(DCONF);
+$ALLOW_OVERRIDE = "off" if($ALLOW_OVERRIDE eq "");
+$DEFAULT_PREF = "off" if($DEFAULT_PREF eq "");
+if (! -d $DSPAMHOME) {
+  die("Could not determine DSPAM home!");
+}
+
+# Create list of users having TP bigger then zero
+open(IN, "$BINDIR/dspam_stats|");
+while(<IN>) {
+  chomp;
+  s/:/ /g;
+  my($username, $tp, $tn, $fp, $fn, $sc, $nc) = (split(/\s+/))[0,2,4,6,8,10,12];
+  if ($tp eq "") {
+    $_ = <IN>;
+    s/:/ /g;
+    ($tp, $tn, $fp, $fn, $sc, $nc) = (split(/\s+/))[2,4,6,8,10,12];
+  }
+  push(@RECIPIENT_LIST, $username) if $tp != 0;
+}
+close(IN);
+
+# Get default user preference for dailyQuarantineSummary
+if ($PREF_CHECK == 1 && $PREFERENCES_EXTENSION == 1) {
+  open(PIPE, "$BINDIR/dspam_admin agg pref 'default'|");
+  while(<PIPE>) {
+    chomp;
+    my($directive, $value) = split(/\=/);
+    if ($directive eq "dailyQuarantineSummary") {
+      $DEFAULT_PREF = $value;
+      last;
+    }
+  }
+  close(PIPE);
+}
+
+# Gather Recipient Quarantine Info
+foreach $RECIPIENT (@RECIPIENT_LIST) {
+
+  # Get User Preference from dspam_admin
+  if ($ALLOW_OVERRIDE eq "on") {						# Check for Allow Overides
+    open(PIPE, "$BINDIR/dspam_admin li pref " . quotemeta($RECIPIENT) . "|");
+    while(<PIPE>) {
+      chomp;
+      my($directive, $value) = split(/\=/);
+      if ($directive eq "dailyQuarantineSummary") {
+        if ($value ne "on" && $value ne "off") {
+          $USER_PREF = $DEFAULT_PREF;						# User Preference in valid, use default preference
+        } else {
+          $USER_PREF = $value;
+        }
+        last;
+      }
+    }
+    close(PIPE);
+  } else {
+    $USER_PREF = $DEFAULT_PREF;							# Overrides off, use default preference
+  }
+
+   # Build path to Quarantine .mbox
+  if ($DOMAIN_SCALE == 1) {							# Format Quarantine path for Domain Scale
+    my($u, $D) = (split(/@/, $RECIPIENT));
+    $MBOX = $DSPAMHOME . "/data/" . $D . "/" . $u . "/" . $u . ".mbox";
+  } elsif ($LARGE_SCALE == 1) {							# Format Quarantine path for Large Scale
+    $u = substr($RECIPIENT, 0, 1);
+    $s = substr($RECIPIENT, 1, 1);
+    $MBOX = $DSPAMHOME . "/data/" . $u . "/" . $s . "/" . $RECIPIENT . "/" . $RECIPIENT . ".mbox";
+  } else {									# Format Quarantine path for Normal Scale
+    $MBOX = $DSPAMHOME . "/data/" . $RECIPIENT . "/" . $RECIPIENT . ".mbox";
+  }
+
+  # Get total amount of quarantine messages and their signature
+  $NEW = 0;
+  $TOTAL = 0;
+  $SIG = '';
+  @Q_SIG = ();
+  @Q_SUBJECT = ();
+  if ($USER_PREF ne "off" && -e $MBOX) {					# Check if .mbox file exists and user pref
+    open(MBOX, "<$MBOX") || die("Could not open " . $MBOX . " file!");
+    while(<MBOX>) {
+      s/\r?\n//;
+      next if ($_ !~ /^From QUARANTINE/);
+      $TOTAL++;									# Count Total messages in Quarantine
+      $NEW++ if ($_ =~ /^From QUARANTINE $TODAY/);				# Count New messages in Quarantine
+      $QSUBJECT = '<None Specified>';
+      while(<MBOX>) {
+        s/\r?\n//;
+        last if ($_ eq "");
+        my($key, $val) = split(/\: ?/, $_, 2);
+        if ($key =~ /^Subject$/i) {
+          $val =~ s/^\s+//;
+          $val =~ s/\s+$//;
+          $QSUBJECT = $val if ($val ne "");
+        }
+        if ($key =~ /^X\-DSPAM\-Signature$/) {
+          push(@Q_SIG, $val);
+          $QSUBJECT =~ s/</&lt;/g;
+          $QSUBJECT =~ s/>/&gt;/g;
+          $QSUBJECT = substr($QSUBJECT, 0, 50) . "..." if (length($QSUBJECT)>50);
+          push(@Q_SUBJECT, $QSUBJECT);
+          last;
+        }
+      }
+    }
+    close(MBOX);
+  }
+  push(@Q_SUBJECT_ITEMS, join("\n", @Q_SUBJECT));
+  push(@Q_SIG_ITEMS, join("\n", @Q_SIG));
+  push(@Q_NEW_ITEMS, $NEW);							# Send Count to Array for later use
+  push(@Q_TOTAL_ITEMS, $TOTAL);							# Send Count to Array for later use
+  @Q_SUBJECT = ();
+  @Q_SIG = ();
+}
+
+
+# Send some emails
+@Q_ROW_COLOR=('CCCCCC','FFFFFF');
+$SMTP = Net::SMTP->new(								# Establish SMTP Connection
+	Host => $SERVER . ":" . $PORT,
+	Timeout => 30) || die ("Could not connect to SMTP server " . $SERVER . ":" . $PORT . "; $!");
+for ($I = 0; $I <= $#RECIPIENT_LIST; $I++) {					# Loop through Recipients List and send the message
+  if (@Q_TOTAL_ITEMS[$I] != 0) {						# Don't send reminders to users with empty quarantines
+    $SMTP->mail($FROM_EMAIL);
+    $SMTP->to($RECIPIENT_LIST[$I]);
+    $SMTP->data();
+    $SMTP->datasend("From: $FROM_NAME <$FROM_EMAIL>\n");
+    $SMTP->datasend("To: $RECIPIENT_LIST[$I]\n");
+    $SMTP->datasend("Subject: $SUBJECT\n");
+    $SMTP->datasend("Mime-Version: 1.0\n");
+    $SMTP->datasend("Content-Type: text/html; charset=UTF-8\n");
+    $SMTP->datasend("\n");
+    $SMTP->datasend("<HTML>\n");
+    $SMTP->datasend("<HEAD>\n");
+    $SMTP->datasend("<TITLE>DSPAM Quarantine Summary for $RECIPIENT_LIST[$I]</TITLE>\n");
+    $SMTP->datasend("<META HTTP-EQUIV='Content-Type' CONTENT='text/html; charset=utf-8'>\n");
+    $SMTP->datasend("</HEAD>\n");
+    $SMTP->datasend("<BODY>\n");
+    $SMTP->datasend($BODY ."\n");
+    $SMTP->datasend("<TABLE>\n");
+    $SMTP->datasend("<TR><TD>Quarantine Summary for</TD><TD>$RECIPIENT_LIST[$I]</TD></TR>\n");
+    $SMTP->datasend("<TR><TD>Date</TD><TD>$TODAY, $YEAR</TD></TR>\n");
+    $SMTP->datasend("<TR><TD COLSPAN='2'>&nbsp;</TD></TR>\n");
+    $SMTP->datasend("<TR><TD>New Messages</TD><TD>@Q_NEW_ITEMS[$I]</TD></TR>\n");
+    $SMTP->datasend("<TR><TD>Total Messages</TD><TD>@Q_TOTAL_ITEMS[$I]</TD></TR>\n");
+    $SMTP->datasend("</TABLE>\n");
+    $SMTP->datasend("<BR>\n");
+    $SMTP->datasend("<TABLE>\n");
+    @Q_SUBJECT = split(/\n/,@Q_SUBJECT_ITEMS[$I]);
+    @Q_SIG = split(/\n/,@Q_SIG_ITEMS[$I]);
+    for ($J = 0; $J <= $#Q_SIG; $J++) {
+      my $QCOMMAND = $QUARANTINE_URL . "&user=" . $RECIPIENT_LIST[$I] . "&signatureID=" . @Q_SIG[$J];
+      my $QROW_COLOR = 0;
+      $QROW_COLOR = 1 if(($J % 2) != 0);
+      $SMTP->datasend("<TR>");
+      if ($J >= $MAX_ITEMS) {
+        $SMTP->datasend("<TD COLSPAM='3' STYLE='background-color:" . @Q_ROW_COLOR[$QROW_COLOR] . ";'>To display more then " . $MAX_ITEMS . " messages, please visit the DSPAM Control Center.</TD>\n");
+        $SMTP->datasend("</TR>\n");
+        last;
+      }
+      $SMTP->datasend("<TD STYLE='background-color:" . @Q_ROW_COLOR[$QROW_COLOR] . ";'>" . @Q_SUBJECT[$J] . "</TD>");
+      $SMTP->datasend("<TD STYLE='background-color:" . @Q_ROW_COLOR[$QROW_COLOR] . ";'><A HREF='" . $QCOMMAND . "&command=viewMessage' TARGET='_blank'>View</A></TD>");
+      $SMTP->datasend("<TD STYLE='background-color:" . @Q_ROW_COLOR[$QROW_COLOR] . ";'><A HREF='" . $QCOMMAND . "&command=processFalsePositive' TARGET='_blank'>Release</A></TD>");
+      $SMTP->datasend("</TR>\n");
+    }
+    $SMTP->datasend("</TABLE>\n");
+    $SMTP->datasend("<BR>\n");
+    $SMTP->datasend("Please remember to check <A HREF='$QUARANTINE_URL' TARGET='_blank'>Your Quarantine</A> regularly.\n");
+    $SMTP->datasend("</BODY>\n");
+    $SMTP->datasend("</HTML>\n");
+    $SMTP->dataend();
+  }
+}
+$SMTP->quit;									# Close SMTP Connection

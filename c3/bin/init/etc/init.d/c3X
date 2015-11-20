@@ -1,0 +1,46 @@
+#!/bin/bash
+#
+# C3X Init Script - v1.0
+#
+# Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
+# All Rights Reserved 
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+DAEMON=/usr/bin/vnc4server
+DESC="Permanent VNC session for C3"
+NAME=vnc4c3
+
+. /lib/lsb/init-functions
+
+# Gracefully exit if the package has been removed.
+test -x $DAEMON || exit 0
+
+case "$1" in
+    start)
+        log_daemon_msg "Starting $DESC" "$NAME"
+	#su c3 -c "$DAEMON :1 -geometry 800x500 -depth 16 -name c3 -nohttpd" >/dev/null 2>&1
+	#su c3 -c "$DAEMON :1 -geometry 1152x864 -depth 24 -name c3" >/dev/null 2>&1
+	su c3 -c "$DAEMON :1 -geometry 1152x864 -depth 24 -name c3"
+
+        log_end_msg $?
+        ;;
+    stop)
+        log_daemon_msg "Stopping $DESC" "$NAME"
+	su c3 -c "$DAEMON -kill :1" >/dev/null 2>&1
+	pkill -u c3 >/dev/null 2>&1
+        log_end_msg $?
+        ;;
+    *)
+        echo "Usage: $0 {start|stop}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
+

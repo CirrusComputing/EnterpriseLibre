@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c4:boot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:c4="http://www.eseri.com/C4" xsi:schemaLocation="http://lucid-mirror.wan.virtualorgs.net/schema/C4/Boot.xsd">
+	<name>Database</name>
+	<host>hades</host>
+	<deploy>
+		<arg>short_domain</arg>
+	</deploy>
+	<certificates>
+	</certificates>
+	<passwords>
+		<password host="pgsql" entity="pgadmin" name="DB_PASSWORD_POSTGRES"><always/></password>
+		<password host="mysql" entity="root" name="DB_PASSWORD_MYSQL"><always/></password>
+		<password host="pgsql" entity="nuxeo" name="DB_PASSWORD_NUXEO5"><required>Nuxeo</required></password>
+		<password host="pgsql" entity="openfire" name="DB_PASSWORD_OPENFIRE"><required>InstantMessaging</required></password>
+		<password host="erato" entity="XMPP Keystore" name="OPENFIRE_KEYPASS"><required>InstantMessaging</required></password>
+		<password host="aphrodite" entity="xmpp" name="LDAP_PASSWORD_OPENFIRE"><required>InstantMessaging</required></password>
+		<password host="mysql" entity="timesheet" name="DB_PASSWORD_TIMESHEET"><required>Timesheet</required></password>
+		<password host="aphrodite" entity="timesheet" name="LDAP_PASSWORD_TIMESHEET"><required>Timesheet</required></password>
+		<password host="pgsql" entity="wikiuser" name="DB_PASSWORD_MEDIAWIKI"><required>Wiki</required></password>
+		<password host="mysql" entity="orangehrm" name="DB_PASSWORD_ORANGEHRM"><required>OrangeHRM</required></password>
+		<password host="poseidon" entity="OrangeHRM Admin" type="user" name="ORANGEHRM_ADMIN_PASSWORD"><required>OrangeHRM</required></password>
+		<password host="pgsql" entity="trac" name="DB_PASSWORD_TRAC"><required>Trac</required></password>
+		<password host="mysql" entity="vtiger" name="DB_PASSWORD_VTIGER"><required>Vtiger</required></password>
+		<password host="pgsql" entity="sqlledger" name="DB_PASSWORD_SQL_LEDGER" ><required>SQLLedger</required></password>
+		<password host="pgsql" entity="funambol" name="DB_PASSWORD_FUNAMBOL"><required>Smartphone</required></password>
+		<password host="pgsql" entity="dspam" name="DB_PASSWORD_DSPAM"><required>Email</required></password>
+		<password host="pgsql" entity="sogo" name="DB_PASSWORD_SOGO"><required>SOGo</required></password>
+		<password host="sogo" entity="system-freebusy" type="user" name="SOGO_PASSWORD_FREEBUSY"><required>SOGo</required></password>
+		<password host="pgsql" entity="redmine" name="DB_PASSWORD_REDMINE"><required>Redmine</required></password>
+		<password host="aphrodite" entity="redmine" name="LDAP_PASSWORD_REDMINE"><required>Redmine</required></password>
+		<password host="mysql" entity="phpscheduleit" name="DB_PASSWORD_PHPSCHEDULEIT"><required>PHPScheduleIt</required></password>
+                <password host="aphrodite" entity="phpscheduleit" name="LDAP_PASSWORD_PHPSCHEDULEIT"><required>PHPScheduleIt</required></password>
+	</passwords>
+	<kerberos_keys>
+	</kerberos_keys>
+	<deployment_files>
+	</deployment_files>
+	<package>
+		<always/>
+	</package>
+</c4:boot>

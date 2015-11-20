@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<java version="1.6.0_17" class="java.beans.XMLDecoder"> 
+ <object class="ca.inverse.sogo.engine.source.SOGoSyncSource"> 
+  <void property="databasePassword"> 
+   <string>[-DB_PASSWORD_SOGO-]</string> 
+  </void> 
+  <void property="databaseURL"> 
+   <string>jdbc:postgresql://pgsql.[-DOMAIN-]/sogo</string> 
+  </void> 
+  <void property="databaseUsername"> 
+   <string>sogo</string> 
+  </void> 
+  <void property="info"> 
+   <object class="com.funambol.framework.engine.source.SyncSourceInfo"> 
+    <void property="supportedTypes"> 
+     <array class="com.funambol.framework.engine.source.ContentType" length="1"> 
+      <void index="0"> 
+       <object class="com.funambol.framework.engine.source.ContentType"> 
+        <void property="type"> 
+         <string>text/x-vevent</string> 
+        </void> 
+        <void property="version"> 
+         <string>1</string> 
+        </void> 
+       </object> 
+      </void> 
+     </array> 
+    </void> 
+   </object> 
+  </void> 
+  <void property="name"> 
+   <string>event</string> 
+  </void> 
+  <void property="sourceURI"> 
+   <string>event</string> 
+  </void> 
+ </object> 
+</java> 

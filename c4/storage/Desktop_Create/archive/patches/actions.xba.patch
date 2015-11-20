@@ -1,0 +1,16 @@
+--- actions.xba.orig    2010-08-10 10:27:03.000000000 -0400
++++ actions.xba 2010-08-10 10:25:54.000000000 -0400
+@@ -7,7 +7,13 @@
+ dim isSaved as boolean
+
+ sub store()
++    On Error Goto ErrorHandler
+     ThisComponent.store
++    On Error Goto 0
++    Exit sub
++    ErrorHandler:
++        message = getRsc(&quot;A document must be opened from Nuxeo before the &#39;Save in Nuxeo&#39; feature can be used. Locate the place in Nuxeo where you want to manage the document, drag-and-drop or manually upload it to that location, and then reopen it with the Edit Online link, after which you can save it back with one click.&quot;) + chr(10) + chr(10)
++        response = MsgBox (message, 48, &quot;Nuxeo Live Edit&quot;)
+ End sub
+
+ sub selectAction()

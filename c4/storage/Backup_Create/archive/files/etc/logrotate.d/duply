@@ -1,0 +1,8 @@
+/var/log/duply/*.log {
+        weekly
+        missingok
+        rotate 13 
+        compress
+        notifempty
+        create 644 backup backup
+}

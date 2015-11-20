@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Mailing Lists
+Comment=Manage mailing lists
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=firefox "http://lists.[-DOMAIN-]/"
+Terminal=false
+StartupNotify=true
+Icon=mailinglists

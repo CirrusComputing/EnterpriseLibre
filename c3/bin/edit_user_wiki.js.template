@@ -1,0 +1,61 @@
+//
+// edit_user_wiki.template v1.1
+//
+// This script edits the user wiki page with the contents in the variable 'body'
+// It uses mozmill to do the necessary.
+//
+// Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
+//
+// Copyright (c) 1996-2014 Free Open Source Solutions Inc.
+// All Rights Reserved 
+//
+// Free Open Source Solutions Inc. owns and reserves all rights, title,
+// and interest in and to this software in both machine and human
+// readable forms.
+//
+
+var setupModule = function(module){
+    controller = mozmill.getBrowserController();
+};
+
+var testRecorded = function(){
+    username='[-USERNAME-]';
+    network_name='[-NETWORK_NAME-]';
+    alias_domain='[-ALIAS_DOMAIN-]';
+    controller.open('http://wiki.'+alias_domain+'/index.php?title=User:'+username+'&action=edit');
+    controller.waitForPageLoad();
+    var edit_box = new elementslib.ID(controller.tabs.activeTab, "wikEdFrameBody");
+    var submit_button = new elementslib.ID(controller.tabs.activeTab, "wpSave");
+
+    // Contents of the user wiki page
+    var body = 'Welcome to your user page on your cloud\'s Wiki.  You can use your personal page for anything you wish.  For example, some people keep a list of common links and misc notes, like in the starting list provided for you below.\n\n';
+    
+    body += '=== Important Links ===\n\n';
+    body += '* [http://wiki.cirrusopen.org/index.php/Main_Page Help Wiki]\n\n';
+    body += '* [http://webmail.'+network_name+'/SOGo/so/'+username+'/Mail/view Web Email & Calendars]\n\n';
+    body += '* [http://trac.'+network_name+'/query?status=accepted&status=assigned&status=new&status=reopened&groupdesc=1&group=priority&order=priority&col=id&col=summary&col=status&col=priority&col=reporter&col=time All Issues] &nbsp;&nbsp;&ndash;&nbsp;&nbsp; [http://trac.'+network_name+'/query?status=new&status=assigned&status=reopened&groupdesc=1&group=priority&owner='+username+'&order=priority My Issues] &nbsp;&nbsp;&ndash;&nbsp;&nbsp; [http://trac.'+network_name+'/newticket New Issue]\n\n';
+    body += '* [http://nuxeo.'+network_name+'/nuxeo/nxpath/default/default-domain/UserWorkspaces/'+username+'@view_documents Document Management Personal Workspace] &nbsp;&nbsp; (open [http://nuxeo.'+network_name+'/ Main Page] first)\n\n';
+    body += '* [http://vtiger.'+network_name+'/index.php?module=Dashboard&action=index Customer Relationship Management Dashboard]\n\n';
+    body += '* [http://timesheet.'+network_name+'/daily.php? Daily Timesheet] &nbsp;&nbsp;&ndash;&nbsp;&nbsp;   [http://timesheet.'+network_name+'/weekly.php? Weekly Timesheet]\n\n';
+
+    body += '=== Key Wiki Pages ===\n\n';
+    body += '* [http://wiki.'+network_name+'/index.php/Special:AllPages All Pages]\n\n';
+    body += '* [http://wiki.'+network_name+'/index.php/Special:PopularPages Popular Pages]\n\n';
+    body += '* [[Policies & Procedures]]&nbsp;&nbsp; (page might not exist yet, simply open and type to create&nbsp; ;-)\n\n';
+
+    body += '=== Misc Notes ===\n\n';
+    body += '* Information I don\'t want to lose: Green, medium, brushed, $25.47.\n\n';
+    body += '* First draft: \'\'\"Our best current estimate appears to be somewhere in the general vicinity of the neighborhood around 42.\"\'\'';
+     
+    // Type and submit
+    controller.type(edit_box, body);
+    controller.click(submit_button);
+    controller.waitForPageLoad();
+
+    // Manually open Nuxeo Personal Workspaces, otherwise personal workspaces link in the user wiki page won't work.
+    controller.open('http://nuxeo.'+alias_domain);
+    controller.waitForPageLoad();
+    controller.click(new elementslib.Link(controller.tabs.activeTab, "Personal Workspace"));
+    controller.waitForPageLoad();
+}
+

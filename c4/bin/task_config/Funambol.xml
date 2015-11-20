@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c4:boot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:c4="http://www.eseri.com/C4" xsi:schemaLocation="http://lucid-mirror.wan.virtualorgs.net/schema/C4/Boot.xsd">
+	<name>Funambol</name>
+	<host>metis</host>
+	<deploy>
+	</deploy>
+	<certificates>
+	</certificates>
+	<passwords>
+		<password host="pgsql" entity="funambol" name="DB_PASSWORD_FUNAMBOL"><always/></password>
+		<password host="funambol" entity="admin" name="FUNAMBOL_ADMIN_PASSWORD"><always/></password>
+		<password host="pgsql" entity="sogo" name="DB_PASSWORD_SOGO"><required>SOGo</required></password>
+	</passwords>
+	<kerberos_keys>
+	</kerberos_keys>
+	<deployment_files>
+	</deployment_files>
+	<package>
+		<required>Email</required>
+		<required>Smartphone</required>
+	</package>
+</c4:boot>

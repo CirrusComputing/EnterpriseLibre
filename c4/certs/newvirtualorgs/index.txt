@@ -1,0 +1,7 @@
+V	200930050659Z		01	unknown	/CN=ssl.newvirtualorgs.net/ST=ON/C=CA/emailAddress=hostmaster@newvirtualorgs.net/O=newvirtualorgs/OU=IT Department
+V	200930050659Z		02	unknown	/CN=aphrodite.newvirtualorgs.net/ST=ON/C=CA/emailAddress=hostmaster@newvirtualorgs.net/O=newvirtualorgs/OU=IT Department
+V	200930050701Z		03	unknown	/CN=imap.newvirtualorgs.net/ST=ON/C=CA/emailAddress=hostmaster@newvirtualorgs.net/O=newvirtualorgs/OU=IT Department
+V	200930050702Z		04	unknown	/CN=smtp.newvirtualorgs.net/ST=ON/C=CA/emailAddress=hostmaster@newvirtualorgs.net/O=newvirtualorgs/OU=IT Department
+V	200930050703Z		05	unknown	/CN=dkim.newvirtualorgs.net/ST=ON/C=CA/emailAddress=hostmaster@newvirtualorgs.net/O=newvirtualorgs/OU=IT Department
+V	200930050704Z		06	unknown	/CN=xmpp.newvirtualorgs.net/ST=ON/C=CA/emailAddress=hostmaster@newvirtualorgs.net/O=newvirtualorgs/OU=IT Department
+V	200930050705Z		07	unknown	/CN=xmpp.newvirtualorgs.net/ST=ON/C=CA/emailAddress=hostmaster@newvirtualorgs.net/O=newvirtualorgs/OU=IT Department

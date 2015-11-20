@@ -1,0 +1,28 @@
+#!/bin/bash
+#
+# configure_sogo.sh v1.3
+#
+# This script configures SOGo for a user 
+#
+# Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2014 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+USERNAME=[-USERNAME-]
+EMAIL_PREFIX=[-EMAIL_PREFIX-]
+CLOUD_DOMAIN=[-CLOUD_DOMAIN-]
+TIMEZONE=$(cat /etc/timezone)
+
+su - -c "psql -d sogo << EOF
+DELETE FROM sogo_user_profile where c_uid = '$USERNAME';
+EOF" postgres
+
+su - -c "psql -d sogo << EOF
+INSERT INTO sogo_user_profile (c_uid, c_defaults, c_settings) values ('$USERNAME', '{"\"SOGoTimeFormat"\": "\"%H:%M"\", "\"SOGoMailSignature"\": "\""\", "\"SOGoMailShowSubscribedFoldersOnly"\": "\"0"\", "\"SOGoMailSignaturePlacement"\": "\"below"\", "\"SOGoLanguage"\": "\"English"\", "\"SOGoDayEndTime"\": "\"18:00"\", "\"SOGoFirstWeekOfYear"\": "\"January1"\", "\"SOGoFirstDayOfWeek"\": "\"0"\", "\"SOGoTimeZone"\": "\"$TIMEZONE"\", "\"SOGoContactsCategories"\": [\"Business Partner\", "\"Colleague"\", "\"Competitor"\", "\"Customer"\", "\"Family"\", "\"Friend"\", "\"Press"\", "\"Provider"\", "\"VIP"\"], "\"Vacation"\": {"\"enabled"\": false, "\"autoReplyEmailAddresses"\": ["\"$EMAIL_PREFIX@$CLOUD_DOMAIN"\"], "\"ignoreLists"\": true, "\"daysBetweenResponse"\": "\"7"\", "\"autoReplyText"\": "\""\"}, "\"SOGoMailSortByThreads"\": "\"0"\", "\"SOGoMailMessageCheck"\": "\"manually"\", "\"SOGoMailMessageForwarding"\": "\"inline"\", "\"SOGoLoginModule"\": "\"Mail"\", "\"SOGoCalendarCategoriesColors"\": {"\"Customer"\": "\"#aaa"\", "\"Calls"\": "\"#aaa"\", "\"Favorites"\": "\"#aaa"\", "\"Meeting"\": "\"#aaa"\", "\"Ideas"\": "\"#aaa"\", "\"Miscellaneous"\": "\"#aaa"\", "\"Birthday"\": "\"#aaa"\", "\"Anniversary"\": "\"#aaa"\", "\"Vacation"\": "\"#aaa"\", "\"Travel"\": "\"#aaa"\", "\"Projects"\": "\"#aaa"\", "\"Suppliers"\": "\"#aaa"\", "\"Gifts"\": "\"#aaa"\", "\"Clients"\": "\"#aaa"\", "\"Issues"\": "\"#aaa"\", "\"Business"\": "\"#aaa"\", "\"Holidays"\": "\"#aaa"\", "\"Personal"\": "\"#aaa"\", "\"Status"\": "\"#aaa"\", "\"Competition"\": "\"#aaa"\", \"Follow up\": "\"#aaa"\", \"Public Holiday\": "\"#aaa"\"}, "\"SOGoCalendarCategories"\": ["\"Customer"\", "\"Calls"\", "\"Favorites"\", "\"Meeting"\", "\"Ideas"\", "\"Miscellaneous"\", "\"Birthday"\", "\"Anniversary"\", "\"Vacation"\", "\"Travel"\", "\"Projects"\", "\"Suppliers"\", "\"Gifts"\", "\"Clients"\", "\"Issues"\", "\"Business"\", "\"Holidays"\", "\"Personal"\", "\"Status"\", "\"Competition"\", \"Follow up\", \"Public Holiday\"], "\"Forward"\": {"\"enabled"\": false, "\"forwardAddress"\": ["\""\"], "\"keepCopy"\": false}, "\"SOGoRememberLastModule"\": "\"0"\", "\"SOGoSieveFilters"\": [{"\"actions"\": [{"\"method"\": "\"addflag"\", "\"argument"\": "\"junk"\"}], "\"active"\": true, "\"rules"\": [{"\"operator"\": "\"contains"\", "\"custom_header"\": "\"X-DSPAM-Result"\", "\"field"\": "\"header"\", "\"value"\": "\"Spam"\"}], "\"match"\": "\"any"\", "\"name"\": "\"Junk"\"}], "\"SOGoDayStartTime"\": "\"07:00"\", "\"SOGoMailComposeMessageType"\": "\"html"\"}', '{"\"Calendar"\": {}}');
+EOF" postgres

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Enterprise Resource Planning
+Comment=Collaboration web sites
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=firefox "http://openerp.[-ALIAS_DOMAIN-]/web/webclient/sso_login"
+Terminal=false
+StartupNotify=true
+Icon=openerp

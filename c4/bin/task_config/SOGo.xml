@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c4:boot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:c4="http://www.eseri.com/C4" xsi:schemaLocation="http://lucid-mirror.wan.virtualorgs.net/schema/C4/Boot.xsd">
+	<name>SOGo</name>
+	<host>gaia</host>
+	<deploy>
+		<arg>email_domain</arg>
+		<arg>manager_username</arg>
+	</deploy>
+	<certificates>
+	</certificates>
+	<passwords>
+		<password host="aphrodite" entity="sogo" name="LDAP_PASSWORD_SOGO" ><always/></password>
+		<password host="pgsql" entity="sogo" name="DB_PASSWORD_SOGO" ><always/></password>
+		<password host="sogo" entity="system-freebusy" type="user" name="SOGO_PASSWORD_FREEBUSY" ><always/></password>
+		<password host="aphrodite" entity="dovecot" name="LDAP_PASSWORD_DOVECOT" ><always/></password>
+		<password host="dovecot" entity="proxy" name="DOVECOT_MASTER_USER_PASSWORD" ><always/></password>
+	</passwords>
+	<kerberos_keys>
+		<service>apache2</service>
+	</kerberos_keys>
+	<deployment_files>
+	</deployment_files>
+	<package>
+		<required>Email</required>
+		<required>SOGo</required>
+	</package>
+</c4:boot>

@@ -1,0 +1,15 @@
+#
+# dkim.domainneverused.net.cnf
+#
+
+[ req ]
+prompt                  = no
+distinguished_name      = dkim.domainneverused.net
+
+[ dkim.domainneverused.net ]
+commonName              = dkim.domainneverused.net
+stateOrProvinceName     = ON
+countryName             = CA
+emailAddress            = hostmaster@domainneverused.net
+organizationName        = domainneverused
+organizationalUnitName  = IT Department

@@ -1,0 +1,188 @@
+--- Users.php	2009-07-21 08:35:26.000000000 -0400
++++ Users.php	2010-08-26 14:52:57.000000000 -0400
+@@ -33,6 +33,7 @@
+ require_once('include/utils/UserInfoUtil.php');
+ require_once('modules/Calendar/Activity.php');
+ require_once('modules/Contacts/Contacts.php');
++require_once('modules/Users/CreateUserPrivilegeFile.php');
+ require_once('data/Tracker.php');
+ require_once 'include/utils/CommonUtils.php';
+ require_once 'include/Webservices/Utils.php';
+@@ -461,6 +462,177 @@
+ 		return $this;
+ 	}
+ 
++
++	/** 
++	 * Load a user based on the user_name in $this, ignoring the damned password
++	 * @return -- this if load was successul and null if load failed.
++	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
++	 * All Rights Reserved..
++	 * Contributor(s): Gregory Wolgemuth___________________________..
++	 */
++	function remote_load_user()
++	{
++		$usr_name = $this->column_fields["user_name"];
++		/*You can't "attempt" to login when we're using remote auth - nuts to it
++		if(isset($_SESSION['loginattempts'])){
++			$_SESSION['loginattempts'] += 1;
++		}else{
++			$_SESSION['loginattempts'] = 1;	
++		}
++		if($_SESSION['loginattempts'] > 5){
++			$this->log->warn("SECURITY: " . $usr_name . " has attempted to login ". 	$_SESSION['loginattempts'] . " times.");
++		}*/
++		$this->log->debug("Starting remote user load for $usr_name");
++		$validation = 0;
++		unset($_SESSION['validation']);
++		if( !isset($this->column_fields["user_name"]) || $this->column_fields["user_name"] == "" /*|| !isset($user_password) || $user_password == ""*/)
++			return null;
++
++
++		//I have no idea what these do, or if they're even necessary. There's a lot of salted MD5 hashing and base64 encoding going on, but I just don't know why
++		if($this->validation_check('aW5jbHVkZS9pbWFnZXMvc3VnYXJzYWxlc19tZC5naWY=','1a44d4ab8f2d6e15e0ff6ac1c2c87e6f', '866bba5ae0a15180e8613d33b0acc6bd') == -1)$validation = -1;
++		if($this->validation_check('aW5jbHVkZS9pbWFnZXMvcG93ZXJlZF9ieV9zdWdhcmNybS5naWY=' , '3d49c9768de467925daabf242fe93cce') == -1)$validation = -1;
++		if($this->authorization_check('aW5kZXgucGhw' , 'PEEgaHJlZj0naHR0cDovL3d3dy5zdWdhcmNybS5jb20nIHRhcmdldD0nX2JsYW5rJz48aW1nIGJvcmRlcj0nMCcgc3JjPSdpbmNsdWRlL2ltYWdlcy9wb3dlcmVkX2J5X3N1Z2FyY3JtLmdpZicgYWx0PSdQb3dlcmVkIEJ5IFN1Z2FyQ1JNJz48L2E+', 1) == -1)$validation = -1;
++
++		/*More checking the password - we still don't care!
++		$authCheck = false;
++		$authCheck = $this->doLogin($user_password);
++
++		if(!$authCheck)
++		{
++			$this->log->warn("User authentication for $usr_name failed");
++			return null;
++		}
++		*/
++
++		
++		$this->log->debug("Checking to see if user exists in DB");
++		//When in Rome, don't parameterize your database queries
++		$count_query = "SELECT COUNT(*) AS count FROM $this->table_name WHERE user_name='$usr_name'";
++		$result = $this->db->requireSingleResult($count_query, false);
++		$row = $this->db->fetchByAssoc($result);
++		$numUsers = $row['count'];
++
++		//User is not in the database. Perform LDAP lookup of the user, retrieve pertinent info, stuff into database
++		//Also, if user is first user in the system, assign admin role of some kind, or something, I dunno
++		if ($numUsers == 0){
++			$this->log->debug("User does not exist in DB, starting to perform LDAP lookup");
++			/*List of things we should look up and set somehow
++			is_admin - Set to "on" for the first user. Damnitall, a boolean value that's "on" or "off"?
++			first_name - Given name
++			last_name - Surname
++			status - Should be hardcoded to "Active"
++			email1 - User's primary e-mail, we can look this one up properly in LDAP
++
++			TODO: Does the user need to have a default role set?
++			*/
++			$total_count_query = "SELECT COUNT(*) AS count FROM $this->table_name";
++			$result = $this->db->requireSingleResult($total_count_query, false);
++			$row = $this->db->fetchByAssoc($result);
++			$totalNumUsers = $row['count'];
++
++			$roleid_query = "SELECT roleid FROM vtiger_role ORDER BY roleid DESC";
++			$result = $this->db->query($roleid_query);
++			$row = $this->db->fetchByAssoc($result);
++			$user_roleid = $row['roleid'];
++			$this->log->debug("Chosen roleid is $user_roleid");
++			$this->log->debug("Total number of users in vtiger table $this->table_name appears to be $totalNumUsers");
++			global $ldap_host;
++			global $ldap_base;
++			global $ldap_bind_dn;
++			global $ldap_bind_pw;
++			$this->log->debug("LDAP settings appear to be $ldap_bind_dn on $ldap_host and base $ldap_base");
++			$this->log->debug("Trying a manual LDAP bind");
++			$lconn = ldap_connect($ldap_host);
++			$this->log->debug(ldap_error($lconn));
++			ldap_set_option($lconn, LDAP_OPT_PROTOCOL_VERSION, 3);
++			$lbind = ldap_bind($lconn, $ldap_bind_dn, $ldap_bind_pw);
++			if (! $lbind ){
++				$this->log->debug("Something screwed up on the LDAP bind, damnitall");
++			}
++                        $user_dn="uid=$usr_name,$ldap_base";
++			$this->log->debug("LDAP DN set to $user_dn");
++			/*WARNING WARNING WARNING
++			PHP's LDAP functions DO NOT conform to the LDAP RFCs
++			Please consult PHP's manual to find out what this code is doing
++			Because it isn't doing what you expect*/
++			$ldap_read_result = ldap_read ($lconn, $user_dn, "objectClass=*", array("givenName", "sn", "mail", "eseriMailAlternateAddress"));
++		
++                        if ($ldap_read_result){
++				$this->log->debug("LDAP result set returned successfully");
++				$ldap_arr = ldap_get_entries($lconn, $ldap_read_result);
++				//PHP is ****ing stupid and forces lowercase on returned attribute names
++				//READ RFCs WHEN YOU IMPLEMENT OR WOOGDOR SMASH
++				$this->column_fields['first_name'] = $ldap_arr[0]['givenname'][0];
++				$this->column_fields['last_name'] = $ldap_arr[0]['sn'][0];
++				if (array_key_exists('eserimailalternateaddress', $ldap_arr[0])){
++					$this->column_fields['email1'] = $ldap_arr[0]['eserimailalternateaddress'][0];
++				}
++				else {
++					$this->column_fields['email1'] = $ldap_arr[0]['mail'][0];
++				}
++			}
++
++			if ($totalNumUsers == 0){
++				$this->column_fields['is_admin'] = "on";
++			}
++			$this->column_fields['status'] = "Active";
++			$this->column_fields['roleid'] = $user_roleid;
++			$this->column_fields['hour_format'] = "am/pm";
++			$this->column_fields['date_format'] = "yyyy-mm-dd";
++			$this->column_fields['currency_id'] = 1;
++			$this->column_fields['activity_view'] = "Today";
++			$this->column_fields['lead_view'] = "Today";
++			$this->column_fields['internal_mailer'] = 1;
++			$this->column_fields['reminder_interval'] = "None";
++			ldap_unbind($lconn);
++			$this->mode = "create";
++			$this->saveentity("Users");
++			$this->id = $this->retrieve_user_id($usr_name);
++			$_REQUEST['ALVT'] = "true";
++			$_REQUEST['HDB'] = "true";
++			$_REQUEST['PLVT'] = "true";
++			$_REQUEST['QLTQ'] = "true";
++			$_REQUEST['CVLVT'] = "true";
++			$_REQUEST['HLT'] = "true";
++			$_REQUEST['UA'] = "true";
++			$_REQUEST['GRT'] = "true";
++			$_REQUEST['OLTSO'] = "true";
++			$_REQUEST['ILTI'] = "true";
++			$_REQUEST['MNL'] = "true";
++			$_REQUEST['OLTPO'] = "true";
++			$_REQUEST['PA'] = "true";
++			$_REQUEST['LTFAQ'] = "true";
++			$this->saveHomeStuffOrder($this->id);
++			insertUser2RoleMapping('H5', $this->id);
++			insertUsers2GroupMapping(7 , $this->id);
++			createUserPrivilegesfile($this->id);
++			createUserSharingPrivilegesfile($this->id);
++		}
++		// Get the fields for the user
++		$query = "SELECT * from $this->table_name where user_name='$usr_name'";
++		$result = $this->db->requireSingleResult($query, false);
++		$row = $this->db->fetchByAssoc($result);
++		$this->id = $row['id'];	
++
++		$user_hash = strtolower(md5($user_password));
++
++
++		// If there is no user_hash is not present or is out of date, then create a new one.
++		if(!isset($row['user_hash']) || $row['user_hash'] != $user_hash)
++		{
++			$query = "UPDATE $this->table_name SET user_hash=? where id=?";
++			$this->db->pquery($query, array($user_hash, $row['id']), true, "Error setting new hash for {$row['user_name']}: ");	
++		}
++		$this->loadPreferencesFromDB($row['user_preferences']);
++
++
++		if ($row['status'] != "Inactive") $this->authenticated = true;
++
++		unset($_SESSION['loginattempts']);
++		return $this;
++	}
++
+ 	/**
+ 	 * Get crypt type to use for password for the user.
+ 	 * Fix for: http://trac.vtiger.com/cgi-bin/trac.cgi/ticket/4923

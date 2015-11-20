@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<filteroptions>
+  <ruleset>
+    <rule enabled="true" grouping="all" source="incoming">
+      <title>Postmaster </title>
+      <partset>
+        <part name="to">
+          <value name="recipient-type" type="option" value="contains"/>
+          <value name="recipient" type="address">
+            <address>postmaster@</address>
+          </value>
+        </part>
+      </partset>
+      <actionset>
+        <part name="move-to-folder">
+          <value name="folder" type="folder">
+            <folder uri="email://1337374872.661.24@chaos/Postmaster"/>
+          </value>
+        </part>
+      </actionset>
+    </rule>
+  </ruleset>
+</filteroptions>

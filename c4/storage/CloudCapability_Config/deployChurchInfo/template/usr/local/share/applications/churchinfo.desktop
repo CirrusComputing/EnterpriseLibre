@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Church Management
+Comment=Collaboration web sites
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=firefox "http://churchinfo.[-ALIAS_DOMAIN-]"
+Terminal=false
+StartupNotify=true
+Icon=churchinfo

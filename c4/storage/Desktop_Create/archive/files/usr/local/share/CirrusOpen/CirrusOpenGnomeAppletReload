@@ -1,0 +1,56 @@
+#!/bin/bash
+#
+# Gnome Applet Reload v1.2
+#
+# Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2014 (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+ITER=0
+FAIL=0
+
+GCONF_PANEL_FOLDER=~/.gconf/apps/panel
+APPLET_IIDS=('GNOME_WindowListApplet' 'GNOME_ClockApplet' 'GNOME_IndicatorApplet' 'GNOME_Panel_TrashApplet' 'GNOME_NotificationAreaApplet')
+APPLET_PROCESSES=('wnck-applet' 'clock-applet' 'indicator-applet' 'trashapplet' 'notification-area-applet')
+
+while [ $ITER -lt 3 ]; do
+    ITER=$(($ITER+1))
+    sleep 3
+    PID_GNOME_PANEL=$(ps -C gnome-panel -o pid= -o ruser= | grep $USER | awk '{print $1}')
+    while [ ! -d /proc/$PID_GNOME_PANEL ] ; do
+	sleep 1
+    done
+    sleep 2
+    
+    for (( i=0; i<${#APPLET_IIDS[@]}; i++ )); do
+	APPLET_IID=${APPLET_IIDS[$i]}
+	APPLET_PROCESS=${APPLET_PROCESSES[$i]}
+	
+	FOLDERS=$(find $GCONF_PANEL_FOLDER/applets/ -exec grep -iH "$APPLET_IID" {} \; | awk '{print $1}' | awk -F/ '{ print $(NF-1)}')
+	FOLDERS=( $FOLDERS )
+
+	for (( j=0; j<${#FOLDERS[@]}; j++ )); do
+	    FOLDER=${FOLDERS[$j]}
+
+	    if grep $FOLDER $GCONF_PANEL_FOLDER/general/%gconf.xml >/dev/null; then
+		PID_APPLET=$(ps -C $APPLET_PROCESS -o pid= -o ruser= | grep $USER | awk '{print $1}')
+		if [ "$PID_APPLET" == "" ]; then
+		    FAIL=1
+    		fi
+	    fi
+	done
+    done
+	    
+    if [ $FAIL -eq 1 ]; then
+	FAIL=0
+	killall gnome-panel
+    else
+	break
+    fi
+done

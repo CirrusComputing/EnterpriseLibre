@@ -1,0 +1,2047 @@
+--
+-- PostgreSQL database dump
+--
+
+SET statement_timeout = 0;
+SET client_encoding = 'UTF_8';
+SET standard_conforming_strings = off;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+SET escape_string_warning = off;
+
+SET search_path = public, pg_catalog;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Convert functions
+--
+
+CREATE FUNCTION pg_catalog.text(integer) RETURNS text STRICT IMMUTABLE LANGUAGE SQL AS 'SELECT textin(int4out($1));';
+CREATE CAST (integer AS text) WITH FUNCTION pg_catalog.text(integer) AS IMPLICIT;
+COMMENT ON FUNCTION pg_catalog.text(integer) IS 'convert integer to text';
+CREATE FUNCTION pg_catalog.text(bigint) RETURNS text STRICT IMMUTABLE LANGUAGE SQL AS 'SELECT textin(int8out($1));';
+CREATE CAST (bigint AS text) WITH FUNCTION pg_catalog.text(bigint) AS IMPLICIT;
+COMMENT ON FUNCTION pg_catalog.text(bigint) IS 'convert bigint to text';
+
+--
+-- Name: fnbl_client_mapping; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_client_mapping (
+    principal bigint NOT NULL,
+    sync_source character varying(128) NOT NULL,
+    luid character varying(200) NOT NULL,
+    guid character varying(200) NOT NULL,
+    last_anchor character varying(20)
+);
+
+
+ALTER TABLE public.fnbl_client_mapping OWNER TO funambol;
+
+--
+-- Name: fnbl_connector; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_connector (
+    id character varying(128) NOT NULL,
+    name character varying(200) NOT NULL,
+    description character varying(200),
+    admin_class character varying(255)
+);
+
+
+ALTER TABLE public.fnbl_connector OWNER TO funambol;
+
+--
+-- Name: fnbl_connector_source_type; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_connector_source_type (
+    connector character varying(128) NOT NULL,
+    sourcetype character varying(128) NOT NULL
+);
+
+
+ALTER TABLE public.fnbl_connector_source_type OWNER TO funambol;
+
+--
+-- Name: fnbl_device; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_device (
+    id character varying(128) NOT NULL,
+    description character varying(255),
+    type character varying(255),
+    client_nonce character varying(255),
+    server_nonce character varying(255),
+    server_password character varying(255),
+    timezone character varying(32),
+    convert_date character(1),
+    charset character varying(16),
+    address character varying(50),
+    msisdn character varying(50),
+    notification_builder character varying(255),
+    notification_sender character varying(255),
+    id_caps bigint,
+    sent_server_caps boolean DEFAULT false
+);
+
+
+ALTER TABLE public.fnbl_device OWNER TO funambol;
+
+--
+-- Name: fnbl_device_caps; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_device_caps (
+    id bigint NOT NULL,
+    version character varying(16) NOT NULL,
+    man character varying(100),
+    model character varying(100),
+    fwv character varying(100),
+    swv character varying(100),
+    hwv character varying(100),
+    utc character(1) NOT NULL,
+    lo character(1) NOT NULL,
+    noc character(1) NOT NULL
+);
+
+
+ALTER TABLE public.fnbl_device_caps OWNER TO funambol;
+
+--
+-- Name: fnbl_device_config; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_device_config (
+    username character varying(255) NOT NULL,
+    principal bigint NOT NULL,
+    uri character varying(128) NOT NULL,
+    value character varying(255) NOT NULL,
+    last_update bigint NOT NULL,
+    status character(1) NOT NULL,
+    encrypted boolean
+);
+
+
+ALTER TABLE public.fnbl_device_config OWNER TO funambol;
+
+--
+-- Name: fnbl_device_datastore; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_device_datastore (
+    id bigint NOT NULL,
+    caps bigint,
+    sourceref character varying(128) NOT NULL,
+    label character varying(128),
+    maxguidsize integer,
+    dsmem character(1) NOT NULL,
+    shs character(1) NOT NULL,
+    synccap character varying(32) NOT NULL
+);
+
+
+ALTER TABLE public.fnbl_device_datastore OWNER TO funambol;
+
+--
+-- Name: fnbl_device_ext; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_device_ext (
+    id bigint NOT NULL,
+    caps bigint,
+    xname character varying(255),
+    xvalue character varying(255)
+);
+
+
+ALTER TABLE public.fnbl_device_ext OWNER TO funambol;
+
+--
+-- Name: fnbl_ds_ctcap; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_ds_ctcap (
+    id bigint NOT NULL,
+    datastore bigint NOT NULL,
+    type character varying(64) NOT NULL,
+    version character varying(16) NOT NULL,
+    field character(1) NOT NULL
+);
+
+
+ALTER TABLE public.fnbl_ds_ctcap OWNER TO funambol;
+
+--
+-- Name: fnbl_ds_ctcap_prop; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_ds_ctcap_prop (
+    id bigint NOT NULL,
+    ctcap bigint NOT NULL,
+    name character varying(64) NOT NULL,
+    label character varying(128),
+    type character varying(32),
+    maxoccur integer,
+    maxsize integer,
+    truncated character(1) NOT NULL,
+    valenum character varying(255)
+);
+
+
+ALTER TABLE public.fnbl_ds_ctcap_prop OWNER TO funambol;
+
+--
+-- Name: fnbl_ds_ctcap_prop_param; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_ds_ctcap_prop_param (
+    property bigint NOT NULL,
+    name character varying(64) NOT NULL,
+    label character varying(128),
+    type character varying(32),
+    valenum character varying(255)
+);
+
+
+ALTER TABLE public.fnbl_ds_ctcap_prop_param OWNER TO funambol;
+
+--
+-- Name: fnbl_ds_cttype_rx; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_ds_cttype_rx (
+    datastore bigint NOT NULL,
+    type character varying(64) NOT NULL,
+    version character varying(16) NOT NULL,
+    preferred character(1) NOT NULL
+);
+
+
+ALTER TABLE public.fnbl_ds_cttype_rx OWNER TO funambol;
+
+--
+-- Name: fnbl_ds_cttype_tx; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_ds_cttype_tx (
+    datastore bigint NOT NULL,
+    type character varying(64) NOT NULL,
+    version character varying(16) NOT NULL,
+    preferred character(1) NOT NULL
+);
+
+
+ALTER TABLE public.fnbl_ds_cttype_tx OWNER TO funambol;
+
+--
+-- Name: fnbl_ds_filter_cap; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_ds_filter_cap (
+    datastore bigint NOT NULL,
+    type character varying(64) NOT NULL,
+    version character varying(16) NOT NULL,
+    keywords character varying(255),
+    properties character varying(255)
+);
+
+
+ALTER TABLE public.fnbl_ds_filter_cap OWNER TO funambol;
+
+--
+-- Name: fnbl_ds_filter_rx; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_ds_filter_rx (
+    datastore bigint NOT NULL,
+    type character varying(64) NOT NULL,
+    version character varying(16) NOT NULL
+);
+
+
+ALTER TABLE public.fnbl_ds_filter_rx OWNER TO funambol;
+
+--
+-- Name: fnbl_ds_mem; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_ds_mem (
+    datastore bigint,
+    shared character(1) NOT NULL,
+    maxmem integer,
+    maxid integer
+);
+
+
+ALTER TABLE public.fnbl_ds_mem OWNER TO funambol;
+
+--
+-- Name: fnbl_email_account; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_email_account (
+    account_id bigint NOT NULL,
+    username character varying(50) NOT NULL,
+    ms_login character varying(50) NOT NULL,
+    ms_password character varying(50) NOT NULL,
+    ms_address character varying(70) NOT NULL,
+    ms_mailboxname character varying(64),
+    push character(1),
+    soft_delete character(1),
+    max_num_email integer,
+    max_imap_email integer,
+    mailserver_id character varying(20) NOT NULL,
+    server_public character(1),
+    server_type character varying(20),
+    description character varying(50),
+    protocol character varying(5),
+    out_server character varying(30),
+    out_port integer,
+    out_auth character(1),
+    in_server character varying(30),
+    in_port integer,
+    sslin character(1),
+    sslout character(1),
+    inbox_name character varying(30),
+    inbox_active character(1),
+    outbox_name character varying(30),
+    outbox_active character(1),
+    sent_name character varying(30),
+    sent_active character(1),
+    drafts_name character varying(30),
+    drafts_active character(1),
+    trash_name character varying(30),
+    trash_active character(1),
+    out_login character varying(50),
+    out_password character varying(50)
+);
+
+
+ALTER TABLE public.fnbl_email_account OWNER TO funambol;
+
+--
+-- Name: fnbl_email_cache; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_email_cache (
+    guid character varying(200) NOT NULL,
+    source_uri character varying(128) NOT NULL,
+    principal bigint NOT NULL,
+    last_crc bigint,
+    invalid character(1),
+    internal character(1),
+    messageid character varying(700),
+    headerdate character varying(20),
+    received character varying(20),
+    subject character varying(700),
+    sender character varying(300),
+    isemail character(1)
+);
+
+
+ALTER TABLE public.fnbl_email_cache OWNER TO funambol;
+
+--
+-- Name: fnbl_email_enable_account; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_email_enable_account (
+    account_id bigint NOT NULL,
+    username character varying(50) NOT NULL
+);
+
+
+ALTER TABLE public.fnbl_email_enable_account OWNER TO funambol;
+
+--
+-- Name: fnbl_email_folder; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_email_folder (
+    guid character varying(50) NOT NULL,
+    source_uri character varying(128) NOT NULL,
+    principal bigint NOT NULL,
+    parentid character varying(50),
+    path character varying(500)
+);
+
+
+ALTER TABLE public.fnbl_email_folder OWNER TO funambol;
+
+--
+-- Name: fnbl_email_inbox; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_email_inbox (
+    guid character varying(200) NOT NULL,
+    username character varying(50) NOT NULL,
+    protocol character varying(4) NOT NULL,
+    last_crc bigint,
+    invalid character(1),
+    internal character(1),
+    messageid character varying(700),
+    headerdate character varying(20),
+    received character varying(20),
+    subject character varying(700),
+    sender character varying(300),
+    token character varying(200),
+    status character(1)
+);
+
+
+ALTER TABLE public.fnbl_email_inbox OWNER TO funambol;
+
+--
+-- Name: fnbl_email_mailserver; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_email_mailserver (
+    mailserver_id character varying(20) NOT NULL,
+    server_public character(1),
+    server_type character varying(20),
+    description character varying(50),
+    protocol character varying(5),
+    out_server character varying(30),
+    out_port integer,
+    out_auth character(1),
+    in_server character varying(30),
+    in_port integer,
+    sslin character(1),
+    sslout character(1),
+    inbox_name character varying(30),
+    inbox_active character(1),
+    outbox_name character varying(30),
+    outbox_active character(1),
+    sent_name character varying(30),
+    sent_active character(1),
+    drafts_name character varying(30),
+    drafts_active character(1),
+    trash_name character varying(30),
+    trash_active character(1),
+    soft_delete character(1)
+);
+
+
+ALTER TABLE public.fnbl_email_mailserver OWNER TO funambol;
+
+--
+-- Name: fnbl_email_push_registry; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_email_push_registry (
+    id bigint NOT NULL,
+    period bigint,
+    active character(1),
+    last_update bigint,
+    status character varying(1),
+    task_bean_file character varying(255)
+);
+
+
+ALTER TABLE public.fnbl_email_push_registry OWNER TO funambol;
+
+--
+-- Name: fnbl_email_sentpop; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_email_sentpop (
+    id character varying(200) NOT NULL,
+    source_uri character varying(128) NOT NULL,
+    principal bigint NOT NULL,
+    messageid character varying(700),
+    mail bytea
+);
+
+
+ALTER TABLE public.fnbl_email_sentpop OWNER TO funambol;
+
+--
+-- Name: fnbl_file_data_object; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_file_data_object (
+    id bigint NOT NULL,
+    userid character varying(255),
+    source_uri character varying(255),
+    last_update bigint,
+    status character(1),
+    local_name character varying(255),
+    crc bigint,
+    true_name character varying(255),
+    created timestamp without time zone,
+    modified timestamp without time zone,
+    accessed timestamp without time zone,
+    h character(1),
+    s character(1),
+    a character(1),
+    d character(1),
+    w character(1),
+    r character(1),
+    x character(1),
+    cttype character varying(255),
+    object_size bigint,
+    size_on_storage bigint
+);
+
+
+ALTER TABLE public.fnbl_file_data_object OWNER TO funambol;
+
+--
+-- Name: fnbl_id; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_id (
+    idspace character varying(30) NOT NULL,
+    counter bigint NOT NULL,
+    increment_by integer DEFAULT 100
+);
+
+
+ALTER TABLE public.fnbl_id OWNER TO funambol;
+
+--
+-- Name: fnbl_last_sync; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_last_sync (
+    principal bigint NOT NULL,
+    sync_source character varying(128) NOT NULL,
+    sync_type integer NOT NULL,
+    status integer,
+    last_anchor_server character varying(20),
+    last_anchor_client character varying(20),
+    start_sync bigint,
+    end_sync bigint
+);
+
+
+ALTER TABLE public.fnbl_last_sync OWNER TO funambol;
+
+--
+-- Name: fnbl_module; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_module (
+    id character varying(128) NOT NULL,
+    name character varying(200) NOT NULL,
+    description character varying(200)
+);
+
+
+ALTER TABLE public.fnbl_module OWNER TO funambol;
+
+--
+-- Name: fnbl_module_connector; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_module_connector (
+    module character varying(128) NOT NULL,
+    connector character varying(128) NOT NULL
+);
+
+
+ALTER TABLE public.fnbl_module_connector OWNER TO funambol;
+
+--
+-- Name: fnbl_pending_notification; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_pending_notification (
+    id bigint NOT NULL,
+    username character varying(255) NOT NULL,
+    device character varying(128) NOT NULL,
+    sync_source character varying(128) NOT NULL,
+    content_type character varying(128) NOT NULL,
+    sync_type integer NOT NULL,
+    ui_mode integer NOT NULL,
+    "time" bigint NOT NULL
+);
+
+
+ALTER TABLE public.fnbl_pending_notification OWNER TO funambol;
+
+--
+-- Name: fnbl_pim_address; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_pim_address (
+    contact bigint NOT NULL,
+    type smallint NOT NULL,
+    street character varying(128),
+    city character varying(64),
+    state character varying(64),
+    postal_code character varying(16),
+    country character varying(32),
+    po_box character varying(16),
+    extended_address character varying(255)
+);
+
+
+ALTER TABLE public.fnbl_pim_address OWNER TO funambol;
+
+--
+-- Name: fnbl_pim_calendar; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_pim_calendar (
+    id bigint NOT NULL,
+    userid character varying(255),
+    last_update bigint,
+    status character(1),
+    type smallint,
+    all_day character(1),
+    body text,
+    busy_status smallint,
+    categories character varying(255),
+    companies character varying(255),
+    birthday character varying(16),
+    duration integer,
+    dstart timestamp with time zone,
+    dend timestamp with time zone,
+    folder character varying(255),
+    importance smallint,
+    location character varying(255),
+    meeting_status smallint,
+    mileage character varying(16),
+    reminder_time timestamp with time zone,
+    reminder character(1),
+    reminder_sound_file character varying(255),
+    reminder_options integer,
+    reminder_repeat_count integer,
+    sensitivity smallint,
+    subject character varying(1000),
+    rec_type smallint,
+    rec_interval integer,
+    rec_month_of_year smallint,
+    rec_day_of_month smallint,
+    rec_day_of_week_mask character varying(16),
+    rec_instance smallint,
+    rec_start_date_pattern character varying(32),
+    rec_no_end_date character(1),
+    rec_end_date_pattern character varying(32),
+    rec_occurrences smallint,
+    dstart_tz character varying(255),
+    dend_tz character varying(255),
+    reminder_tz character varying(255),
+    reply_time timestamp with time zone,
+    completed timestamp with time zone,
+    percent_complete smallint
+);
+
+
+ALTER TABLE public.fnbl_pim_calendar OWNER TO funambol;
+
+--
+-- Name: fnbl_pim_calendar_exception; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_pim_calendar_exception (
+    calendar bigint NOT NULL,
+    addition character(1) NOT NULL,
+    occurrence_date timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.fnbl_pim_calendar_exception OWNER TO funambol;
+
+--
+-- Name: fnbl_pim_contact; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_pim_contact (
+    id bigint NOT NULL,
+    userid character varying(255),
+    last_update bigint,
+    status character(1),
+    photo_type smallint,
+    importance smallint,
+    sensitivity smallint,
+    subject character varying(255),
+    folder character varying(255),
+    anniversary character varying(16),
+    first_name character varying(64),
+    middle_name character varying(64),
+    last_name character varying(64),
+    display_name character varying(128),
+    birthday character varying(16),
+    body text,
+    categories character varying(255),
+    children character varying(255),
+    hobbies character varying(255),
+    initials character varying(16),
+    languages character varying(255),
+    nickname character varying(64),
+    spouse character varying(128),
+    suffix character varying(32),
+    title character varying(32),
+    gender character(1),
+    assistant character varying(128),
+    company character varying(255),
+    department character varying(255),
+    job_title character varying(128),
+    manager character varying(128),
+    mileage character varying(16),
+    office_location character varying(64),
+    profession character varying(64),
+    companies character varying(255)
+);
+
+
+ALTER TABLE public.fnbl_pim_contact OWNER TO funambol;
+
+--
+-- Name: fnbl_pim_contact_item; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_pim_contact_item (
+    contact bigint NOT NULL,
+    type smallint NOT NULL,
+    value character varying(255)
+);
+
+
+ALTER TABLE public.fnbl_pim_contact_item OWNER TO funambol;
+
+--
+-- Name: fnbl_pim_contact_photo; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_pim_contact_photo (
+    contact bigint NOT NULL,
+    type character varying(64),
+    photo bytea,
+    url character varying(255)
+);
+
+
+ALTER TABLE public.fnbl_pim_contact_photo OWNER TO funambol;
+
+--
+-- Name: fnbl_pim_listener_registry; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_pim_listener_registry (
+    id bigint NOT NULL,
+    username character varying(255),
+    push_contacts character(1),
+    push_calendars character(1),
+    push_notes character(1)
+);
+
+
+ALTER TABLE public.fnbl_pim_listener_registry OWNER TO funambol;
+
+--
+-- Name: fnbl_pim_note; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_pim_note (
+    id bigint NOT NULL,
+    userid character varying(255),
+    last_update bigint,
+    status character(1),
+    crc bigint,
+    subject character varying(255),
+    textdescription character varying(65535),
+    categories character varying(255),
+    folder character varying(255),
+    color integer,
+    height integer,
+    width integer,
+    top integer,
+    leftmargin integer
+);
+
+
+ALTER TABLE public.fnbl_pim_note OWNER TO funambol;
+
+--
+-- Name: fnbl_principal; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_principal (
+    username character varying(255) NOT NULL,
+    device character varying(128) NOT NULL,
+    id bigint NOT NULL
+);
+
+
+ALTER TABLE public.fnbl_principal OWNER TO funambol;
+
+--
+-- Name: fnbl_push_listener_registry; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_push_listener_registry (
+    id bigint NOT NULL,
+    period bigint,
+    active character(1),
+    last_update bigint,
+    status character varying(1),
+    task_bean_file character varying(255)
+);
+
+
+ALTER TABLE public.fnbl_push_listener_registry OWNER TO funambol;
+
+--
+-- Name: fnbl_role; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_role (
+    role character varying(128) NOT NULL,
+    description character varying(200) NOT NULL
+);
+
+
+ALTER TABLE public.fnbl_role OWNER TO funambol;
+
+--
+-- Name: fnbl_sync_source; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_sync_source (
+    uri character varying(128) NOT NULL,
+    config character varying(255) NOT NULL,
+    name character varying(200) NOT NULL,
+    sourcetype character varying(128) NOT NULL
+);
+
+
+ALTER TABLE public.fnbl_sync_source OWNER TO funambol;
+
+--
+-- Name: fnbl_sync_source_type; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_sync_source_type (
+    id character varying(128) NOT NULL,
+    description character varying(200),
+    class character varying(255) NOT NULL,
+    admin_class character varying(255)
+);
+
+
+ALTER TABLE public.fnbl_sync_source_type OWNER TO funambol;
+
+--
+-- Name: fnbl_user; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_user (
+    username character varying(255) NOT NULL,
+    password character varying(255) NOT NULL,
+    email character varying(255),
+    first_name character varying(255),
+    last_name character varying(255)
+);
+
+
+ALTER TABLE public.fnbl_user OWNER TO funambol;
+
+--
+-- Name: fnbl_user_role; Type: TABLE; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE TABLE fnbl_user_role (
+    username character varying(255) NOT NULL,
+    role character varying(128) NOT NULL
+);
+
+
+ALTER TABLE public.fnbl_user_role OWNER TO funambol;
+
+--
+-- Data for Name: fnbl_client_mapping; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_client_mapping (principal, sync_source, luid, guid, last_anchor) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_connector; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_connector (id, name, description, admin_class) FROM stdin;
+email	FunambolEmailConnector	Funambol Email Connector	com.funambol.email.admin.ConsolePanel
+foundation	FunambolFoundationConnector	Funambol Foundation Connector	\N
+sogo	FunambolSOGoConnector	Funambol SOGo Connector	
+\.
+
+
+--
+-- Data for Name: fnbl_connector_source_type; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_connector_source_type (connector, sourcetype) FROM stdin;
+email	email-ss
+foundation	contact-foundation
+foundation	calendar-foundation
+foundation	fs-foundation
+foundation	sif-fs-foundation
+foundation	config-foundation
+foundation	note-foundation
+sogo	sogo
+\.
+
+
+--
+-- Data for Name: fnbl_device; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_device (id, description, type, client_nonce, server_nonce, server_password, timezone, convert_date, charset, address, msisdn, notification_builder, notification_sender, id_caps, sent_server_caps) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_device_caps; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_device_caps (id, version, man, model, fwv, swv, hwv, utc, lo, noc) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_device_config; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_device_config (username, principal, uri, value, last_update, status, encrypted) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_device_datastore; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_device_datastore (id, caps, sourceref, label, maxguidsize, dsmem, shs, synccap) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_device_ext; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_device_ext (id, caps, xname, xvalue) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_ds_ctcap; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_ds_ctcap (id, datastore, type, version, field) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_ds_ctcap_prop; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_ds_ctcap_prop (id, ctcap, name, label, type, maxoccur, maxsize, truncated, valenum) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_ds_ctcap_prop_param; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_ds_ctcap_prop_param (property, name, label, type, valenum) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_ds_cttype_rx; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_ds_cttype_rx (datastore, type, version, preferred) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_ds_cttype_tx; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_ds_cttype_tx (datastore, type, version, preferred) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_ds_filter_cap; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_ds_filter_cap (datastore, type, version, keywords, properties) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_ds_filter_rx; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_ds_filter_rx (datastore, type, version) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_ds_mem; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_ds_mem (datastore, shared, maxmem, maxid) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_email_account; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_email_account (account_id, username, ms_login, ms_password, ms_address, ms_mailboxname, push, soft_delete, max_num_email, max_imap_email, mailserver_id, server_public, server_type, description, protocol, out_server, out_port, out_auth, in_server, in_port, sslin, sslout, inbox_name, inbox_active, outbox_name, outbox_active, sent_name, sent_active, drafts_name, drafts_active, trash_name, trash_active, out_login, out_password) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_email_cache; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_email_cache (guid, source_uri, principal, last_crc, invalid, internal, messageid, headerdate, received, subject, sender, isemail) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_email_enable_account; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_email_enable_account (account_id, username) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_email_folder; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_email_folder (guid, source_uri, principal, parentid, path) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_email_inbox; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_email_inbox (guid, username, protocol, last_crc, invalid, internal, messageid, headerdate, received, subject, sender, token, status) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_email_mailserver; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_email_mailserver (mailserver_id, server_public, server_type, description, protocol, out_server, out_port, out_auth, in_server, in_port, sslin, sslout, inbox_name, inbox_active, outbox_name, outbox_active, sent_name, sent_active, drafts_name, drafts_active, trash_name, trash_active, soft_delete) FROM stdin;
+1	y	GMail	Gmail	imap	smtp.gmail.com	465	y	imap.gmail.com	993	y	y	INBOX	y	Outbox	y	[Gmail]/Sent Mail	n	[Gmail]/Drafts	n	[Gmail]/Trash	n	n
+2	y	GMail	Google Mail	imap	smtp.googlemail.com	465	y	imap.googlemail.com	993	y	y	INBOX	y	Outbox	y	[Google Mail]/Sent Mail	n	[Google Mail]/Drafts	n	[Google Mail]/Trash	n	n
+3	y	Other	Yahoo	pop3	smtp.mail.yahoo.com	465	y	pop.mail.yahoo.com	995	y	y	Inbox	y	Outbox	y	Sent	n	Drafts	n	Trash	n	n
+4	y	AOL	AOL	imap	smtp.aol.com	587	y	imap.aol.com	143	n	n	INBOX	y	Outbox	y	Sent Items	n	Drafts	n	Trash	n	n
+5	y	Hotmail	Hotmail	pop3	smtp.live.com	587	y	pop3.live.com	995	y	n	Inbox	y	Outbox	y	Sent Items	n	Drafts	n	Trash	n	n
+100	y	Other	[-ORG-]	imap	smtp.[-DOMAIN-]	587	n	imap.[-DOMAIN-]	993	y	y	Inbox	y	Outbox	y	Sent	y	Drafts	y	Trash	y	n
+\.
+
+
+--
+-- Data for Name: fnbl_email_push_registry; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_email_push_registry (id, period, active, last_update, status, task_bean_file) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_email_sentpop; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_email_sentpop (id, source_uri, principal, messageid, mail) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_file_data_object; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_file_data_object (id, userid, source_uri, last_update, status, local_name, crc, true_name, created, modified, accessed, h, s, a, d, w, r, x, cttype, object_size, size_on_storage) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_id; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_id (idspace, counter, increment_by) FROM stdin;
+device	0	100
+principal	0	100
+guid	3	100
+datastore	0	100
+capability	0	100
+ext	0	100
+ctcap	0	100
+ctcap_property	0	100
+pending.notification.id	0	100
+email.cacheid	0	100
+email.sentid	0	100
+email.folderid	0	100
+email.mailserverid	200	100
+pim.id	0	100
+\.
+
+
+--
+-- Data for Name: fnbl_last_sync; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_last_sync (principal, sync_source, sync_type, status, last_anchor_server, last_anchor_client, start_sync, end_sync) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_module; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_module (id, name, description) FROM stdin;
+email	email	email
+foundation	foundation	Foundation
+sogo	sogo	SOGo
+\.
+
+
+--
+-- Data for Name: fnbl_module_connector; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_module_connector (module, connector) FROM stdin;
+email	email
+foundation	foundation
+sogo	sogo
+\.
+
+
+--
+-- Data for Name: fnbl_pending_notification; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_pending_notification (id, username, device, sync_source, content_type, sync_type, ui_mode, "time") FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_pim_address; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_pim_address (contact, type, street, city, state, postal_code, country, po_box, extended_address) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_pim_calendar; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_pim_calendar (id, userid, last_update, status, type, all_day, body, busy_status, categories, companies, birthday, duration, dstart, dend, folder, importance, location, meeting_status, mileage, reminder_time, reminder, reminder_sound_file, reminder_options, reminder_repeat_count, sensitivity, subject, rec_type, rec_interval, rec_month_of_year, rec_day_of_month, rec_day_of_week_mask, rec_instance, rec_start_date_pattern, rec_no_end_date, rec_end_date_pattern, rec_occurrences, dstart_tz, dend_tz, reminder_tz, reply_time, completed, percent_complete) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_pim_calendar_exception; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_pim_calendar_exception (calendar, addition, occurrence_date) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_pim_contact; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_pim_contact (id, userid, last_update, status, photo_type, importance, sensitivity, subject, folder, anniversary, first_name, middle_name, last_name, display_name, birthday, body, categories, children, hobbies, initials, languages, nickname, spouse, suffix, title, gender, assistant, company, department, job_title, manager, mileage, office_location, profession, companies) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_pim_contact_item; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_pim_contact_item (contact, type, value) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_pim_contact_photo; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_pim_contact_photo (contact, type, photo, url) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_pim_listener_registry; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_pim_listener_registry (id, username, push_contacts, push_calendars, push_notes) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_pim_note; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_pim_note (id, userid, last_update, status, crc, subject, textdescription, categories, folder, color, height, width, top, leftmargin) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_principal; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_principal (username, device, id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_push_listener_registry; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_push_listener_registry (id, period, active, last_update, status, task_bean_file) FROM stdin;
+\.
+
+
+--
+-- Data for Name: fnbl_role; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_role (role, description) FROM stdin;
+sync_user	User
+sync_administrator	Administrator
+\.
+
+
+--
+-- Data for Name: fnbl_sync_source; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_sync_source (uri, config, name, sourcetype) FROM stdin;
+mail	email/email/email-ss/mail.xml	mail	email-ss
+briefcase	foundation/foundation/fs-foundation/BriefcaseSource.xml	briefcase	fs-foundation
+scard	foundation/foundation/contact-foundation/SIFContactSource.xml	scard	contact-foundation
+cal	foundation/foundation/calendar-foundation/VCalendarSource.xml	cal	calendar-foundation
+scal	foundation/foundation/calendar-foundation/SIFEventSource.xml	scal	calendar-foundation
+stask	foundation/foundation/calendar-foundation/SIFTaskSource.xml	stask	calendar-foundation
+snote	foundation/foundation/note-foundation/SIFNoteSource.xml	snote	note-foundation
+note	foundation/foundation/note-foundation/PlainTextNoteSource.xml	note	note-foundation
+configuration	foundation/foundation/configuration/configuration.xml	configuration	config-foundation
+card	sogo/sogo/sogo/card.xml	card	sogo
+event	sogo/sogo/sogo/event.xml	event	sogo
+task	sogo/sogo/sogo/task.xml	task	sogo
+\.
+
+
+--
+-- Data for Name: fnbl_sync_source_type; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_sync_source_type (id, description, class, admin_class) FROM stdin;
+email-ss	Email SyncSource	com.funambol.email.engine.source.EmailSyncSource	com.funambol.email.admin.EmailSyncSourceConfigPanel
+contact-foundation	PIM Contact SyncSource	com.funambol.foundation.engine.source.PIMContactSyncSource	com.funambol.foundation.admin.PIMContactSyncSourceConfigPanel
+calendar-foundation	PIM Calendar SyncSource	com.funambol.foundation.engine.source.PIMCalendarSyncSource	com.funambol.foundation.admin.PIMCalendarSyncSourceConfigPanel
+fs-foundation	FileSystem SyncSource	com.funambol.foundation.engine.source.FileSystemSyncSource	com.funambol.foundation.admin.FileSystemSyncSourceConfigPanel
+sif-fs-foundation	SIF SyncSource	com.funambol.foundation.engine.source.SIFSyncSource	com.funambol.foundation.admin.SIFSyncSourceConfigPanel
+note-foundation	Notes SyncSource	com.funambol.foundation.engine.source.PIMNoteSyncSource	com.funambol.foundation.admin.PIMNoteSyncSourceConfigPanel
+config-foundation	Configuration SyncSource	com.funambol.foundation.engine.source.ConfigSyncSource	\N
+sogo	SOGo SyncSource	ca.inverse.sogo.engine.source.SOGoSyncSource	ca.inverse.sogo.admin.SOGoSyncSourceConfigPanel
+\.
+
+
+--
+-- Data for Name: fnbl_user; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_user (username, password, email, first_name, last_name) FROM stdin;
+admin	lltUbBHM7oA=	admin@funambol.com	admin	admin
+\.
+
+
+--
+-- Data for Name: fnbl_user_role; Type: TABLE DATA; Schema: public; Owner: funambol
+--
+
+COPY fnbl_user_role (username, role) FROM stdin;
+admin	sync_administrator
+\.
+
+
+--
+-- Name: fnbl_email_push_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_email_push_registry
+    ADD CONSTRAINT fnbl_email_push_registry_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: fnbl_file_data_object_pkey; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_file_data_object
+    ADD CONSTRAINT fnbl_file_data_object_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: fnbl_pim_address_pkey; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_pim_address
+    ADD CONSTRAINT fnbl_pim_address_pkey PRIMARY KEY (contact, type);
+
+
+--
+-- Name: fnbl_pim_calendar_exception_pkey; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_pim_calendar_exception
+    ADD CONSTRAINT fnbl_pim_calendar_exception_pkey PRIMARY KEY (calendar, addition, occurrence_date);
+
+
+--
+-- Name: fnbl_pim_calendar_pkey; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_pim_calendar
+    ADD CONSTRAINT fnbl_pim_calendar_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: fnbl_pim_contact_item_pkey; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_pim_contact_item
+    ADD CONSTRAINT fnbl_pim_contact_item_pkey PRIMARY KEY (contact, type);
+
+
+--
+-- Name: fnbl_pim_contact_photo_pkey; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_pim_contact_photo
+    ADD CONSTRAINT fnbl_pim_contact_photo_pkey PRIMARY KEY (contact);
+
+
+--
+-- Name: fnbl_pim_contact_pkey; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_pim_contact
+    ADD CONSTRAINT fnbl_pim_contact_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: fnbl_pim_listener_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_pim_listener_registry
+    ADD CONSTRAINT fnbl_pim_listener_registry_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: fnbl_pim_note_pkey; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_pim_note
+    ADD CONSTRAINT fnbl_pim_note_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: fnbl_push_listener_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_push_listener_registry
+    ADD CONSTRAINT fnbl_push_listener_registry_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pk_cache; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_email_cache
+    ADD CONSTRAINT pk_cache PRIMARY KEY (guid, source_uri, principal);
+
+
+--
+-- Name: pk_cache_inbox; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_email_inbox
+    ADD CONSTRAINT pk_cache_inbox PRIMARY KEY (guid, username, protocol);
+
+
+--
+-- Name: pk_clientmapping; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_client_mapping
+    ADD CONSTRAINT pk_clientmapping PRIMARY KEY (principal, sync_source, luid, guid);
+
+
+--
+-- Name: pk_config; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_device_config
+    ADD CONSTRAINT pk_config PRIMARY KEY (username, principal, uri);
+
+
+--
+-- Name: pk_connector; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_connector
+    ADD CONSTRAINT pk_connector PRIMARY KEY (id);
+
+
+--
+-- Name: pk_connector_sst; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_connector_source_type
+    ADD CONSTRAINT pk_connector_sst PRIMARY KEY (connector, sourcetype);
+
+
+--
+-- Name: pk_dev_datastore; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_device_datastore
+    ADD CONSTRAINT pk_dev_datastore PRIMARY KEY (id);
+
+
+--
+-- Name: pk_dev_ext; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_device_ext
+    ADD CONSTRAINT pk_dev_ext PRIMARY KEY (id);
+
+
+--
+-- Name: pk_device; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_device
+    ADD CONSTRAINT pk_device PRIMARY KEY (id);
+
+
+--
+-- Name: pk_device_caps; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_device_caps
+    ADD CONSTRAINT pk_device_caps PRIMARY KEY (id);
+
+
+--
+-- Name: pk_ds_ctcap; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_ds_ctcap
+    ADD CONSTRAINT pk_ds_ctcap PRIMARY KEY (id);
+
+
+--
+-- Name: pk_ds_ctcap_prop; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_ds_ctcap_prop
+    ADD CONSTRAINT pk_ds_ctcap_prop PRIMARY KEY (id);
+
+
+--
+-- Name: pk_ds_cttype_rx; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_ds_cttype_rx
+    ADD CONSTRAINT pk_ds_cttype_rx PRIMARY KEY (type, version, datastore);
+
+
+--
+-- Name: pk_ds_cttype_tx; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_ds_cttype_tx
+    ADD CONSTRAINT pk_ds_cttype_tx PRIMARY KEY (type, version, datastore);
+
+
+--
+-- Name: pk_ds_filter_cap; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_ds_filter_cap
+    ADD CONSTRAINT pk_ds_filter_cap PRIMARY KEY (type, version, datastore);
+
+
+--
+-- Name: pk_ds_filter_rx; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_ds_filter_rx
+    ADD CONSTRAINT pk_ds_filter_rx PRIMARY KEY (type, version, datastore);
+
+
+--
+-- Name: pk_enable_account; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_email_enable_account
+    ADD CONSTRAINT pk_enable_account PRIMARY KEY (account_id, username);
+
+
+--
+-- Name: pk_folder; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_email_folder
+    ADD CONSTRAINT pk_folder PRIMARY KEY (guid, source_uri, principal);
+
+
+--
+-- Name: pk_id; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_id
+    ADD CONSTRAINT pk_id PRIMARY KEY (idspace);
+
+
+--
+-- Name: pk_last_sync; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_last_sync
+    ADD CONSTRAINT pk_last_sync PRIMARY KEY (principal, sync_source);
+
+
+--
+-- Name: pk_mailserver; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_email_mailserver
+    ADD CONSTRAINT pk_mailserver PRIMARY KEY (mailserver_id);
+
+
+--
+-- Name: pk_mod_connector; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_module_connector
+    ADD CONSTRAINT pk_mod_connector PRIMARY KEY (module, connector);
+
+
+--
+-- Name: pk_module; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_module
+    ADD CONSTRAINT pk_module PRIMARY KEY (id);
+
+
+--
+-- Name: pk_pending_notification; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_pending_notification
+    ADD CONSTRAINT pk_pending_notification PRIMARY KEY (id);
+
+
+--
+-- Name: pk_principal; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_principal
+    ADD CONSTRAINT pk_principal PRIMARY KEY (id);
+
+
+--
+-- Name: pk_role; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_role
+    ADD CONSTRAINT pk_role PRIMARY KEY (role);
+
+
+--
+-- Name: pk_sentpop; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_email_sentpop
+    ADD CONSTRAINT pk_sentpop PRIMARY KEY (id, source_uri, principal);
+
+
+--
+-- Name: pk_sst; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_sync_source_type
+    ADD CONSTRAINT pk_sst PRIMARY KEY (id);
+
+
+--
+-- Name: pk_sync_source; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_sync_source
+    ADD CONSTRAINT pk_sync_source PRIMARY KEY (uri);
+
+
+--
+-- Name: pk_user; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_user
+    ADD CONSTRAINT pk_user PRIMARY KEY (username);
+
+
+--
+-- Name: pk_user_account; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_email_account
+    ADD CONSTRAINT pk_user_account PRIMARY KEY (account_id, username);
+
+
+--
+-- Name: pk_user_role; Type: CONSTRAINT; Schema: public; Owner: funambol; Tablespace: 
+--
+
+ALTER TABLE ONLY fnbl_user_role
+    ADD CONSTRAINT pk_user_role PRIMARY KEY (username, role);
+
+
+--
+-- Name: ind_client_mapping; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_client_mapping ON fnbl_client_mapping USING btree (principal, sync_source);
+
+
+--
+-- Name: ind_ctcap; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_ctcap ON fnbl_ds_ctcap USING btree (datastore);
+
+
+--
+-- Name: ind_ctcap_prop; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_ctcap_prop ON fnbl_ds_ctcap_prop USING btree (ctcap);
+
+
+--
+-- Name: ind_ctcappropparam; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_ctcappropparam ON fnbl_ds_ctcap_prop_param USING btree (property);
+
+
+--
+-- Name: ind_cttype_rx; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_cttype_rx ON fnbl_ds_cttype_rx USING btree (datastore);
+
+
+--
+-- Name: ind_cttype_tx; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_cttype_tx ON fnbl_ds_cttype_tx USING btree (datastore);
+
+
+--
+-- Name: ind_datastore; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_datastore ON fnbl_device_datastore USING btree (caps);
+
+
+--
+-- Name: ind_device_ext; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_device_ext ON fnbl_device_ext USING btree (caps);
+
+
+--
+-- Name: ind_file_data_object; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_file_data_object ON fnbl_file_data_object USING btree (userid, source_uri, last_update, status);
+
+
+--
+-- Name: ind_filter_cap; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_filter_cap ON fnbl_ds_filter_cap USING btree (datastore);
+
+
+--
+-- Name: ind_filter_rx; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_filter_rx ON fnbl_ds_filter_rx USING btree (datastore);
+
+
+--
+-- Name: ind_fnbl_email_cache_uri_principal; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_fnbl_email_cache_uri_principal ON fnbl_email_cache USING btree (source_uri, principal);
+
+
+--
+-- Name: ind_fnbl_email_enable_account_username; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_fnbl_email_enable_account_username ON fnbl_email_enable_account USING btree (username);
+
+
+--
+-- Name: ind_fnbl_email_folder_uri_principal; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_fnbl_email_folder_uri_principal ON fnbl_email_folder USING btree (source_uri, principal);
+
+
+--
+-- Name: ind_fnbl_email_inbox_token; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_fnbl_email_inbox_token ON fnbl_email_inbox USING btree (token);
+
+
+--
+-- Name: ind_fnbl_email_inbox_user_prot; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_fnbl_email_inbox_user_prot ON fnbl_email_inbox USING btree (username, protocol);
+
+
+--
+-- Name: ind_fnbl_email_push_registry_lastupdate_status; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_fnbl_email_push_registry_lastupdate_status ON fnbl_email_push_registry USING btree (last_update, status);
+
+
+--
+-- Name: ind_fnbl_email_push_registry_status; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_fnbl_email_push_registry_status ON fnbl_email_push_registry USING btree (status);
+
+
+--
+-- Name: ind_mem; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_mem ON fnbl_ds_mem USING btree (datastore);
+
+
+--
+-- Name: ind_pim_calendar; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_pim_calendar ON fnbl_pim_calendar USING btree (userid, last_update, status);
+
+
+--
+-- Name: ind_pim_calendar_userid_dstart; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_pim_calendar_userid_dstart ON fnbl_pim_calendar USING btree (userid, dstart);
+
+
+--
+-- Name: ind_pim_contact; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_pim_contact ON fnbl_pim_contact USING btree (userid, last_update, status);
+
+
+--
+-- Name: ind_pim_listener_username; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_pim_listener_username ON fnbl_pim_listener_registry USING btree (username);
+
+
+--
+-- Name: ind_pim_note; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_pim_note ON fnbl_pim_note USING btree (userid, last_update, status);
+
+
+--
+-- Name: ind_principal; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_principal ON fnbl_principal USING btree (username, device);
+
+
+--
+-- Name: ind_principal_user; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_principal_user ON fnbl_principal USING btree (username);
+
+
+--
+-- Name: ind_push_listener_lastupdate_status; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_push_listener_lastupdate_status ON fnbl_push_listener_registry USING btree (last_update, status);
+
+
+--
+-- Name: ind_push_listener_status; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_push_listener_status ON fnbl_push_listener_registry USING btree (status);
+
+
+--
+-- Name: ind_user; Type: INDEX; Schema: public; Owner: funambol; Tablespace: 
+--
+
+CREATE INDEX ind_user ON fnbl_user USING btree (username, password);
+
+
+--
+-- Name: fk_ctcap_propparam; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_ds_ctcap_prop_param
+    ADD CONSTRAINT fk_ctcap_propparam FOREIGN KEY (property) REFERENCES fnbl_ds_ctcap_prop(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: fk_dev_datastore; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_device_datastore
+    ADD CONSTRAINT fk_dev_datastore FOREIGN KEY (caps) REFERENCES fnbl_device_caps(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: fk_dev_ext; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_device_ext
+    ADD CONSTRAINT fk_dev_ext FOREIGN KEY (caps) REFERENCES fnbl_device_caps(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: fk_device; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_principal
+    ADD CONSTRAINT fk_device FOREIGN KEY (device) REFERENCES fnbl_device(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: fk_ds_ctcap; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_ds_ctcap
+    ADD CONSTRAINT fk_ds_ctcap FOREIGN KEY (datastore) REFERENCES fnbl_device_datastore(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: fk_ds_ctcap_prop; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_ds_ctcap_prop
+    ADD CONSTRAINT fk_ds_ctcap_prop FOREIGN KEY (ctcap) REFERENCES fnbl_ds_ctcap(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: fk_ds_cttype_rx; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_ds_cttype_rx
+    ADD CONSTRAINT fk_ds_cttype_rx FOREIGN KEY (datastore) REFERENCES fnbl_device_datastore(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: fk_ds_cttype_tx; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_ds_cttype_tx
+    ADD CONSTRAINT fk_ds_cttype_tx FOREIGN KEY (datastore) REFERENCES fnbl_device_datastore(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: fk_ds_filter_cap; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_ds_filter_cap
+    ADD CONSTRAINT fk_ds_filter_cap FOREIGN KEY (datastore) REFERENCES fnbl_device_datastore(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: fk_ds_filter_rx; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_ds_filter_rx
+    ADD CONSTRAINT fk_ds_filter_rx FOREIGN KEY (datastore) REFERENCES fnbl_device_datastore(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: fk_ds_mem; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_ds_mem
+    ADD CONSTRAINT fk_ds_mem FOREIGN KEY (datastore) REFERENCES fnbl_device_datastore(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: fk_pn_device; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_pending_notification
+    ADD CONSTRAINT fk_pn_device FOREIGN KEY (device) REFERENCES fnbl_device(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: fk_pn_username; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_pending_notification
+    ADD CONSTRAINT fk_pn_username FOREIGN KEY (username) REFERENCES fnbl_user(username) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: fk_principal; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_last_sync
+    ADD CONSTRAINT fk_principal FOREIGN KEY (principal) REFERENCES fnbl_principal(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: fk_principal_cm; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_client_mapping
+    ADD CONSTRAINT fk_principal_cm FOREIGN KEY (principal) REFERENCES fnbl_principal(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: fk_principal_email_cache; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_email_cache
+    ADD CONSTRAINT fk_principal_email_cache FOREIGN KEY (principal) REFERENCES fnbl_principal(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_principal_email_folder; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_email_folder
+    ADD CONSTRAINT fk_principal_email_folder FOREIGN KEY (principal) REFERENCES fnbl_principal(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_principal_email_sentpop; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_email_sentpop
+    ADD CONSTRAINT fk_principal_email_sentpop FOREIGN KEY (principal) REFERENCES fnbl_principal(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_source; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_last_sync
+    ADD CONSTRAINT fk_source FOREIGN KEY (sync_source) REFERENCES fnbl_sync_source(uri) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: fk_source_cm; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_client_mapping
+    ADD CONSTRAINT fk_source_cm FOREIGN KEY (sync_source) REFERENCES fnbl_sync_source(uri) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: fk_userrole; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_user_role
+    ADD CONSTRAINT fk_userrole FOREIGN KEY (username) REFERENCES fnbl_user(username) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: fnbl_pim_address_contact_fkey; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_pim_address
+    ADD CONSTRAINT fnbl_pim_address_contact_fkey FOREIGN KEY (contact) REFERENCES fnbl_pim_contact(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fnbl_pim_calendar_exception_calendar_fkey; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_pim_calendar_exception
+    ADD CONSTRAINT fnbl_pim_calendar_exception_calendar_fkey FOREIGN KEY (calendar) REFERENCES fnbl_pim_calendar(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fnbl_pim_contact_item_contact_fkey; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_pim_contact_item
+    ADD CONSTRAINT fnbl_pim_contact_item_contact_fkey FOREIGN KEY (contact) REFERENCES fnbl_pim_contact(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fnbl_pim_contact_photo_contact_fkey; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_pim_contact_photo
+    ADD CONSTRAINT fnbl_pim_contact_photo_contact_fkey FOREIGN KEY (contact) REFERENCES fnbl_pim_contact(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fnbl_pim_listener_registry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: funambol
+--
+
+ALTER TABLE ONLY fnbl_pim_listener_registry
+    ADD CONSTRAINT fnbl_pim_listener_registry_id_fkey FOREIGN KEY (id) REFERENCES fnbl_push_listener_registry(id) ON DELETE CASCADE;
+
+
+--
+-- Name: public; Type: ACL; Schema: -; Owner: postgres
+--
+
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON SCHEMA public FROM postgres;
+GRANT ALL ON SCHEMA public TO funambol;
+
+
+--
+-- PostgreSQL database dump complete
+--
+

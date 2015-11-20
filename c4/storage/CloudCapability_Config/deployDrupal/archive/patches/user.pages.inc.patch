@@ -1,0 +1,11 @@
+--- user.pages.inc	2013-12-18 16:14:09.000000000 -0500
++++ user.pages.inc.new	2013-12-18 16:14:49.000000000 -0500
+@@ -176,7 +176,7 @@
+   // Destroy the current session, and reset $user to the anonymous user.
+   session_destroy();
+ 
+-  drupal_goto();
++  drupal_goto('user/login/sso');
+ }
+ 
+ /**

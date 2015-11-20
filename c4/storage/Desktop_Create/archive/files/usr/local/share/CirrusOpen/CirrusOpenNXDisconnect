@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+# Suspend the session of the caller - v1.0
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+#
+# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+FILE=/home/$SUDO_USER/.config/autostart/gnome-screensaver-command.desktop
+cat $FILE | grep 'Hidden=true'
+EXISTS=`echo $?`
+
+if [ $EXISTS == "1" ]
+then
+	su - -c "gnome-screensaver-command -l" $SUDO_USER
+fi
+
+/usr/NX/bin/nxserver --suspend $SUDO_USER
+
+exit $?

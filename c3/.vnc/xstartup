@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if [ -e "$HOME/.Xresources" ]
+then
+        xrdb "$HOME/.Xresources"
+fi
+
+gnome-session &

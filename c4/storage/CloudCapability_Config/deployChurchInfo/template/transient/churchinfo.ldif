@@ -1,0 +1,6 @@
+# ChurchInfo entry
+dn: cn=churchinfo,ou=applications,ou=system,[-LDAP_BASE_DN-]
+objectClass: top
+objectClass: eseriApplicationEntity
+cn: churchinfo
+userPassword: [-LDAP_SSHA_PASSWORD_CHURCHINFO-]

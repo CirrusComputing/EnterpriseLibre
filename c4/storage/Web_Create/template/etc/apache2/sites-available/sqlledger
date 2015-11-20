@@ -1,0 +1,18 @@
+<VirtualHost [-IP_ADDRESS-]:80>
+    ServerAdmin webmaster@[-DOMAIN-]
+    ServerName sql-ledger.[-DOMAIN-]
+    ServerAlias sql-ledger.[-DOMAIN-]
+
+    DocumentRoot /usr/share/sql-ledger
+
+    <Directory /usr/share/sql-ledger>
+        AddHandler cgi-script .pl
+        Options ExecCGI Includes FollowSymlinks
+    </Directory>
+
+    # Possible values include: debug, info, notice, warn, error, crit, alert, emerg.
+    LogLevel warn
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log combined
+    ServerSignature Off
+</VirtualHost>

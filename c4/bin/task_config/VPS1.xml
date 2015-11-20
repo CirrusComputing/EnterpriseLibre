@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c4:boot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:c4="http://www.eseri.com/C4" xsi:schemaLocation="http://lucid-mirror.wan.virtualorgs.net/schema/C4/Boot.xsd">
+	<name>VPS1</name>
+	<host>HWHOST</host>
+	<deploy>
+		<arg>veid_base</arg>
+		<arg>vps_config_template</arg>
+		<arg>vz_base_path</arg>
+		<arg>domain</arg>
+		<arg>network</arg>
+		<arg>bridge</arg>
+		<arg>wan_ip</arg>
+		<arg>timezone</arg>
+		<arg>vps1_list</arg>
+	</deploy>
+	<certificates>
+	</certificates>
+	<passwords>
+	</passwords>
+	<kerberos_keys>
+	</kerberos_keys>
+	<deployment_files>
+	</deployment_files>
+	<package>
+		<always/>
+	</package>
+</c4:boot>

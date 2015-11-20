@@ -1,0 +1,4 @@
+#!/bin/sh
+ssh-keygen -f /etc/ssh/ssh_host_rsa_key -t rsa -N ''
+ssh-keygen -f /etc/ssh/ssh_host_dsa_key -t dsa -N ''
+rm -f $0

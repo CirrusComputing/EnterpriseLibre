@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c4:boot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:c4="http://www.eseri.com/C4" xsi:schemaLocation="http://lucid-mirror.wan.virtualorgs.net/schema/C4/Boot.xsd">
+	<name>Drupal</name>
+	<host>trident</host>
+	<deploy>
+		<arg>short_domain</arg>
+		<arg>status</arg>
+		<arg>usertype</arg>
+		<arg>username</arg>
+		<arg>email_prefix</arg>
+		<arg>firstname</arg>
+		<arg>lastname</arg>
+		<arg>cloud_domain</arg>
+		<arg>alias_domain</arg>
+		<arg>timezone</arg>
+	</deploy>
+	<certificates>
+	</certificates>
+	<passwords>
+		<password host="athena" entity="Krb5Admin" name="KRB5_PASSWORD_ADMIN"><always/></password>
+		<password host="mysql" entity="root" name="DB_PASSWORD_MYSQL"><always/></password>		
+		<password host="mysql" entity="drupal" name="DB_PASSWORD_DRUPAL" ><required>Drupal</required></password>
+		<password host="aphrodite" entity="drupal" name="LDAP_PASSWORD_DRUPAL" ><required>Drupal</required></password>
+	</passwords>
+	<kerberos_keys>
+	</kerberos_keys>
+	<deployment_files>
+	</deployment_files>
+	<package>
+		<always/>
+	</package>
+</c4:boot>

@@ -1,0 +1,6 @@
+<html><body>
+<p>Dear [%=firstname%] [%=lastname%],</p>
+<p>We regret to inform you that an error occured while processing your new organization. Rest assured that our system administration team is aware of the problem, and is working to resolve it as quickly as possible.</p>
+<p>Sincerely,</p>
+<p>The CirrusComputing Team</p>
+</body></html>

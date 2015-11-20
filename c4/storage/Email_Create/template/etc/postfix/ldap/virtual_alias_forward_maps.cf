@@ -1,0 +1,8 @@
+version = 3
+server_host = ldaps://aphrodite.[-DOMAIN-]:636
+search_base = ou=people,[-LDAP_BASE_DN-]
+query_filter = (&(objectClass=*)(|(eseriMailAlternateAddress=%s)(mail=%s)))
+result_attribute = eseriMailForwardingAddress
+bind = yes
+bind_dn = cn=postfix,ou=applications,ou=system,[-LDAP_BASE_DN-]
+bind_pw = [-LDAP_PASSWORD_POSTFIX-]

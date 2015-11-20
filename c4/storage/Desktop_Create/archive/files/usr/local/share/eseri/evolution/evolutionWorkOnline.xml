@@ -1,0 +1,11 @@
+<gconfentryfile>
+  <entrylist base="/apps/evolution/shell">
+    <entry>
+      <key>start_offline</key>
+      <schema_key>/schemas/apps/evolution/shell/start_offline</schema_key>
+      <value>
+        <bool>false</bool>
+      </value>
+    </entry>
+  </entrylist>
+</gconfentryfile>

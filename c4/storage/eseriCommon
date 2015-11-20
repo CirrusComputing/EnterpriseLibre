@@ -1,0 +1,443 @@
+#!/bin/sh
+#
+# Common variables and scripts - v3.9
+#
+# Created by Karoly Molnar <kmolnar@cirruscomputing.com>
+# Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2015 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+##############################################################################
+# General variables
+BIN_FOLDER=${0%/*}
+SCRIPT_NAME=${0##*/}
+TEMPLATE_FOLDER=${BIN_FOLDER}/template
+ARCHIVE_FOLDER=${BIN_FOLDER}/archive
+RESULT_FOLDER=${BIN_FOLDER}/result
+ESERIMAN_HOME=/var/lib/eseriman
+TIMEZONE=$(cat /etc/timezone)
+
+##############################################################################
+# Functions
+
+#Uses the new deployment configuration file to determine capabilities for the
+#organization being deployed
+hasCapability()
+{
+	if [ $# -ne 1 ] ; then
+		echo "WARNING: Incorrect number of arguments for hasCapability()" >&2
+		exit 1
+	fi
+	grep "CAPABILITY:$1" $RESULT_FOLDER/deployment > /dev/null 2>&1
+	RET=$?
+	if [ $RET -ne 0 ] ; then
+		echo "INFO: hasCapability failed for $1" >&2
+	fi
+	return $RET
+}
+
+#Uses the new deployment configuration file to determine capabilities to be enabled
+#for the organization being deployed
+hasCapabilityEnabled()
+{
+        if [ $# -ne 1 ] ; then
+                echo "WARNING: Incorrect number of arguments for hasCapabilityEnabled()" >&2
+                exit 1
+        fi
+        grep "CAPABILITY_ENABLE:$1" $RESULT_FOLDER/deployment > /dev/null 2>&1
+        RET=$?
+        return $RET
+}
+
+#Parses the given file, in place to remove [-DELETE_UNLESS_*-] flags
+#if the required capability is present, or remove lines if capability is not present
+parseCapabilities()
+{
+	if [ $# -ne 1 ] ; then
+		echo "WARNING: Incorrect number of arguments for parseCapabilities()" >&2
+		exit 1
+	fi
+	for cap in `head -n 1 $RESULT_FOLDER/deployment`
+		do hasCapability $cap
+		if [ $? -eq 0 ] 
+			then sed -i -e "s/\[-DELETE_UNLESS_$cap-\]//" $1
+		else
+			sed -i -e "/\[-DELETE_UNLESS_$cap-\]/d" $1
+		fi
+	done
+}
+
+#Gets the required password from the deployment configuration file
+#Needs to be invoked as VAR=$(getPassword("PasswordName"))
+getPassword()
+{
+	if [ $# -ne 1 ] ; then
+		echo "WARNING: Incorrect number of arguments for getPassword()" >&2
+		exit 1
+	fi
+	grep "PASSWORD:$1:.*" $RESULT_FOLDER/deployment > /dev/null 2>&1
+	if [ $? -ne 0 ] ; then
+		echo "WARNING: Password $1 not present in deployment file" >&2
+		exit 1
+	fi
+	grep "PASSWORD:$1:.*" $RESULT_FOLDER/deployment | sed -e "s/PASSWORD:$1://"
+	return 0
+}
+
+#Gets the requested paramter from the deployment configuration file
+#Needs to be invoked as VAR=$(getParameter("ParamName"))
+getParameter()
+{
+	if [ $# -ne 1 ] ; then
+		echo "WARNING: Incorrect number of arguments for getParameter()" >&2
+		exit 1
+	fi
+	grep "PARAMETER:$1:.*" $RESULT_FOLDER/deployment > /dev/null 2>&1
+	if [ $? -ne 0 ] ; then
+		echo "WARNING: Parameter $1 not present in deployment file" >&2
+		exit 1
+	fi
+	grep "PARAMETER:$1:.*" $RESULT_FOLDER/deployment | sed -e "s/PARAMETER:$1://"
+	return 0
+}
+
+# Check whether the paramter is one word or not
+eseriCheckParameter()
+{
+	if [ $# -ne 2 -a $# -ne 1 ]; then
+		echo "Error: $1 must not contain space or other separator characters"
+		exit 1
+	fi
+}
+
+# Check whether the parameter is numeric or not
+eseriCheckNumber()
+{
+	test $2 -ne 0 -o $2 -eq 0 >/dev/null 2>&1
+
+	if [ $? -ne 0 ]; then
+		echo "Error: $1 must be an integer value"
+		exit 1
+	fi
+}
+
+# Get DNS parameters into variables
+eseriGetDNS()
+{
+	eseriGetDNSInternal $(hostname -d) $(hostname -f) $(hostname -s)
+}
+
+eseriGetDNSInternal()
+{
+	DOMAIN=$1
+	echo "$DOMAIN"
+
+	REALM=$(echo $DOMAIN | tr '[a-z]' '[A-Z]')
+	echo "$REALM"
+	
+	SHORT_NAME=$3
+	echo "$SHORT_NAME"
+
+	FQDN_HOSTNAME=$2
+	echo "$FQDN_HOSTNAME"
+
+	local TMP_DOMAIN=$DOMAIN
+	LDAP_BASE=""
+	while true; do
+		SUBDOMAIN=${TMP_DOMAIN%%.*}
+		[ -z $LDAP_BASE ] && LDAP_FIRST_DC=${SUBDOMAIN} || LDAP_BASE="${LDAP_BASE},"
+		LDAP_BASE="${LDAP_BASE}dc=${SUBDOMAIN}"
+		[ $TMP_DOMAIN = ${TMP_DOMAIN#*.} ] && break
+		TMP_DOMAIN=${TMP_DOMAIN#*.}
+	done
+}
+
+# Get network parameters
+eseriGetNetwork()
+{
+	IP=$(ifconfig eth0 | awk '/inet addr/ {split ($2,A,":"); print A[2]}')
+	echo "$IP"
+
+	NETWORK=$(echo "$IP" | sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).[0-9]*/\1.\2.\3/')
+	echo "$NETWORK"
+
+	NETWORK_REVERSE=$(echo "$NETWORK" | sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\3.\2.\1/')
+	echo "$NETWORK_REVERSE"
+}
+
+# Replace values in config files
+eseriReplaceValues()
+{
+	[ -n "${VEID}" ] && sed -i -e "s/\[-VEID-\]/${VEID}/g" $1
+	[ -n "${VZ_BASE_PATH}" ] && sed -i -e "s|\[-VZ_BASE_PATH-\]|${VZ_BASE_PATH}|g" $1
+	[ -n "${BRIDGE}" ] && sed -i -e "s/\[-BRIDGE-\]/${BRIDGE}/g" $1
+	[ -n "${DOMAIN}" ] && sed -i -e "s/\[-DOMAIN-\]/${DOMAIN}/g" $1
+	[ -n "${NETWORK}" ] && sed -i -e "s/\[-NETWORK-\]/${NETWORK}/g" $1
+	[ -n "${NETWORK_REVERSE}" ] && sed -i -e "s/\[-NETWORK_REVERSE-\]/${NETWORK_REVERSE}/g" $1
+	[ -n "${REALM}" ] && sed -i -e "s/\[-REALM-\]/${REALM}/g" $1
+	[ -n "${DEPLOY_TIME}" ] && sed -i -e "s/\[-DEPLOY_TIME-\]/${DEPLOY_TIME}/g" $1
+	[ -n "${FQDN_HOSTNAME}" ] && sed -i -e "s/\[-FQDN_HOSTNAME-\]/${FQDN_HOSTNAME}/g" $1
+	[ -n "${LDAP_BASE}" ] && sed -i -e "s/\[-LDAP_BASE_DN-\]/${LDAP_BASE}/g" $1
+	[ -n "${LDAP_FIRST_DC}" ] && sed -i -e "s/\[-LDAP_FIRST_DC-\]/${LDAP_FIRST_DC}/g" $1
+	[ -n "${WAN_IP}" ] && sed -i -e "s/\[-WAN_IP-\]/${WAN_IP}/g" $1
+	[ -n "${WAN_IP_2}" ] && sed -i -e "s/\[-WAN_IP_2-\]/${WAN_IP_2}/g" $1
+	[ -n "${IT_MAN_USER}" ] && sed -i -e "s/\[-IT_MAN_USER-\]/${IT_MAN_USER}/g" $1
+	[ -n "${VPS_TEMPLATE_NAME}" ] && sed -i -e "s/\[-VPS_TEMPLATE_NAME-\]/${VPS_TEMPLATE_NAME}/g" $1
+	[ -n "${SYSTEM_ANCHOR_DOMAIN}" ] && sed -i -e "s/\[-SYSTEM_ANCHOR_DOMAIN-\]/${SYSTEM_ANCHOR_DOMAIN}/g" $1
+	[ -n "${IP}" ] && sed -i -e "s/\[-IP-\]/${IP}/g" $1
+	[ -n "${SHORT_NAME}" ] && sed -i -e "s/\[-SHORT_NAME-\]/${SHORT_NAME}/g" $1
+	[ -n "${ESERI_DNS_IP_PRIVATE}" ] && sed -i -e "s/\[-ESERI_DNS_IP_PRIVATE-\]/${ESERI_DNS_IP_PRIVATE}/g" $1
+	[ -n "${ESERI_DNS_IP_PUBLIC}" ] && sed -i -e "s/\[-ESERI_DNS_IP_PUBLIC-\]/${ESERI_DNS_IP_PUBLIC}/g" $1
+	[ -n "${ALIAS_DOMAIN}" ] && sed -i -e "s/\[-ALIAS_DOMAIN-\]/${ALIAS_DOMAIN}/g" $1
+}
+
+# Upgrade to the latest packages
+eseriSystemUpgrade()
+{
+	apt-get -q update
+	apt-get -q -y dist-upgrade
+	apt-get -q -y autoremove --purge
+}
+
+# apt-get install with retries if the mirror cannot be accessed.   
+aptGetInstall()
+{
+TIME=0
+DELAY=10
+TIMEOUT=400
+while true; do
+    apt-get -y -q install $*
+    [ $? -eq 0 ] && break
+    echo "Time: $TIME sec(s)"
+    sleep $DELAY
+    TIME=$(expr $TIME + $DELAY)
+    [ $TIME -ge $TIMEOUT ] && exit 1
+done
+}
+
+replace_serialized_length()
+{
+    while grep '\[-SERIALIZED_LENGTH-\]' $1 >/dev/null; do
+	CONTENTS=$(grep -o -P 's:\[-SERIALIZED_LENGTH-\]:\\"[^"]*\\";' $1 | head -1 | sed -e 's|s:\[-SERIALIZED_LENGTH-\]:\\"\(.*\)\\";|\1|g')
+	SIZE=${#CONTENTS}
+        sed -i -e "0,/\[-SERIALIZED_LENGTH-\]/s/\[-SERIALIZED_LENGTH-\]/$SIZE/" $1
+    done
+}
+
+init_process()
+{
+    $1 $2
+    if [ $? -ne 0 ]; then
+	echo "$1 failed to $2. Exitting..."
+      	exit 1
+    fi
+}
+
+dns_update_serial()
+{
+    FILES=$1
+    AWK_FILE=$ARCHIVE_FOLDER/db.dns_update_serial.awk
+    # Update serial for newly created/modified db file.
+    for FILE in $FILES; do
+	awk -f $AWK_FILE $FILE > $FILE.tmp
+	# Did awk fail for some reason?
+	if [ $? -ne 0 ]
+	then
+	    echo "awk1 failed "
+	    exit 1
+	fi
+        # Is the result a zero length file? 
+	if [ ! -s $FILE.tmp ]; then
+	    echo "Awk created a zero length file."
+	    exit 1
+	fi
+	mv $FILE.tmp $FILE
+    done
+}
+
+to_upper()
+{
+    echo -e "$1" | tr '[:lower:]' '[:upper:]'
+}
+
+to_lower()
+{
+    echo -e "$1" | tr '[:upper:]' '[:lower:]'
+}
+
+dns_add_cname()
+{
+    CNAMES=( $1 )
+    CNAME_CONTAINERS=( $2 )
+    CNAME_OPTION=$3
+
+    DNS_CONFIG_FOLDER=/etc/bind
+    DNS_DB_CAPABILITIES=$DNS_CONFIG_FOLDER/db.$(to_lower $CNAME_OPTION)capabilities
+
+    for (( i=0; i<${#CNAMES[@]}; i++ )); do
+	CNAME=${CNAMES[$i]}
+	CNAME_CONTAINER=${CNAME_CONTAINERS[$i]}	
+	if ! grep "$CNAME.*$CNAME_CONTAINER" $DNS_DB_CAPABILITIES >/dev/null; then
+	    CNAME_LINE="$CNAME\t\t\tIN\tCNAME\t$CNAME_CONTAINER\n"
+	    printf '%s\n' "$(cat $DNS_DB_CAPABILITIES)" > $DNS_DB_CAPABILITIES
+	    echo -e "$CNAME_LINE" >> $DNS_DB_CAPABILITIES
+	fi
+    done
+
+    dns_update_serial "$(grep -l "$DNS_DB_CAPABILITIES" $DNS_CONFIG_FOLDER/*)"
+    init_process '/etc/init.d/bind9' 'reload'
+}
+
+apache2_site_config()
+{
+    APACHE2_SITE_TEMPLATE=$1
+    APACHE2_SITE=$2
+    ENABLE_DISABLE=$3
+    RELOAD=$4
+
+    ALIAS_DOMAIN=$(getParameter alias_domain)
+    APACHE2_CONFIG_FOLDER=/etc/apache2
+    APACHE2_SITES_AVAILABLE_FOLDER=$APACHE2_CONFIG_FOLDER/sites-available
+    
+    #WAN_IP for firewall/proxy container
+    WAN_IP=$(ifconfig venet0:0 | awk '/inet addr/ {split ($2,A,":"); print A[2]}')
+    #Apache2 Configuration
+    install -o root -g root -m 644 $TEMPLATE_FOLDER/$APACHE2_SITES_AVAILABLE_FOLDER/$APACHE2_SITE_TEMPLATE $APACHE2_SITES_AVAILABLE_FOLDER/$APACHE2_SITE
+    eseriReplaceValues $APACHE2_SITES_AVAILABLE_FOLDER/$APACHE2_SITE
+    
+    if [ $ENABLE_DISABLE == 'enable' ]; then
+	a2ensite $APACHE2_SITE
+    elif [ $ENABLE_DISABLE == 'disable' ]; then
+	a2dissite $APACHE2_SITE
+    fi
+    
+    if [ $RELOAD == 't' ]; then
+	init_process '/etc/init.d/apache2' 'reload'
+    fi
+}
+
+ldap_ldif_config()
+{
+    CAPABILITY=$1
+    TEMPLATE_LDIF=$TEMPLATE_FOLDER/transient/$(to_lower $CAPABILITY).ldif
+    TMP_LDIF=/tmp/$(to_lower $CAPABILITY).ldif
+    LDAP_PASSWORD_CAPABILITY=$(getPassword LDAP_PASSWORD_$(to_upper $CAPABILITY))
+    install -m 644 $TEMPLATE_LDIF $TMP_LDIF
+    sed -i -e "s~\[-LDAP_SSHA_PASSWORD_$(to_upper $CAPABILITY)-\]~$(slappasswd -h {SSHA} -s $LDAP_PASSWORD_CAPABILITY)~" $TMP_LDIF
+    eseriReplaceValues $TMP_LDIF
+    init_process '/etc/init.d/slapd' 'stop'
+    su -s /bin/bash -c "slapadd -l $TMP_LDIF" openldap
+    su -s /bin/bash -c "slapindex -v >/dev/null" openldap
+    init_process '/etc/init.d/slapd' 'start'
+    rm $TMP_LDIF    
+}
+
+deploy_eseriman_script()
+{
+    ESERIMAN_SCRIPT_NAMES=( $1 )
+    for (( i=0; i<${#ESERIMAN_SCRIPT_NAMES[@]}; i++ )); do
+	ESERIMAN_SCRIPT_NAME=${ESERIMAN_SCRIPT_NAMES[$i]}
+	ESERIMAN_SCRIPT=$ESERIMAN_HOME/bin/$ESERIMAN_SCRIPT_NAME
+	install -o root -g root -m 500 $TEMPLATE_FOLDER/$ESERIMAN_SCRIPT $ESERIMAN_HOME/bin/
+	chown root:root $ESERIMAN_SCRIPT
+	chmod u+s $ESERIMAN_SCRIPT
+    done
+}
+
+deploy_start_menu_items()
+{
+    DIRECTORY_NAME=$1
+    CAPABILITY_NAME=$2
+    ALIAS_DOMAIN=$(getParameter alias_domain)
+    LOCAL_SHARE_FOLDER=/usr/local/share
+    DIRECTORY_ICON_FOLDER=$LOCAL_SHARE_FOLDER/icons/gnome/64x64/categories
+    CAPABILITY_ICON_FOLDER=$LOCAL_SHARE_FOLDER/icons/hicolor/64x64/apps
+    DIRECTORY_SHORTCUT_FOLDER=$LOCAL_SHARE_FOLDER/desktop-directories
+    CAPABILITY_SHORTCUT_FOLDER=$LOCAL_SHARE_FOLDER/applications
+
+    if [ $DIRECTORY_NAME != 'null' ]; then
+	install -o root -g root -m 644 -t $DIRECTORY_ICON_FOLDER $ARCHIVE_FOLDER/files/$DIRECTORY_ICON_FOLDER/applications-$DIRECTORY_NAME.png
+	install -o root -g root -m 644 -t $DIRECTORY_SHORTCUT_FOLDER $ARCHIVE_FOLDER/files/$DIRECTORY_SHORTCUT_FOLDER/$DIRECTORY_NAME.directory
+    fi
+
+    if [ $CAPABILITY_NAME != 'null' ]; then
+	install -o root -g root -m 644 -t $CAPABILITY_ICON_FOLDER $ARCHIVE_FOLDER/files/$CAPABILITY_ICON_FOLDER/$CAPABILITY_NAME.png
+	install -o root -g root -m 644 -t $CAPABILITY_SHORTCUT_FOLDER $TEMPLATE_FOLDER/$CAPABILITY_SHORTCUT_FOLDER/$CAPABILITY_NAME.desktop
+	eseriReplaceValues $CAPABILITY_SHORTCUT_FOLDER/$CAPABILITY_NAME.desktop
+    fi
+}
+
+configure_existing_users()
+{
+    ESERIMAN_SCRIPT=$1
+    PARAMETER_LIST=( $2 )
+
+    KRB5_PASSWORD_ADMIN=$(getPassword KRB5_PASSWORD_ADMIN)
+    STATUSS=$(getParameter status)
+    USERTYPES=$(getParameter usertype)
+    USERNAMES=$(getParameter username)
+    EMAIL_PREFIXES=$(getParameter email_prefix)
+    FIRSTNAMES=$(getParameter firstname)
+    LASTNAMES=$(getParameter lastname)
+    CLOUD_DOMAIN=$(getParameter cloud_domain)
+
+    # Tokenize varibles
+    STATUSS=( $STATUSS )
+    USERTYPES=( $USERTYPES )
+    USERNAMES=( $USERNAMES )
+    EMAIL_PREFIXES=( $EMAIL_PREFIXES )
+    FIRSTNAMES=( $FIRSTNAMES )
+    LASTNAMES=( $LASTNAMES )
+
+    for (( i=0; i<${#PARAMETER_LIST[$i]}; i++ )); do
+        PARAMETER=${PARAMETER_LIST[$i]}
+        if [ $PARAMETER == 'PASSWORD' ]; then
+            PASSWORDS=$(getParameter password)
+            PASSWORDS=( $PASSWORDS )
+        elif [ $PARAMETER == 'MD5_PASSWORD' ]; then
+            MD5_PASSWORDS=$(getParameter md5_password)
+            MD5_PASSWORDS=( $MD5_PASSWORDS )
+	elif [ $PARAMETER == 'TIMEZONE' ]; then
+	    TIMEZONES=$(getParameter timezone)
+	    TIMEZONES=( $TIMEZONES )
+        fi
+    done
+
+    for (( i=0; i<${#USERNAMES[@]}; i++ )); do
+        STATUS=${STATUSS[$i]}
+	USERTYPE=${USERTYPES[$i]}
+        USERNAME=${USERNAMES[$i]}
+        EMAIL_PREFIX=${EMAIL_PREFIXES[$i]}
+        FIRSTNAME=${FIRSTNAMES[$i]}
+        LASTNAME=${LASTNAMES[$i]}
+        [[ -n "PASSWORDS" ]] && PASSWORD=${PASSWORDS[$i]}
+        [[ -n "MD5_PASSWORDS" ]] && MD5_PASSWORD=${MD5_PASSWORDS[$i]}
+        [[ -n "TIMEZONES" ]] && TIMEZONE=${TIMEZONES[$i]}
+
+	PARAMETER_LIST_SUBSTITUTED=()
+        for (( j=0; j<${#PARAMETER_LIST[@]}; j++ )); do
+            PARAMETER=${PARAMETER_LIST[$j]}
+            PARAMETER_LIST_SUBSTITUTED[$j]=${!PARAMETER}
+        done
+
+	# If user is archived currently then restore user in LDAP before configuring user.
+	if [ $STATUS == 'ARCHIVED' ] || [ $USERTYPE == 'email_only' ]; then
+	    kadmin -p root/admin -w $KRB5_PASSWORD_ADMIN -q "modprinc -expire never $USERNAME"
+	fi
+
+        su - -c "sudo ./bin/$ESERIMAN_SCRIPT $(echo ${PARAMETER_LIST_SUBSTITUTED[@]})" eseriman
+
+	# Reverse the above
+	if [ $STATUS == 'ARCHIVED' ] || [ $USERTYPE == 'email_only' ]; then
+	    kadmin -p root/admin -w $KRB5_PASSWORD_ADMIN -q "modprinc -expire yesterday $USERNAME"
+	fi
+    done
+}
+
+# end

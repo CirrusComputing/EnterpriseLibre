@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=HR Management
+Comment=Manage human resources
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=firefox "http://hrm.[-DOMAIN-]/"
+Terminal=false
+StartupNotify=true
+Icon=orangehrm

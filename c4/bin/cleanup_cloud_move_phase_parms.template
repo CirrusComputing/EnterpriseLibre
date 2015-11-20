@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Config
+VEID_BASE=[-VEID_BASE-]
+ORG=[-SHORT_NAME-]
+NETWORK=[-NETWORK-]
+IP=[-IP-]
+VZ_BASE_PATH=[-VZ_BASE_PATH-]
+BRIDGE=[-BRIDGE-]
+HWHOST=[-HWHOST-]
+
+PHASE=[-PHASE-]
+
+source /home/c4/bin/cleanup_cloud_move_phase.sh

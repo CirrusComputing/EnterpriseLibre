@@ -1,0 +1,22 @@
+--- vtigercrm/modules/Users/Authenticate.php	2008-03-10 08:54:31.000000000 -0400
++++ /var/lib/vtigercrm/modules/Users/Authenticate.php	2009-01-14 00:54:43.000000000 -0500
+@@ -31,9 +31,17 @@
+ 
+ // Add in defensive code here.
+ $focus->column_fields["user_name"] = to_html($_REQUEST['user_name']);
+-$user_password = vtlib_purify($_REQUEST['user_password']);
++if (isset($_SERVER['REMOTE_USER'])){
++	$log->debug("Authenticate has picked up on the remote user and is beginning a remote user load");
++	$split_remote_user = split("@", $_SERVER['REMOTE_USER']);
++	$focus->column_fields["user_name"] = $split_remote_user[0];
++	$focus->remote_load_user();	
++}
++else{
++	$user_password = $_REQUEST['user_password'];
++	$focus->load_user($user_password);
++}
+ 
+-$focus->load_user($user_password);
+ 
+ if($focus->is_authenticated())
+ {

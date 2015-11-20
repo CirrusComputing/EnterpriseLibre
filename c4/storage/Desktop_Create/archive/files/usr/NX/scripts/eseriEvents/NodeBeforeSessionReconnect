@@ -1,0 +1,30 @@
+#! /bin/bash
+#
+# NX and Kerberos V integration
+#
+# This script is responsible for setting the KRB5CCNAME environment variable
+# in either ~/.profile or ~/.bashrc - v1.0
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+#
+# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+/usr/local/share/eseri/EseriLog "$USER - Reconnect"
+
+# Find the Kerberos 5 ticket cache file that is used by the suspended session
+KRB5_TMP=`grep KRB5CCNAME $HOME/.profile`
+KRB5_ACT=${KRB5_TMP#*=}
+
+# Find the Kerberos 5 ticket cache file that was created by this login
+KRB5_NEW=/tmp/`ls -t /tmp/ | grep krb5cc_${UID}_ | sed '2,$ d'`
+
+# Move the new Kerberos 5 ticket cache file in place of the active one
+[ -n "$KRB5_ACT" -a -n "$KRB5_NEW" ] && mv -f $KRB5_NEW $KRB5_ACT &>/dev/null
+
+exit 0

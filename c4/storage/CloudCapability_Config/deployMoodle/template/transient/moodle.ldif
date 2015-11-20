@@ -1,0 +1,6 @@
+# Moodle entry
+dn: cn=moodle,ou=applications,ou=system,[-LDAP_BASE_DN-]
+objectClass: top
+objectClass: eseriApplicationEntity
+cn: moodle
+userPassword: [-LDAP_SSHA_PASSWORD_MOODLE-]

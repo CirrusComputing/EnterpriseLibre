@@ -1,0 +1,60 @@
+<VirtualHost [-IP-]:80>
+    ServerAdmin webmaster@[-DOMAIN-]
+    ServerName openerp.[-DOMAIN-]
+    ServerAlias openerp.[-ALIAS_DOMAIN-]
+
+    ProxyRequests Off
+    ProxyPreserveHost On
+
+    <Proxy *>
+	Order deny,allow
+	Allow from all
+    </Proxy>
+
+    ProxyPass / http://localhost:8069/
+    ProxyPassReverse / http://localhost:8069/
+
+    RewriteEngine On
+    RewriteCond %{LA-U:REMOTE_USER} (.*)
+    RewriteRule .* - [E=RU:%1]
+    RequestHeader set REMOTE_USER %{RU}e
+
+    <Location />
+	AuthType Kerberos
+	AuthName "OpenERP"
+	KrbAuthRealms [-REALM-]
+	Krb5Keytab /etc/apache2/apache2.keytab
+	KrbMethodNegotiate on
+	KrbMethodK5Passwd on
+	require valid-user
+    </Location>
+
+    # Possible values include: debug, info, notice, warn, error, crit, alert, emerg.
+    LogLevel warn
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log combined
+    ServerSignature Off
+</VirtualHost>
+
+<VirtualHost [-IP-]:80>
+    ServerAdmin webmaster@[-DOMAIN-]
+    ServerName openerp-external.[-DOMAIN-]
+    ServerAlias openerp-external.[-ALIAS_DOMAIN-]
+
+    ProxyRequests Off
+    ProxyPreserveHost Off
+
+    <Proxy *>
+        Order deny,allow
+        Allow from all
+    </Proxy>
+
+    ProxyPass / http://localhost:8069/
+    ProxyPassReverse / http://localhost:8069/
+
+    # Possible values include: debug, info, notice, warn, error, crit, alert, emerg.
+    LogLevel warn
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log combined
+    ServerSignature Off
+</VirtualHost>

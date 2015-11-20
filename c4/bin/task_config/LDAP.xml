@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c4:boot xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:c4="http://www.eseri.com/C4" xsi:schemaLocation="http://lucid-mirror.wan.virtualorgs.net/schema/C4/Boot.xsd">
+	<name>LDAP</name>
+	<host>aphrodite</host>
+	<deploy>
+		<arg>manager_username</arg>
+	</deploy>
+	<certificates>
+		<cert host="aphrodite" type="RSA" />
+	</certificates>
+	<passwords>
+		<password host="aphrodite" entity="slapd_config_dit" name="SLAPD_CONFIG_PASSWORD" ><always/></password>
+		<password host="aphrodite" entity="libnss" name="LDAP_PASSWORD_LIBNSS" ><always/></password>
+		<password host="aphrodite" entity="postfix" name="LDAP_PASSWORD_POSTFIX"><required>Email</required></password>
+		<password host="aphrodite" entity="dovecot" name="LDAP_PASSWORD_DOVECOT"><required>Email</required></password>
+		<password host="aphrodite" entity="nuxeo5" name="LDAP_PASSWORD_NUXEO5"><required>Nuxeo</required></password>
+		<password host="aphrodite" entity="webhuddle" name="LDAP_PASSWORD_WEBHUDDLE"><required>WebConferencing</required></password>
+		<password host="aphrodite" entity="mediawiki" name="LDAP_PASSWORD_MEDIAWIKI"><required>Wiki</required></password>
+		<password host="aphrodite" entity="vtiger" name="LDAP_PASSWORD_VTIGER"><required>Vtiger</required></password>
+		<password host="aphrodite" entity="timesheet" name="LDAP_PASSWORD_TIMESHEET"><required>Timesheet</required></password>
+		<password host="aphrodite" entity="xmpp" name="LDAP_PASSWORD_XMPP"><required>InstantMessaging</required></password>
+		<password host="aphrodite" entity="sogo" name="LDAP_PASSWORD_SOGO"><required>SOGo</required></password>
+		<password host="aphrodite" entity="redmine" name="LDAP_PASSWORD_REDMINE"><required>Redmine</required></password>
+		<password host="aphrodite" entity="phpscheduleit" name="LDAP_PASSWORD_PHPSCHEDULEIT"><required>PHPScheduleIt</required></password>
+	</passwords>
+	<kerberos_keys>
+		<service>slapd</service>
+		<service>host</service>
+	</kerberos_keys>
+	<deployment_files>
+	</deployment_files>
+	<package>
+		<always/>
+	</package>
+</c4:boot>

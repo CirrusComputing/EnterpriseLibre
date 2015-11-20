@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+
+<account version='1.0'>
+	<account>
+		<protocol>prpl-jabber</protocol>
+		<name></name>
+		<password></password>
+		<statuses>
+			<status type='available' name='Available' active='true'>
+				<attributes/>
+			</status>
+			<status type='freeforchat' name='Chatty' active='false'>
+				<attributes/>
+			</status>
+			<status type='away' name='Away' active='false'>
+				<attributes/>
+			</status>
+			<status type='extended_away' name='Extended away' active='false'>
+				<attributes/>
+			</status>
+			<status type='dnd' name='Do Not Disturb' active='false'>
+				<attributes/>
+			</status>
+			<status type='offline' name='Offline' active='false'>
+				<attributes/>
+			</status>
+			<status type='tune' name='Listening to music' active='false'>
+				<attributes/>
+			</status>
+		</statuses>
+		<userinfo>&lt;vCard xmlns=&apos;vcard-temp&apos;/&gt;</userinfo>
+		<settings>
+			<setting name='use-global-buddyicon' type='bool'>1</setting>
+			<setting name='require_tls' type='bool'>1</setting>
+			<setting name='ft_proxies' type='string'>proxy.jabber.org:7777</setting>
+			<setting name='check-mail' type='bool'>0</setting>
+			<setting name='connect_server' type='string'></setting>
+			<setting name='old_ssl' type='bool'>0</setting>
+			<setting name='auth_plain_in_clear' type='bool'>0</setting>
+			<setting name='port' type='int'>5222</setting>
+			<setting name='auth_gssapi' type='bool'>1</setting>
+		</settings>
+		<settings ui='gtk-gaim'>
+			<setting name='auto-login' type='bool'>1</setting>
+		</settings>
+		<current_error/>
+	</account>
+</account>

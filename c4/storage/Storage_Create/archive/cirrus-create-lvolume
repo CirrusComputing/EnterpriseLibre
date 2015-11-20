@@ -1,0 +1,85 @@
+#!/usr/bin/perl -w
+
+#Creates a new volume in a volume group with space available
+
+use Git;
+unless ($#ARGV == 1){
+	print "Usage: cirrus-create-lvolume name size\n";
+	exit 1;
+}
+my $VOLNAME = $ARGV[0];
+if ($VOLNAME =~ m/[^A-Za-z0-9]/){
+	print "Volume group name must be alphanumeric\n";
+	exit 1;
+}
+
+my $TARGET_SIZE = $ARGV[1];
+my $volgroups_out = `vgs --noheadings --nosuffix --units g --separator ','`;
+my @volgroups = split(/\n/, $volgroups_out);
+
+my $chosen_group = '';
+foreach my $group (@volgroups){
+	my @data = split(/,/, $group);
+	my $name = $data[0];
+	my $free_space = $data[6];
+	if ($TARGET_SIZE < $free_space){
+		$chosen_group = $name;
+		$chosen_group =~ s/^\s+//;
+		$chosen_group =~ s/\s+$//;
+		last;
+	}
+}
+
+unless ($chosen_group){
+	print "Insufficient space available on any volume group\n";
+	exit 1;
+}
+#Check to see if the name is already in use
+my $lv_output = `lvs --noheadings -o vg_name,lv_name`;
+my @lvs = split(/\n/, $lv_output);
+foreach my $lv (@lvs){
+	$lv =~ s/^\s+//;
+	my @data = split(/\s+/, $lv);
+	my $vg = $data[0];
+	my $name = $data[1];
+	if ($vg eq $chosen_group && $name eq $VOLNAME){
+		print "$VOLNAME is already created in $chosen_group\n";
+		exit 1;
+	}
+}
+#Check to see if the mount point is already in use
+my $mount_point = "/var/lib/vz-$VOLNAME";
+if (-e $mount_point){
+	print "Mount point $mount_point already exists\n";
+	exit 1;
+}
+mkdir("$mount_point");
+unless ($? == 0){
+	print "Error making empty mount-point directory\n";
+	exit 1;
+}
+system("lvcreate", "-L", "${TARGET_SIZE}G", "-n", "$VOLNAME", "$chosen_group");
+unless ($? == 0){
+	print "Error creating volume group\n";
+	exit 1;
+}
+system("mkfs.ext3", "-L", "$VOLNAME", "/dev/$chosen_group/$VOLNAME");
+unless ($? == 0){
+	print "Error making filesystem\n";
+	exit 1;
+}
+#system("udevadm", "trigger");
+open(FSTAB, ">>/etc/fstab");
+print FSTAB "/dev/mapper/$chosen_group-$VOLNAME\t$mount_point\text3\tdefaults\t0 2\n";
+close(FSTAB);
+my $repository = Git->repository("/etc");
+$repository->command("add", "/etc/fstab");
+system("mount", "$mount_point");
+unless ($? == 0){
+	print "Error mounting new volume group, reverting\n";
+	$repository->command("reset", "--hard", "HEAD");
+	exit 1;
+}
+$repository->command("commit", "-m", "Made new storage area $VOLNAME");
+mkdir("$mount_point/private");
+mkdir("$mount_point/root");

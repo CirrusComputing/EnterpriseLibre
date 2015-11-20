@@ -1,0 +1,170 @@
+#!/bin/sh
+#
+# Startup script for Webhuddle - v1.0
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+#
+# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+# It is assumed that after starting LOG4J will not log to the console,
+# it will write the $SERVERLOGFILE file
+#
+
+# Source LSB function library.
+[ -f /lib/lsb/init-functions ] && . /lib/lsb/init-functions
+
+#---------------------------------------------
+# Begin Java and Jboss trivial Confgiuration params
+#---------------------------------------------
+JBOSS_HOME=/var/lib/webhuddle
+JBOSS_CONFIGURATION="default"
+JBOSS_SHELL="/bin/sh"
+JAVA_HOME=/usr/lib/jvm/java-6-sun/
+JAVACMD="$JAVA_HOME/bin/java"
+# JAVA_OPTS="-Xms64M -Xmx128M"
+JAVAC_JAR="$JAVA_HOME/lib/tools.jar"
+#---------------------------------------------
+# End Java and Jboss trivial Confgiuration params
+#---------------------------------------------
+
+# Set some essential variables
+JBOSS_BINDIR="$JBOSS_HOME/bin"
+LOCKFILE=/var/lock/webhuddle
+PIDFILE=/var/run/webhuddle.pid
+LOGFOLDER=$JBOSS_HOME/server/$JBOSS_CONFIGURATION/log
+LOGFILE=${LOGFOLDER}/webhuddle.log
+SERVERLOGFILE=${LOGFOLDER}/server.log
+
+# Functions
+start ()
+{
+	if [ ! -f $LOCKFILE ]; then
+		echo "Starting Webhuddle: "
+
+		touch $LOCKFILE
+
+		# Reset log to make sure we don't read old start message
+		[ -e $LOGFILE ] && rm $LOGFILE
+		[ -d $LOGFOLDER ] || mkdir -p $LOGFOLDER
+		touch $LOGFILE
+
+		export JAVA_HOME JAVACMD JAVA_OPTS JBOSS_CONFIGURATION JAVAC_JAR 
+
+		cd $JBOSS_BINDIR
+		$JBOSS_SHELL $JBOSS_BINDIR/run.sh > $LOGFILE &
+
+		sleep=0
+		RETVAL=1
+		while [ $sleep -lt 180 -a $RETVAL -eq 1 ]; do
+			sleep 10
+			sleep=`expr $sleep + 10`
+			grep -q MicroKernel $SERVERLOGFILE 2>&1 > /dev/null 2>&1
+			[ $? -eq 0 ] && RETVAL=0
+		done
+
+		# Uncomment if JBoss doesn't deploy everything in time
+		#sleep 60
+		if [ -f /lib/lsb/init-functions ]; then
+			[ $RETVAL -eq 0 ] && log_success_msg "Webhuddle startup" || ( log_failure_msg "Webhuddle startup" && rm -f $LOCKFILE )
+			echo ""
+		else
+			[ $RETVAL -eq 0 ] && echo "Webhuddle startup succeeded" || ( echo "Webhuddle startup failed" && rm -f $LOCKFILE )
+		fi
+	else
+		echo "lockfile for Webhuddle already exists..."
+		RETVAL=0
+	fi
+	return $RETVAL
+}
+
+stop ()
+{
+	echo -n "Shutting down Webhuddle: "
+
+	# Don't stop it if it's not running..
+	status > /dev/null 2>&1
+	if [ $? -eq 3 ]; then
+		if [ -f /lib/lsb/init-functions ]; then
+			log_success_msg "Webhuddle shutdown"
+			echo ""
+		else
+			echo "Webhuddle shutdown succeeded"
+		fi
+		return 0
+	fi
+
+	export JAVA_HOME JAVACMD JAVA_OPTS JBOSS_CONFIGURATION JAVAC_JAR 
+
+	$JBOSS_SHELL $JBOSS_BINDIR/shutdown.sh $JBOSS_SHUTDOWN_OPTIONS -- &
+
+	# Sleep every 10 seconds for up to 180 seconds, and check to see if
+	# jboss is still running
+	sleep=10
+	RETVAL=1
+	while [ $sleep -lt 180 -a $RETVAL -eq 1 ]; do
+		sleep 5
+		sleep=`expr $sleep + 10`
+		pslist=$( ps -af | grep webhuddle | grep java | grep root | awk '{print $2}' | tr '\n' ' ' | sed -e s/\ $// )
+		[ -z "$pslist" ]
+		if [ $? -eq 0 ]; then
+			RETVAL=0
+		fi
+	done
+	if [ -f /lib/lsb/init-functions ]; then
+		[ $RETVAL -eq 0 ] && ( log_success_msg "Webhuddle shutdown" && rm -f $LOCKFILE ) || log_failure_msg "Webhuddle shutdown"
+		echo ""
+	else
+		[ $RETVAL -eq 0 ] && ( echo "Webhuddle shutdown succeeded" && rm -f $LOCKFILE ) || echo "Webhuddle shutdown failed"
+	fi
+	return $RETVAL
+}
+
+status ()
+{
+	pslist=$( ps -af | grep webhuddle | grep java | grep root | awk '{print $2}' | tr '\n' ' ' | sed -e s/\ $// )
+	if [ -n "$pslist" ]; then
+		echo "Webhuddle (pid $pslist) is running"
+		return 0
+	fi
+	if [ -f $PIDFILE ]; then
+		echo "Webhuddle dead but pid file exists"
+		return 1
+	fi
+	if [ -f $LOCKFILE ]; then
+		echo "Webhuddle dead but subsys locked"
+		return 2
+	fi
+	echo "Webhuddle is stopped"
+	return 3
+}
+
+# See how we were called.
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	status)
+		status
+		RETVAL=$?
+		;;
+	restart|reload|force-reload)
+		stop
+		start
+		;;
+	coldrestart)
+		[ -f $LOCKFILE ] && $0 restart
+		;;
+	*)
+		echo "Usage: $0 {start|stop|status|restart|reload|force-reload|coldrestart}"
+		exit 1
+esac
+
+exit $RETVAL

@@ -1,0 +1,8 @@
+<html>
+<body>
+<p>Dear [%=firstname%] [%=lastname%],</p>
+<p>Thank you for signing up with CirrusComputing! Unfortunately, we are currently unable to process your new organization due to excess demand. We will begin processing as soon as resources become available. For more information, please contact our sales team.</p>
+<p>Sincerely,</p>
+<p>The CirrusComputing Team</p>
+</body>
+</html>

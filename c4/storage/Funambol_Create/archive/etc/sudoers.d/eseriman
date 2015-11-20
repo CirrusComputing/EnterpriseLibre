@@ -1,0 +1,3 @@
+# Eseri specific settings
+Cmnd_Alias ESERIMAN = /var/lib/eseriman/bin/addFunambolUser.sh, /var/lib/eseriman/bin/changeFunambolUserPassword.sh
+eseriman ALL=NOPASSWD: ESERIMAN

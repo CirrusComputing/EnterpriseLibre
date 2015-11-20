@@ -1,0 +1,12 @@
+- /var/lib/backup/files/chaos/*/.cache
+- /var/lib/backup/files/chaos/*/.xsession-errors
+- /var/lib/backup/files/chaos/*/.evolution/cache/tmp
+- /var/lib/backup/files/chaos/*/.evolution/mail/imap/*[-SYSTEM_ANCHOR_DOMAIN-]
+- /var/lib/backup/files/chaos/*/.local/share/gvfs-metadata/*.log
+- /var/lib/backup/files/chaos/*/.mozilla/firefox/*.default/Cache
+- /var/lib/backup/files/chaos/*/.mozilla/firefox/*.default/urlclassifier.pset
+- /var/lib/backup/files/chaos/*/.mozilla/firefox/*.default/urlclassifier3.sqlite
+- /var/lib/backup/files/chaos/*/.mozilla/firefox/*.default/cookies.sqlite*
+- /var/lib/backup/files/chaos/*/.nx
+- /var/lib/backup/files/chaos/*/.cache
+- /var/lib/backup/files/chaos/*/VTBackup

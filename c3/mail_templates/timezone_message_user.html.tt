@@ -1,0 +1,15 @@
+<html>
+ <body>
+  <p>Dear [% first_name  %] [% last_name %],</p>
+  
+    <p>Your timezone has been changed to [% new_timezone %]. Clearing the browser cache accompanied with a desktop reboot is required to see the timezone changes.</p>
+  <p>---</p>
+
+  <p>Enjoy your cloud to the fullest!  If you have any questions at or need any assistance at all, please don't hesitate to contact us through our website support page and we will be glad to help.</p>
+
+  <p>Best regards,</p>
+  <p>Cirrus Open</p>
+---
+  <p>You received this email because you just changed the settings of your Cirrus Open user account. If this email reached you in error for any reason, please let us know immediately.</p>
+ </body>
+</html>

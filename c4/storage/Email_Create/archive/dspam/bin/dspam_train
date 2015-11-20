@@ -1,0 +1,251 @@
+#!/usr/bin/perl
+#
+# $Id: dspam_train.in,v 1.01 2010/08/12 02:03:35 sbajic Exp $
+
+use strict;
+use vars qw { $USER %CONFIG $SPAM_CORPUS $NONSPAM_CORPUS };
+
+$CONFIG{'SHOW_SUBJECTS'} = 0;
+$CONFIG{'DSPAM_BINARY'}  = '/usr/bin/dspam'; 
+$CONFIG{'BINDIR'}        = '/usr/bin';
+
+### DO NOT CONFIGURE ANYTHING BELOW THIS LINE
+
+$USER           = shift;
+$SPAM_CORPUS    = shift;
+if ($SPAM_CORPUS eq "--client" || $SPAM_CORPUS eq "-c") {
+  $SPAM_CORPUS = shift;
+  $CONFIG{'DSPAM_BINARY'} .= " --client";
+}
+$NONSPAM_CORPUS = shift;
+
+if ($NONSPAM_CORPUS eq "") {
+    # we were wrong about the first argument, it was the spam corpus and not
+    # the user name in fact
+    ($USER, $NONSPAM_CORPUS, $SPAM_CORPUS) = ((getpwuid($<))[0], $SPAM_CORPUS, $USER)
+}
+
+sub usage {
+    print STDERR "Usage: $0 [username] [--client] [[-i index]|[spam_corpus] [nonspam_corpus]]\n";
+    exit(-1);
+}
+
+print "Taking Snapshot...\n";
+system("$CONFIG{'BINDIR'}/dspam_stats -r $USER");
+if (($? >> 8) != 0) {
+    print STDERR "Running dspam_stats for $USER failed.\n";
+    exit(-1);
+}
+
+if ($SPAM_CORPUS eq "-i") {
+    TrainOnIndex($NONSPAM_CORPUS);
+}
+else {
+    &Train("$NONSPAM_CORPUS", "$SPAM_CORPUS");
+}
+
+FinishTraining();
+
+
+sub TrainOnIndex {
+  my($index) = @_;
+  open(INDEX, "<$index") or die "Failed to open index file \"$index\": $!\n";
+
+  print "Training on $index index...\n";
+  while(<INDEX>) {
+    chomp;
+    my($class, $filename) = split(/\s+/);
+    if ($class eq "ham" || $class eq "nonspam") {
+        TestNonspam($filename);
+    } elsif ($class eq "spam") {
+        TestSpam($filename);
+    } else {
+        die "ERROR: Unknown class '$class'. Test Broken.";
+    }
+  }
+}
+
+sub Train {
+    my($nonspam, $spam) = @_;
+    my(@nonspam_corpus, @spam_corpus);
+    my($msg);
+
+    print "Training $nonspam / $spam corpora...\n";
+
+    @nonspam_corpus = GetFilesOrMessages($nonspam);
+    @spam_corpus = GetFilesOrMessages($spam); 
+
+    while($#nonspam_corpus > -1 || $#spam_corpus > -1) {
+        if ($#nonspam_corpus > -1) {
+            my($count) = 0;
+
+            # Process nonspam until balanced
+            $msg = shift(@nonspam_corpus);
+            TestNonspam($msg);
+            if ($#spam_corpus > -1) {
+                $count = ($#nonspam_corpus+1) / ($#spam_corpus+1);
+            }
+            for(1..$count-1)
+            { 
+                $msg = shift(@nonspam_corpus);
+                TestNonspam($msg);
+            }
+        }
+
+        if ($#spam_corpus > -1) {
+            my($count) = 0;
+            # Process spam until balanced
+            $msg = shift(@spam_corpus);
+            TestSpam($msg);
+            if ($#nonspam_corpus > -1) {
+                $count = ($#spam_corpus+1) / ($#nonspam_corpus+1);
+            }
+            for(1..$count-1)
+            {
+                $msg = shift(@spam_corpus);
+                TestSpam($msg);
+            }
+        }
+    }
+}
+
+sub FinishTraining() {
+    print "TRAINING COMPLETE\n";
+    print "\nTraining Snapshot:\n";
+    system("$CONFIG{'BINDIR'}/dspam_stats -S -s $USER");
+    if (($? >> 8) != 0) {
+        print STDERR "Running dspam_stats for $USER failed.\n";
+        exit(-1);
+    }
+    print "\nOverall Statistics:\n";
+    system("$CONFIG{'BINDIR'}/dspam_stats -S $USER");
+    if (($? >> 8) != 0) {
+        print STDERR "Running dspam_stats for $USER failed.\n";
+        exit(-1);
+    }
+}
+
+sub GetFilesOrMessages {
+    my ($corpus) = @_;
+    if (-d $corpus) {
+        return GetFiles($corpus);
+    }
+    elsif (-f $corpus) {
+        return GetMessages($corpus);
+    }
+    else {
+        die "Corpus \"$corpus\" must be either a MBOX file or a maildir directory.\n"
+    }
+}
+
+sub GetFiles {
+  my($corpus) = @_;
+  my(@files);
+
+  opendir(DIR, "$corpus") || die "$corpus: $!";
+  @files = grep(!/^\.\.?$/, readdir(DIR));
+  closedir(DIR);
+  return map { $_ = "$corpus/" . $_ } @files;
+} 
+
+sub GetMessages {
+    my ($mbox) = @_;
+
+    die "Please install Mail::MboxParser module if you want to be able to use " .
+        "MBOX files for training.\n" unless eval { require Mail::MboxParser; };
+
+    # filter out special pseudo messages used by Pine/UW-IMAPd
+    return grep { $_->header->{subject} ne "DON'T DELETE THIS MESSAGE -- FOLDER INTERNAL DATA" }
+            Mail::MboxParser->new($mbox)->get_messages();
+}
+
+sub TestNonspam {
+    my($msg) = @_;
+    TestAny($msg, "nonspam", "Innocent", "Whitelisted", "innocent", "fp")
+}
+
+sub TestSpam {
+    my($msg) = @_;
+    TestAny($msg, "spam   ", "Spam", "Blacklisted", "spam", "fn")
+}
+
+sub TestAny {
+    my($msg, $testname, $ok1, $ok2, $dspam_class, $short_class) = @_;
+    my $response;
+    print "[test: $testname] " . substr($msg . " " x 32, 0, 32) .  " result: ";
+    my $cmd = "$CONFIG{'DSPAM_BINARY'} --user $USER --deliver=summary --stdout";
+    if ( -f $msg ) {
+        $response = `$cmd < '$msg'`;
+    }
+    else {
+        use FileHandle;
+        use IPC::Open2;
+        my ($dspam_in, $dspam_out);
+        my $pid = open2($dspam_out, $dspam_in, $cmd);
+        print $dspam_in $msg->as_string();
+        close $dspam_in;
+        $response = join('', <$dspam_out>);
+        waitpid $pid, 0
+    }
+
+    my $code = "UNKNOWN";
+    if ($response =~ /class="(\S+)"/i) {
+        $code = $1;
+    }
+    if ($code eq "UNKNOWN") {
+        # print "\n===== WOAH THERE =====\n";
+        # print "I was unable to parse the result. Test Broken.\n";
+        # print "======================\n";
+        # exit(0);
+        print "BROKEN result!!\n";
+        return;
+    }
+
+    if ($code eq $ok1 || $code eq $ok2) {
+        print "PASS";
+    } else {
+        my($class) = "UNKNOWN";
+        my($signature) = "UNKNOWN";
+        if ($response =~ /class="(\S+)"/i) {
+            $class = $1;
+        } else {
+            print "BROKEN class!!\n";
+            return;
+        }
+
+        if ($response =~ /signature=(\S+)/i) {
+            $signature = $1;
+        } else {
+            # print "\n===== WOAH THERE =====\n";
+            # print "I was unable to find the DSPAM signature. Test Broken.\n";
+            # print "======================\n";
+            # print "\n$response\n";
+            # exit(0);
+            print "BROKEN signature!!\n";
+            return;
+        }
+
+        print "FAIL ($class)";
+        if ($CONFIG{'SHOW_SUBJECTS'} == 1) {
+            print "\n\t[$short_class] ";
+            if ( -f $msg ) {
+                open(FILE, "<$msg");
+                while(<FILE>) {
+                    if (/^Subject:/i) {
+                        chomp;
+                        print $_;
+                        close(FILE);
+                    }
+                }
+                close(FILE);
+            }
+            else {
+                print $msg->header->{subject}
+            }
+        }
+        open(TRAIN, "|$CONFIG{'DSPAM_BINARY'} --user $USER --class=$dspam_class " .
+                    "--source=error --signature=$signature");
+        close(TRAIN);
+    }
+    print "\n";
+}

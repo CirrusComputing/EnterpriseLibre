@@ -1,0 +1,14 @@
+# Sane defaults: log to syslog
+DAEMON_OPTS="-l -i /etc/dkim.InternalSigningHosts.conf"
+# Sign for example.com with key in /etc/mail/domainkey.key using
+# selector '2007' (e.g. 2007._domainkey.example.com)
+#DAEMON_OPTS="$DAEMON_OPTS -d example.com -s /etc/mail/domainkey.key -S 2007"
+DAEMON_OPTS="$DAEMON_OPTS -H -d [-DOMAIN-],lists.[-DOMAIN-] -s /etc/mail/dkim.key -S mail -o received,x-virus-scanned,x-enigmail-version,x-dspam-result,x-dspam-processed,x-dspam-confidence,x-dspam-probability,x-dspam-signature"
+# See dk-filter(8) for a complete list of options
+#
+# Uncomment to specify an alternate socket
+#SOCKET="/var/run/dk-filter/dk-filter.sock" # default
+#SOCKET="inet:54321" # listen on all interfaces on port 54321
+#SOCKET="inet:12345@localhost" # listen on loopback on port 12345
+#SOCKET="inet:12345@192.0.2.1" # listen on 192.0.2.1 on port 12345
+SOCKET="inet:8892@localhost"

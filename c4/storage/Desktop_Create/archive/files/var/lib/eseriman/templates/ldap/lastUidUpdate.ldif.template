@@ -1,0 +1,20 @@
+#
+# UserID manipulation - v1.0
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+#
+# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+dn: cn=lastUid,ou=system,[-LDAP_BASE-]
+changetype: modify
+delete: uidNumber
+uidNumber: [-LDAP_UID_OLD-]
+-
+add: uidNumber
+uidNumber: [-LDAP_UID_NEW-]
