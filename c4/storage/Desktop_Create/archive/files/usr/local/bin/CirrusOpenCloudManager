@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Cloud Manager GUI - v7.0
+# Cloud Manager GUI - v7.1
 #
 # Created by Gregory Wolgemuth <woogie@cirruscomputing.com>
 # Modified by Lukas Kamps <lkamps@cirruscomputing.com> and Nimesh Jethwa <njethwa@cirruscomputing.com>
@@ -623,6 +623,9 @@ class AccountManager(object):
         self.builder.get_object("cc_vbox1").show_all()
         if (self.system_anchor_domain == self.network_name):
             self.builder.get_object("dc_vbox").hide_all()
+            # Hide Anchor IP and Anchor Netmask since there is only one cloud IP
+            self.builder.get_object("ad_hbox2").hide_all()
+            self.builder.get_object("ad_hbox3").hide_all()
         else:
             self.builder.get_object("ad_vbox").hide_all()            
         self.builder.get_object("cc_header_label2").hide()
@@ -732,7 +735,8 @@ class AccountManager(object):
             self.dc_imap_server = self.root.xpath('/result/dc_imap_server')[0].text
             self.dc_alias_domain = self.root.xpath('/result/dc_alias_domain')[0].text
             self.dc_website_ip = self.root.xpath('/result/dc_website_ip')[0].text
-            self.dc_cloud_ip = self.root.xpath('/result/dc_cloud_ip')[0].text
+            self.dc_cloud_ip = os.popen('dig @8.8.8.8 +short ' + self.system_anchor_domain).read()
+            self.dc_cloud_ip = self.dc_cloud_ip[:self.dc_cloud_ip.rfind('\n')]
 
             # Software
             
@@ -770,6 +774,9 @@ class AccountManager(object):
             self.ad_netmask_entry = self.builder.get_object("ad_netmask_entry")
             self.ad_netmask_entry.modify_base(gtk.STATE_NORMAL, self.color_bg_entrybox)
             self.ad_netmask_entry.set_text(self.system_anchor_netmask)
+
+            self.ad_label5 = self.builder.get_object("ad_label5")
+            self.ad_label5.set_markup('Make sure at your registrar you have already set the primary name server for your new anchor domain to "ns1." plus your domain (e.g. ns1.domainneverused.net) and glued it to IP <u>' + self.dc_cloud_ip + '</u>, to connect your cloud to the Internet.')
         else:
             # Domain Config
             
@@ -794,7 +801,7 @@ class AccountManager(object):
             # Radio23
             self.dc_radio23 = self.builder.get_object("dc_radio23")
             self.dc_radio23_label = self.builder.get_object("dc_radio23_label")
-            self.dc_radio23_checkbox1 = self.builder.get_object("dc_radio23_checkbox1")            
+            self.dc_radio23_checkbox1 = self.builder.get_object("dc_radio23_checkbox1")
             self.dc_radio23_label.set_markup('Use your cloud\'s name server as well. This provides maximum security, and external app names will include your domain. Immediately after saving this change, set the primary name server at your domain registrar and glue it to IP <u>' + self.dc_cloud_ip + '</u>.')
             self.dc_website_ip_entry = self.builder.get_object("dc_website_ip_entry")
             self.dc_website_ip_entry.modify_base(gtk.STATE_NORMAL, self.color_bg_entrybox)
@@ -871,7 +878,7 @@ class AccountManager(object):
             xml_value += '<new_system_anchor_netmask>' + '#' + new_system_anchor_netmask + '</new_system_anchor_netmask>'
             xml_value += '</changeSystemAnchorConfig></msg>'
             contents = self.send_data(xml_value)
-            message = '\nMake sure you have already set the primary name server for your anchor domain (at the registrar) to ns1.' + new_system_anchor_domain + ' and ' + new_system_anchor_ip + '.\n'
+            message = '\nMake sure you have already set the primary name server for your anchor domain (at the registrar) to ns1.' + new_system_anchor_domain + ' and <u>' + self.dc_cloud_ip + '</u>.\n'
             self.show_response_dialog(True, 'OK', True, gtk.JUSTIFY_CENTER, 'Confirmation', message)
             return True
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Desktop deploy script - v6.0
+# Desktop deploy script - v6.1
 #
 # Created by Karoly Molnar <kmolnar@cirruscomputing.com>
 # Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
@@ -42,8 +42,10 @@ SYSTEM_KRB5_KEYTAB=/etc/krb5.keytab
 eseriGetDNS
 eseriGetNetwork
 
-# Get the IP address of the Eseri C3 server
-ESERI_C3_IP=$(cat $ARCHIVE_FOLDER/Eseri_C3_IP.txt)
+# Get the Private IP address of the SMC C3.
+SMC_C3_IP_PRIVATE=$(grep 'SMC_C3_IP_PRIVATE=' $ARCHIVE_FOLDER/SMC_HOST_IP.txt | sed 's|SMC_C3_IP_PRIVATE=||')
+echo "SMC_C3_IP_PRIVATE is $SMC_C3_IP_PRIVATE"
+
 
 # Deploy Keytab
 install -o root -g root -m 440 $ARCHIVE_FOLDER/chaos.host.keytab $SYSTEM_KRB5_KEYTAB
@@ -532,7 +534,7 @@ DenyGroups mailonly
 PasswordAuthentication no
 Match Address 127.0.0.1
 PasswordAuthentication yes
-Match Address $ESERI_C3_IP
+Match Address $SMC_C3_IP_PRIVATE
 PasswordAuthentication yes
 EOF
 

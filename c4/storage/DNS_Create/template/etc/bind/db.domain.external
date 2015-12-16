@@ -16,11 +16,11 @@ $ORIGIN [-DOMAIN-].
 ;
 ; A records
 ;
-@                       IN      A       [-WAN_IP-]
-ns1			IN	A	[-WAN_IP-]
-ns2			IN	A	[-WAN_IP-]
-mail1			IN	A	[-WAN_IP-]
-mail2			IN	A	[-WAN_IP-]
+@                       IN      A       [-SMC_DNS_IP_PUBLIC-]
+ns1			IN	A	[-SMC_DNS_IP_PUBLIC-]
+ns2			IN	A	[-SMC_DNS_IP_PUBLIC-]
+mail1			IN	A	[-SMC_DNS_IP_PUBLIC-]
+mail2			IN	A	[-SMC_DNS_IP_PUBLIC-]
 ;
 ; CNAME records
 ;
@@ -32,7 +32,7 @@ $INCLUDE "/etc/bind/db.externalcapabilities"
 ;
 ; Website records
 ;
-;www                     IN      A       [-WAN_IP]
+;www                     IN      A       [-WAN_IP-]
 ;www                     IN      TXT     "v=spf1 -all"
 ;
 ; MX records
@@ -59,9 +59,9 @@ $ORIGIN lists.[-DOMAIN-].
 ;
 ; A records
 ;
-@                       IN      A       [-WAN_IP-]
-mail1			IN	A	[-WAN_IP-]
-mail2			IN	A	[-WAN_IP-]
+@                       IN      A       [-SMC_DNS_IP_PUBLIC-]
+mail1			IN	A	[-SMC_DNS_IP_PUBLIC-]
+mail2			IN	A	[-SMC_DNS_IP_PUBLIC-]
 ;
 ; MX records
 ;

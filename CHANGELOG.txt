@@ -1,0 +1,18 @@
+
+CIRRUS OPEN SYSTEM MANAGER - CHANGELOG
+======================================
+
+THIS VERSION MIGHT BE OLD! Get the latest at: http://wiki.cirrusopen.org/index.php/Development
+
+VERSION - 2015-12-04
+--------------------
+
+Only one IP needed for any number of clouds.
+
+VERSION - 2015-11-14
+--------------------
+
+Initial release.  No changes.
+
+
+

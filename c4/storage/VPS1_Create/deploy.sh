@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# VPS Creation script - Phase One - v3.2
+# VPS Creation script - Phase One - v3.3
 #  DNS and Firewall server
 #
 # Created by Karoly Molnar <kmolnar@eseri.com>
@@ -27,6 +27,7 @@ DOMAIN=$(getParameter domain)
 NETWORK=$(getParameter network)
 BRIDGE=$(getParameter bridge)
 WAN_IP=$(getParameter wan_ip)
+NETMASK=$(getParameter wan_netmask)
 TIMEZONE=$(getParameter timezone)
 VPS_LIST=$(getParameter vps1_list)
 

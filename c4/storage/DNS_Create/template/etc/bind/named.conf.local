@@ -6,11 +6,11 @@ acl trusted-internal {
 	127.0.0.1/32;
 	[-NETWORK-].0/24;
 	10.101.1.4/32;
-	[-ESERI_DNS_IP_PRIVATE-]/32;
+	[-SMC_DNS_IP_PRIVATE-]/32;
 };
 
 acl trusted-external {
-        [-ESERI_DNS_IP_PUBLIC-]/32;
+        [-SYSTEM_ANCHOR_IP-]/32;
 };
 
 key "internal-[-DOMAIN-]." {
@@ -18,7 +18,7 @@ key "internal-[-DOMAIN-]." {
         secret "[-INTERNAL_SECRET-]";
 };
 
-server [-ESERI_DNS_IP_PRIVATE-] {
+server [-SMC_DNS_IP_PRIVATE-] {
        keys {
             internal-[-DOMAIN-].;
        };
@@ -29,7 +29,7 @@ key "external-[-DOMAIN-]." {
         secret "[-EXTERNAL_SECRET-]";
 };
 
-server [-ESERI_DNS_IP_PUBLIC-] {
+server [-SYSTEM_ANCHOR_IP-] {
        keys {
             external-[-DOMAIN-].;
        };

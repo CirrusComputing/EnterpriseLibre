@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-# cloud_move.pl - v2.2
+# cloud_move.pl - v2.3
 #
 # This script moves a cloud from one server to another while keeping the network name and internal IP intact.
 # The move can be to any specified physical server across any subnet (will have different external IP).
@@ -73,7 +73,7 @@ mylog("-- ".Dumper($network_name)) && check_value($network_name);
 mylog("-- ".Dumper($new_hwh_short_name)) && check_value($new_hwh_short_name);
 mylog("-- ".Dumper($phase)) && check_value($phase);
 
-my $prime_dns="dns.$system_anchor_domain";
+my $prime_dns="smc-zeus.$system_anchor_domain";
 my $cloud_dns="zeus.$network_name";
 my $cloud_firewall="hermes.$network_name";
 my $dns_config_folder="/etc/bind";

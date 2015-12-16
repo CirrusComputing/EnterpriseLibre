@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html dir="ltr" class="client-nojs" lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>Install - HelpWiki</title>
+<meta charset="UTF-8">
+<meta name="generator" content="MediaWiki 1.19.14+dfsg-1">
+<link rel="alternate" type="application/x-wiki" title="Edit" href="https://wiki.cirrusopen.org/index.php?title=Install&amp;action=edit">
+<link rel="edit" title="Edit" href="https://wiki.cirrusopen.org/index.php?title=Install&amp;action=edit">
+<link rel="shortcut icon" href="https://wiki.cirrusopen.org/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="https://wiki.cirrusopen.org/opensearch_desc.php" title="HelpWiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.cirrusopen.org/api.php?action=rsd">
+<link rel="copyright" href="http://www.gnu.org/copyleft/fdl.html">
+<link rel="alternate" type="application/atom+xml" title="HelpWiki Atom feed" href="https://wiki.cirrusopen.org/index.php?title=Special:RecentChanges&amp;feed=atom">
+<link rel="stylesheet" href="INSTALL_files/load_002.css">
+<!--[if IE 6]><link rel="stylesheet" href="/skins/monobook/IE60Fixes.css?303" media="screen" /><![endif]-->
+<!--[if IE 7]><link rel="stylesheet" href="/skins/monobook/IE70Fixes.css?303" media="screen" /><![endif]--><meta name="ResourceLoaderDynamicStyles" content="">
+<link rel="stylesheet" href="INSTALL_files/load.css">
+<style>a:lang(ar),a:lang(ckb),a:lang(fa),a:lang(kk-arab),a:lang(mzn),a:lang(ps),a:lang(ur){text-decoration:none}a.new,#quickbar a.new{color:#ba0000}
+
+/* cache key: wikidb:resourceloader:filter:minify-css:7:c88e2bcd56513749bec09a7e29cb3ffa */
+</style>
+
+<script src="INSTALL_files/load_002.php"></script><script src="INSTALL_files/load_003.php"></script>
+<script>if(window.mw){
+mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Install","wgTitle":"Install","wgCurRevisionId":693,"wgArticleId":72,"wgIsArticle":true,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":[],"wgBreakFrames":false,"wgPageContentLanguage":"en","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgRelevantPageName":"Install","wgRestrictionEdit":[],"wgRestrictionMove":[]});
+}</script><script>if(window.mw){
+mw.loader.implement("user.options",function($){mw.user.options.set({"ccmeonemails":0,"cols":80,"date":"default","diffonly":0,"disablemail":0,"disablesuggest":0,"editfont":"default","editondblclick":0,"editsection":1,"editsectiononrightclick":0,"enotifminoredits":0,"enotifrevealaddr":0,"enotifusertalkpages":1,"enotifwatchlistpages":0,"extendwatchlist":0,"externaldiff":0,"externaleditor":0,"fancysig":0,"forceeditsummary":0,"gender":"unknown","hideminor":0,"hidepatrolled":0,"highlightbroken":1,"imagesize":2,"justify":0,"math":1,"minordefault":0,"newpageshidepatrolled":0,"nocache":0,"noconvertlink":0,"norollbackdiff":0,"numberheadings":0,"previewonfirst":0,"previewontop":1,"quickbar":5,"rcdays":7,"rclimit":50,"rememberpassword":0,"rows":25,"searchlimit":20,"showhiddencats":0,"showjumplinks":1,"shownumberswatching":1,"showtoc":1,"showtoolbar":1,"skin":"monobook","stubthreshold":0,"thumbsize":2,"underline":2,"uselivepreview":0,"usenewrc":0,"watchcreations":0,"watchdefault":0,"watchdeletion":
+0,"watchlistdays":3,"watchlisthideanons":0,"watchlisthidebots":0,"watchlisthideliu":0,"watchlisthideminor":0,"watchlisthideown":0,"watchlisthidepatrolled":0,"watchmoves":0,"wllimit":250,"variant":"en","language":"en","searchNs0":true,"searchNs1":false,"searchNs2":false,"searchNs3":false,"searchNs4":false,"searchNs5":false,"searchNs6":false,"searchNs7":false,"searchNs8":false,"searchNs9":false,"searchNs10":false,"searchNs11":false,"searchNs12":false,"searchNs13":false,"searchNs14":false,"searchNs15":false});;},{},{});mw.loader.implement("user.tokens",function($){mw.user.tokens.set({"editToken":"+\\","watchToken":false});;},{},{});
+
+/* cache key: wikidb:resourceloader:filter:minify-js:7:74a832f2292f1f4d40d425d223444e78 */
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.page.startup","mediawiki.legacy.wikibits","mediawiki.legacy.ajax"]);
+}</script>
+</head>
+<body class="mediawiki ltr sitedir-ltr ns-0 ns-subject page-Install skin-monobook action-view">
+<div id="globalWrapper">
+<div id="column-content"><div id="content">
+	<a id="top"></a>
+	
+	<h1 id="firstHeading" class="firstHeading"><span dir="auto">Install</span></h1>
+	<div id="bodyContent" class="mw-body">
+		<div id="siteSub">From HelpWiki</div>
+		<div id="contentSub"></div>
+		<div id="jump-to-nav" class="mw-jump">Jump to: <a href="#column-one">navigation</a>, <a href="#searchInput">search</a></div>
+		<!-- start content -->
+<div id="mw-content-text" dir="ltr" class="mw-content-ltr" lang="en"><p>How to install a System Manager cloud that can create other clouds.
+</p>
+<table id="toc" class="toc"><tbody><tr><td><div id="toctitle"><h2>Contents</h2></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Requirements"><span class="tocnumber">1</span> <span class="toctext">Requirements</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Restore_System_Manager"><span class="tocnumber">2</span> <span class="toctext">Restore System Manager</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Create_New_Clouds"><span class="tocnumber">3</span> <span class="toctext">Create New Clouds</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#Problems_.26_Solutions"><span class="tocnumber">4</span> <span class="toctext">Problems &amp; Solutions</span></a></li>
+</ul>
+</td></tr></tbody></table>
+<h2><span class="editsection">[<a href="https://wiki.cirrusopen.org/index.php?title=Install&amp;action=edit&amp;section=1" title="Edit section: Requirements">edit</a>]</span> <span class="mw-headline" id="Requirements"> Requirements </span></h2>
+<p>You need:
+</p>
+<ul><li> <b>Domain name.</b>&nbsp; A domain name for the System Manager 
+cloud, and to provide starting domains for new clouds such as 
+'a1234.youranchordomain.net'.&nbsp; This is usually an admin domain, not
+ used for anything else.
+</li></ul>
+<ul><li> <b>IP Addresses.</b>&nbsp; One static IP address.
+</li></ul>
+<ul><li> <b>Source Drive.</b>&nbsp; A drive of at least 8 GB for the source image, such as a USB stick.
+</li></ul>
+<ul><li> <b>Destination Drive.</b>&nbsp; A drive of at least 120 GB for the restored System Manager.
+</li></ul>
+<ul><li> <b><a rel="nofollow" class="external text" href="http://clonezilla.org/clonezilla-live.php">Clonezilla Live</a>.</b>&nbsp; On CD/DVD or USB, to restore the source image to the destination drive.
+</li></ul>
+<h2><span class="editsection">[<a href="https://wiki.cirrusopen.org/index.php?title=Install&amp;action=edit&amp;section=2" title="Edit section: Restore System Manager">edit</a>]</span> <span class="mw-headline" id="Restore_System_Manager"> Restore System Manager </span></h2>
+<p>1. <b>Set Anchor Domain.</b>&nbsp; At the domain registrar site, 
+point the anchor domain name server at the IP address you will use for 
+the System Manager cloud (note this can take 24 hours to spread across 
+the Internet):
+</p>
+<ul><li> Create a subdomain of the anchor domain named 'ns1.', e.g. 'ns1.youranchordomain.net'.
+</li></ul>
+<ul><li> Set the primary name server of the anchor domain to that new subdomain, e.g. 'ns1.youranchordomain.net'.
+</li></ul>
+<ul><li> Connect, often called "glue", the name server to the IP address
+ for the System Manager cloud, e.g. 'ns1.youranchordomain.net' to 
+'1.2.3.101'.
+</li></ul>
+<p>2. <b>Get Image.</b>&nbsp; Put the source image on a drive:
+</p>
+<ul><li> Download the current System Manager from the <a rel="nofollow" class="external text" href="http://wiki.cirrusopen.org/index.php/Development">Dev page</a>.&nbsp;
+</li></ul>
+<ul><li> Right-click the file, select your archive/compress application,
+ and extract/decompress to obtain the image, README, and related files.
+</li></ul>
+<ul><li> Right-click the .iso image file, select your archive/compress 
+application, and extract/decompress to a folder that will contain 25 
+files.
+</li></ul>
+<ul><li>  Copy just the image folder containing the 25 files into the top level of the source drive (e.g. an 8 GB USB stick).
+</li></ul>
+<p>3. <b>Install System Manager.</b>&nbsp; Install the source image on the destination drive:
+</p>
+<ul><li>  Boot a computer with a Clonezilla-live CD/DVD or USB, with both source drive and destination drive attached.
+</li></ul>
+<ul><li>  Select the default options for 'Don't touch keymap', 'Start_Clonezilla', 'device-image', and 'local_dev'.
+</li></ul>
+<ul><li>  Select the drive containing the source image, then select the default options '/ Top_directory' and 'Beginner'.
+</li></ul>
+<ul><li>  Select the third option, "restoredisk", then select the 
+default Cirrus Open image, then select the drive the System Manager 
+cloud is to be installed on.
+</li></ul>
+<ul><li>  Ignore all warning messages, and press Enter and 'y' when requested.&nbsp; 
+</li></ul>
+<ul><li> When finished, select the Clonezilla 'Poweroff' option, then remove Clonezilla and the source image drive.
+</li></ul>
+<p>4. <b>Connect Network.</b>&nbsp; Boot the System Manager and connect to the network:
+</p>
+<ul><li> If the System Manager drive is not first in the boot sequence, select it manually with the computer's <a rel="nofollow" class="external text" href="https://craftedflash.com/info/how-boot-computer-from-usb-flash-drive">boot selection key</a>.&nbsp; If the drive isn't listed, make sure 'Secure Boot' is disabled and 'CSM' is enabled in the BIOS.
+</li></ul>
+<ul><li> Log into 'root' with password 'cirrusopen'.
+</li></ul>
+<ul><li> Run the command 'configure_cirrusopen' with four arguments: 
+local gateway IP address, server IP address, server netmask , system 
+anchor domain, e.g.:
+</li></ul>
+<pre>configure_cirrusopen "1.2.3.4" "1.2.3.100" "255.255.255.0" "youranchordomain.net"
+</pre>
+<dl><dd>This can take up to an hour to run on a smaller computer.&nbsp; 
+The script displays a message, saying "Success! Now please reboot the 
+machine!", on completion.
+</dd></dl>
+<ul><li> When the script is completed, enter 'reboot' to restart with the new configuration.
+</li></ul>
+<p>5. <b>Start System Manager.</b>&nbsp; Log into your System Manager:
+</p>
+<ul><li> On your local device, install an <a rel="nofollow" class="external text" href="http://wiki.cirrusopen.org/index.php/NX_Clients">NX virtual desktop client</a>.
+</li></ul>
+<ul><li> From your local web browser, visit the newly available page <a rel="nofollow" class="external free" href="http://login.youranchordomain.net/sessionfile">http://login.YOURANCHORDOMAIN.net/sessionfile</a>, and download a desktop start file with user 'superuser@youranchordomain.com' and password 'cirrusopen'.&nbsp; 
+</li></ul>
+<ul><li> Double-click the login file, or put in the '.nx/config' folder 
+and start your NX application, and log into the Superuser desktop.
+</li></ul>
+<ul><li> Go to 'Start / Favorites / Cloud Manager', click the 'Me' tab, 
+and change the notify email from 'support@cirruscomputing.com' to your 
+own address.&nbsp; Your System Manager is now fully configured, and 
+ready to create new clouds!
+</li></ul>
+<h2><span class="editsection">[<a href="https://wiki.cirrusopen.org/index.php?title=Install&amp;action=edit&amp;section=3" title="Edit section: Create New Clouds">edit</a>]</span> <span class="mw-headline" id="Create_New_Clouds"> Create New Clouds </span></h2>
+<p>1. <b>Create Clouds.</b>&nbsp; complete new clouds for others:
+</p>
+<ul><li> From your Superuser desktop, launch 'Start / Favorites / System Manager'.
+</li></ul>
+<ul><li> Click the Clouds tab, then the 'New' button.&nbsp;  Enter an 
+existing email address to receive the new cloud superuser desktop login 
+info.
+</li></ul>
+<dl><dd><dl><dd>Creating an enterprise cloud is heavy lifting, and can 
+take up to four hours on a slower computer.&nbsp;  If you wish to watch 
+the creation, type the following on the server&nbsp;:
+</dd></dl>
+</dd></dl>
+<dl><dd><dl><dd> tail -f /var/lib/vz/private/1004/var/log/c4/c4_omega.log
+</dd></dl>
+</dd></dl>
+<p>2. <b>Create Desktops.</b>&nbsp; Create new user accounts with virtual desktops at the new cloud just created:
+</p>
+<ul><li> When the login info for the Superuser desktop for the new cloud
+ has been received at the email address you provided for notification, 
+go to <a rel="nofollow" class="external free" href="http://login.youranchordomain.net/login">http://login.YOURANCHORDOMAIN.net/login</a> (using your own anchor domain) and download a desktop start file.
+</li></ul>
+<ul><li> Log into your new cloud Superuser desktop, and launch 'Start / 
+Favorites / Cloud Manager'.&nbsp; Set the domain name and email 
+preferences as desired.&nbsp;  Click 'Save Changes' and wait until 
+complete, about 5 minutes.
+</li></ul>
+<ul><li> Click on the 'Users' tab, and create virtual desktops at the cloud for anyone you wish.
+</li></ul>
+<dl><dd><dl><dd>Creating a user account can take up to 15 minutes on a 
+slower computer.&nbsp; If you wish to watch the creation, type the 
+following on the server&nbsp;:
+</dd></dl>
+</dd></dl>
+<dl><dd><dl><dd> tail -f /var/lib/vz/private/1004/var/log/c3/c3.log
+</dd></dl>
+</dd></dl>
+<h2><span class="editsection">[<a href="https://wiki.cirrusopen.org/index.php?title=Install&amp;action=edit&amp;section=4" title="Edit section: Problems &amp; Solutions">edit</a>]</span> <span class="mw-headline" id="Problems_.26_Solutions"> Problems &amp; Solutions </span></h2>
+<ul><li> <b>Cannot login.</b>&nbsp; Check:
+</li></ul>
+<dl><dd><ul><li> Verify the anchor domain name server setting at the 
+registrar has spread across the Internet, by pinging it and seeing if 
+the correct IP is returned.
+</li></ul>
+</dd></dl>
+<dl><dd><ul><li> When you change a cloud's domain name, remember you need to download new desktop start files from the login page.
+</li></ul>
+</dd></dl>
+<ul><li> <b>Image not recognized.</b>&nbsp; If Clonezilla does not 
+recognized the source image on its drive, make sure it is not still a 
+single '.iso' file, and instead is extracted/decompressed into a folder 
+containing 25 files, stored at the top level on the drive.
+</li></ul>
+<ul><li> <b>Can't select DVD / USB to boot.</b>&nbsp; Use the computer's <a rel="nofollow" class="external text" href="https://craftedflash.com/info/how-boot-computer-from-usb-flash-drive">boot selection key</a>
+ to boot from any device connected to the computer.&nbsp; Make sure 
+Secure Boot is disabled and CSM is enabled in the computer BIOS.
+</li></ul>
+<ul><li> <b>Three Cloud Limit.</b>&nbsp; The baseline restored image is 
+about 110 GB, which provides space for three clouds.&nbsp;  To create 
+more, extend the second partition on the disk to get more space.&nbsp;  A
+ baseline cloud needs 30 GB to start.
+</li></ul>
+<ul><li> <b>Kernel panic.</b>&nbsp;  If you restore a drive as one 
+device and boot as another, for example restoring a 128 GB USB stick on 
+the SDB slot and booting it from the SDC slot, part-way through it 
+displays a "Kernel panic" message.&nbsp; Reboot, making sure the drive 
+has the same slot and name as when restored.
+</li></ul>
+
+<!-- 
+NewPP limit report
+Preprocessor node count: 15/1000000
+Post‐expand include size: 0/2097152 bytes
+Template argument size: 0/2097152 bytes
+Expensive parser function count: 0/100
+-->
+
+<!-- Saved in parser cache with key wikidb:pcache:idhash:72-0!*!*!!en!*!* and timestamp 20151204180454 -->
+</div><div class="printfooter">
+Retrieved from "<a href="http://wiki.cirrusopen.org/index.php?title=Install&amp;oldid=693">http://wiki.cirrusopen.org/index.php?title=Install&amp;oldid=693</a>"</div>
+		<div id="catlinks" class="catlinks catlinks-allhidden"></div>		<!-- end content -->
+				<div class="visualClear"></div>
+	</div>
+</div></div>
+<div id="column-one">
+	<div id="p-cactions" class="portlet">
+		<h5>Views</h5>
+		<div class="pBody">
+			<ul>
+				<li id="ca-nstab-main" class="selected"><a href="https://wiki.cirrusopen.org/index.php/Install" primary="1" context="subject" title="View the content page [c]" accesskey="c">Page</a></li>
+				<li id="ca-talk" class="new"><a href="https://wiki.cirrusopen.org/index.php?title=Talk:Install&amp;action=edit&amp;redlink=1" primary="1" context="talk" title="Discussion about the content page [t]" accesskey="t">Discussion</a></li>
+				<li id="ca-edit"><a href="https://wiki.cirrusopen.org/index.php?title=Install&amp;action=edit" primary="1" title="You can edit this page. Please use the preview button before saving [e]" accesskey="e">Edit</a></li>
+				<li id="ca-history"><a href="https://wiki.cirrusopen.org/index.php?title=Install&amp;action=history" rel="archives" title="Past revisions of this page [h]" accesskey="h">History</a></li>
+			</ul>
+		</div>
+	</div>
+	<div class="portlet" id="p-personal">
+		<h5>Personal tools</h5>
+		<div class="pBody">
+			<ul>
+
+<li id="pt-login"><a href="https://wiki.cirrusopen.org/index.php?title=Special:UserLogin&amp;returnto=Install" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o">Log in / create account</a></li>
+</ul>
+		</div>
+	</div>
+	<div class="portlet" id="p-logo">
+<a href="https://wiki.cirrusopen.org/index.php/Main_Page" style="background-image: url(/cirrus/HelpWikiLogo.png);" title="Visit the main page"></a>
+	</div>
+	<div class="generated-sidebar portlet" id="p-navigation">
+		<h5>Navigation</h5>
+		<div class="pBody">
+			<ul>
+				<li id="n-mainpage-description"><a href="https://wiki.cirrusopen.org/index.php/Main_Page" title="Visit the main page [z]" accesskey="z">Main page</a></li>
+				<li id="n-Development"><a href="https://wiki.cirrusopen.org/index.php/Development">Development</a></li>
+				<li id="n-Providers"><a href="https://wiki.cirrusopen.org/index.php/Providers">Providers</a></li>
+				<li id="n-NX-Clients"><a href="https://wiki.cirrusopen.org/index.php/NX_Clients">NX Clients</a></li>
+				<li id="n-News"><a href="https://wiki.cirrusopen.org/index.php/News">News</a></li>
+				<li id="n-help"><a href="https://wiki.cirrusopen.org/index.php/Help:Contents" title="The place to find out">Help</a></li>
+			</ul>
+		</div>
+	</div>
+	<div id="p-search" class="portlet">
+		<h5><label for="searchInput">Search</label></h5>
+		<div id="searchBody" class="pBody">
+			<form action="/index.php" id="searchform">
+				<input name="title" value="Special:Search" type="hidden">
+				<input name="search" title="Search HelpWiki [f]" accesskey="f" id="searchInput" type="search">
+				<input name="go" value="Go" title="Go to a page with this exact name if exists" id="searchGoButton" class="searchButton" type="submit">&nbsp;
+				<input name="fulltext" value="Search" title="Search the pages for this text" id="mw-searchButton" class="searchButton" type="submit">
+			</form>
+		</div>
+	</div>
+	<div class="portlet" id="p-tb">
+		<h5>Tools</h5>
+		<div class="pBody">
+			<ul>
+				<li id="t-whatlinkshere"><a href="https://wiki.cirrusopen.org/index.php/Special:WhatLinksHere/Install" title="A list of all wiki pages that link here [j]" accesskey="j">What links here</a></li>
+				<li id="t-recentchangeslinked"><a href="https://wiki.cirrusopen.org/index.php/Special:RecentChangesLinked/Install" title="Recent changes in pages linked from this page [k]" accesskey="k">Related changes</a></li>
+				<li id="t-specialpages"><a href="https://wiki.cirrusopen.org/index.php/Special:SpecialPages" title="A list of all special pages [q]" accesskey="q">Special pages</a></li>
+				<li><a href="https://wiki.cirrusopen.org/index.php?title=Install&amp;printable=yes" rel="alternate">Printable version</a></li>
+				<li id="t-permalink"><a href="https://wiki.cirrusopen.org/index.php?title=Install&amp;oldid=693" title="Permanent link to this revision of the page">Permanent link</a></li>
+			</ul>
+		</div>
+	</div>
+</div><!-- end of the left (by default at least) column -->
+<div class="visualClear"></div>
+<div id="footer">
+	<div id="f-copyrightico">
+		<a href="http://www.gnu.org/copyleft/fdl.html"><img src="INSTALL_files/gnu-fdl.png" alt="GNU Free Documentation License 1.2" height="31" width="88"></a>
+	</div>
+	<div id="f-poweredbyico">
+		<a href="https://www.mediawiki.org/"><img src="INSTALL_files/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" height="31" width="88"></a>
+	</div>
+	<ul id="f-list">
+		<li id="lastmod"> This page was last modified on 4 December 2015, at 13:04.</li>
+		<li id="viewcount">This page has been accessed 217 times.</li>
+		<li id="copyright">Content is available under GNU Free Documentation License 1.2.</li>
+		<li id="privacy"><a href="https://wiki.cirrusopen.org/index.php/HelpWiki:Privacy_policy" title="HelpWiki:Privacy policy">Privacy policy</a></li>
+		<li id="about"><a href="https://wiki.cirrusopen.org/index.php/HelpWiki:About" title="HelpWiki:About">About CirrusOpen</a></li>
+		<li id="disclaimer"><a href="https://wiki.cirrusopen.org/index.php/HelpWiki:General_disclaimer" title="HelpWiki:General disclaimer">Disclaimers</a></li>
+	</ul>
+</div>
+</div>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.user","mediawiki.page.ready"], null, true);
+}</script>
+<script src="INSTALL_files/load.php"></script>
+<!-- Served in 0.388 secs. --></body></html>

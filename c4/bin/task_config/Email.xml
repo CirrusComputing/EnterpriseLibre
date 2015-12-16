@@ -26,6 +26,7 @@
 		<service>host</service>
 	</kerberos_keys>
 	<deployment_files>
+ 		<file service="SMC_DNS1" file="SMC_HOST_IP.txt" />	  
 	</deployment_files>
 	<package>
 		<required>Email</required>

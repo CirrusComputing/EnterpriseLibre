@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# DNS deploy script - v3.1
+# DNS deploy script - v3.2
 #
 # Created by Karoly Molnar <kmolnar@cirruscomputing.com>
 # Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
@@ -26,6 +26,7 @@ eseriGetDNSInternal $TMP_DOMAIN zeus.$TMP_DOMAIN
 eseriGetNetwork
 
 SYSTEM_ANCHOR_DOMAIN=$(getParameter system_anchor_domain)
+SYSTEM_ANCHOR_IP=$(getParameter system_anchor_ip)
 SHORT_DOMAIN=$(getParameter short_domain)
 TIMEZONE=$(getParameter timezone)
 WAN_IP=$(getParameter wan_ip)
@@ -70,11 +71,11 @@ DNS_DEFAULTS=$ETC_DEFAULT_FOLDER/bind9
 KRB5_CONFIG=/etc/krb5.conf
 LDAP_CONFIG=/etc/ldap/ldap.conf
 
-# Get the Private IP/ Public IP/ Public hostname of the Eseri DNS server.
-ESERI_DNS_IP_PRIVATE=$(grep 'ESERI_DNS_IP_PRIVATE=' $ARCHIVE_FOLDER/Eseri_DNS_IP.txt | sed 's|ESERI_DNS_IP_PRIVATE=||')
-echo "ESERI_DNS_IP_PRIVATE is $ESERI_DNS_IP_PRIVATE"
-ESERI_DNS_IP_PUBLIC=$(grep 'ESERI_DNS_IP_PUBLIC='  $ARCHIVE_FOLDER/Eseri_DNS_IP.txt | sed 's|ESERI_DNS_IP_PUBLIC=||')
-echo "ESERI_DNS_IP_PUBLIC is $ESERI_DNS_IP_PUBLIC"
+# Get the Private IP address and Public IP address of the SMC DNS.
+SMC_DNS_IP_PRIVATE=$(grep 'SMC_DNS_IP_PRIVATE=' $ARCHIVE_FOLDER/SMC_HOST_IP.txt | sed 's|SMC_DNS_IP_PRIVATE=||')
+echo "SMC_DNS_IP_PRIVATE is $SMC_DNS_IP_PRIVATE"
+SMC_DNS_IP_PUBLIC=$(grep 'SMC_DNS_IP_PUBLIC='  $ARCHIVE_FOLDER/SMC_HOST_IP.txt | sed 's|SMC_DNS_IP_PUBLIC=||')
+echo "SMC_DNS_IP_PUBLIC is $SMC_DNS_IP_PUBLIC"
 
 # Install bind9
 dpkg -i $ARCHIVE_FOLDER/bind/*

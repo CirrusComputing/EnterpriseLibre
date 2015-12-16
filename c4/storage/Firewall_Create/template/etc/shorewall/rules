@@ -15,13 +15,13 @@
 #		Accepted connections from the Internet to Local				net -> loc
 #
 Ping/ACCEPT		net			$FW:[-WAN_IP-]
-ACCEPT          	net             	$FW:[-WAN_IP-]  	tcp     80					# Apache2 HTTP Proxy
-ACCEPT          	net             	$FW:[-WAN_IP-]  	tcp     443					# Apache2 HTTPS Proxy
-DNAT			net			loc:[-NETWORK-].50	tcp	22	-	[-WAN_IP-]		# NX Alternate Port
-DNAT			net			loc:[-NETWORK-].31	tcp	993	-	[-WAN_IP-]		# IMAP - Do not edit line (for FirewallProxyConfig)
-DNAT			net			loc:[-NETWORK-].31	tcp	465	-	[-WAN_IP-]		# SMTP - Do not edit line (for FirewallProxyConfig)
-DNAT			net			loc:[-NETWORK-].31	tcp	25	-	[-WAN_IP-]		# SMTP
 DNAT			net			loc:[-NETWORK-].2 	tcp,udp	53	-	[-WAN_IP-]		# Main DNS
+DNAT			net			loc:[-NETWORK-].31	tcp	993	-	[-WAN_IP-]		# IMAPS - Do not edit line (for FirewallProxyConfig)
+DNAT			net			loc:[-NETWORK-].31	tcp	465	-	[-WAN_IP-]		# SMTPS - Do not edit line (for FirewallProxyConfig)
+DNAT			net			loc:[-NETWORK-].31	tcp	25	-	[-WAN_IP-]		# SMTP
+DNAT			net			loc:[-NETWORK-].50	tcp	22	-	[-WAN_IP-]		# NX Alternate Port
+HTTP/ACCEPT          	net             	$FW:[-WAN_IP-]								# Apache2 HTTP Proxy
+HTTPS/ACCEPT          	net             	$FW:[-WAN_IP-]								# Apache2 HTTPS Proxy
 ############################################################################################################################################
 # Firewall
 ############################################################################################################################################
@@ -29,31 +29,37 @@ DNAT			net			loc:[-NETWORK-].2 	tcp,udp	53	-	[-WAN_IP-]		# Main DNS
 #		Accepted connections from the Firewall to Local				$FW -> loc
 #
 Ping/ACCEPT		$FW:[-NETWORK-].3 	loc
-DNS/ACCEPT		$FW:[-NETWORK-].3 	loc:[-NETWORK-].2 							# DNS
-DNAT            	$FW:[-NETWORK-].3 	loc:[-NETWORK-].50:22	tcp	80	-	[-NETWORK-].50		# Apache2 Tunnel Proxy for NX Desktop
-ACCEPT                  $FW:[-NETWORK-].3       loc:[-NETWORK-].31      tcp     80                                      # Mailman
-ACCEPT			$FW:[-NETWORK-].3 	loc:[-NETWORK-].32	tcp	80					# Poseidon apps
-ACCEPT          	$FW:[-NETWORK-].3 	loc:[-NETWORK-].37	tcp	80					# SOGo
-ACCEPT			$FW:[-NETWORK-].3 	loc:[-NETWORK-].39	tcp	80					# Trident apps
+DNAT			$FW:[-NETWORK-].3 	loc:[-NETWORK-].50:22	tcp	80	-	[-NETWORK-].50		# Apache2 Tunnel Proxy for NX Desktop
+DNS/ACCEPT		$FW:[-NETWORK-].3 	loc:[-NETWORK-].2							# DNS
+HTTP/ACCEPT		$FW:[-NETWORK-].3       loc:[-NETWORK-].31							# Mailman
+HTTP/ACCEPT		$FW:[-NETWORK-].3 	loc:[-NETWORK-].32							# Poseidon apps
+HTTP/ACCEPT		$FW:[-NETWORK-].3 	loc:[-NETWORK-].37							# SOGo
+HTTP/ACCEPT		$FW:[-NETWORK-].3 	loc:[-NETWORK-].39							# Trident apps
 ############################################################################################################################################
 # CirrusOpen
 ############################################################################################################################################
-Ping/ACCEPT             co                      loc
-Ping/ACCEPT		co			$FW
 #
 #		Accepted connections from CirrusOpen to Local				co -> loc
 #
-DNS/ACCEPT		co:10.101.1.2		loc:[-NETWORK-].2
-SMTP/ACCEPT		co:10.101.1.31		loc:[-NETWORK-].31
+Ping/ACCEPT             co                      loc
+DNAT			co:10.101.1.3		loc:[-NETWORK-].50:22	tcp	80	-	[-NETWORK-].50		# Apache2 Tunnel Proxy for NX Desktop from SMC Proxy
+DNS/ACCEPT		co:10.101.1.2		loc:[-NETWORK-].2							# DNS Zone transfer from SMC DNS
+IMAP/ACCEPT		co:10.101.1.31          loc:[-NETWORK-].31							# IMAP - Dovecot Proxy from SMC Email - Do not edit line (for FirewallProxyConfig)
+SMTP/ACCEPT		co:10.101.1.31		loc:[-NETWORK-].31							# Mail delivery/relay from SMC Email
+HTTP/ACCEPT		co:10.101.1.3		loc:[-NETWORK-].31							# Mailman from SMC Proxy
+HTTP/ACCEPT		co:10.101.1.3		loc:[-NETWORK-].32							# Poseidon apps from SMC Proxy
+HTTP/ACCEPT		co:10.101.1.3		loc:[-NETWORK-].37							# SOGo from SMC Proxy
+HTTP/ACCEPT		co:10.101.1.3		loc:[-NETWORK-].39							# Trident apps from SMC Proxy
 IMAP/ACCEPT		co:10.101.1.4		loc:[-NETWORK-].31							# C3
 HTTP/ACCEPT     	co:10.101.1.4		loc:[-NETWORK-].50							# C3
 SSH/ACCEPT		co:10.101.1.4		loc									# C3, C4, C5
 ACCEPT			co:10.101.1.4		loc									# Nagios
-SSH/ACCEPT		co:10.101.1.50		loc									# System Cloud
+SSH/ACCEPT		co:10.101.1.50		loc									# SSH from SMC Desktop
 ACCEPT			co:10.101.1.4		loc			tcp,udp	10080					# Amanda Backup [-DELETE_UNLESS_Amanda-]
 #
 #		Accepted connections from the CirrusOpen to Firewall			co -> $FW
 #
+Ping/ACCEPT		co			$FW
 SSH/ACCEPT		co:10.101.1.4		$FW:[-NETWORK-].3 							# C4
 ACCEPT			co:10.101.1.4		$FW:[-NETWORK-].3 							# Nagios
 SSH/ACCEPT		co:10.101.1.50		$FW:[-NETWORK-].3 							# System Cloud
@@ -74,7 +80,8 @@ SMTP/ACCEPT		loc:[-NETWORK-].31	co:10.101.1.31
 PostgreSQL/ACCEPT	loc:[-NETWORK-].32	co:10.101.1.30
 ACCEPT			loc:[-NETWORK-].32	co:10.101.1.4		tcp	8081
 ACCEPT			loc			co:10.101.1.4		tcp,udp	10080					# Amanda Recover [-DELETE_UNLESS_Amanda-]
-ACCEPT                  loc:[-NETWORK-].4	co:10.101.1.4		tcp	22					# Duplicity Backup [-DELETE_UNLESS_Duplicity-]
+SSH/ACCEPT		loc:[-NETWORK-].4	co:10.101.1.4								# Duplicity Backup [-DELETE_UNLESS_Duplicity-]
+HTTP/ACCEPT		loc:[-NETWORK-].50	co:10.101.1.4								# Access loginsite from cloud desktops
 ############################################################################################################################################
 # Capability rules - Do not edit line (for FirewallPortConfig)
 ############################################################################################################################################

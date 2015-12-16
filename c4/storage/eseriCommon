@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Common variables and scripts - v3.9
+# Common variables and scripts - v4.1
 #
 # Created by Karoly Molnar <kmolnar@cirruscomputing.com>
 # Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
@@ -187,13 +187,16 @@ eseriReplaceValues()
 	[ -n "${LDAP_FIRST_DC}" ] && sed -i -e "s/\[-LDAP_FIRST_DC-\]/${LDAP_FIRST_DC}/g" $1
 	[ -n "${WAN_IP}" ] && sed -i -e "s/\[-WAN_IP-\]/${WAN_IP}/g" $1
 	[ -n "${WAN_IP_2}" ] && sed -i -e "s/\[-WAN_IP_2-\]/${WAN_IP_2}/g" $1
+	[ -n "${WAN_NETMASK}" ] && sed -i -e "s/\[-WAN_NETMASK-\]/${WAN_NETMASK}/g" $1
 	[ -n "${IT_MAN_USER}" ] && sed -i -e "s/\[-IT_MAN_USER-\]/${IT_MAN_USER}/g" $1
 	[ -n "${VPS_TEMPLATE_NAME}" ] && sed -i -e "s/\[-VPS_TEMPLATE_NAME-\]/${VPS_TEMPLATE_NAME}/g" $1
 	[ -n "${SYSTEM_ANCHOR_DOMAIN}" ] && sed -i -e "s/\[-SYSTEM_ANCHOR_DOMAIN-\]/${SYSTEM_ANCHOR_DOMAIN}/g" $1
+	[ -n "${SYSTEM_ANCHOR_IP}" ] && sed -i -e "s/\[-SYSTEM_ANCHOR_IP-\]/${SYSTEM_ANCHOR_IP}/g" $1
 	[ -n "${IP}" ] && sed -i -e "s/\[-IP-\]/${IP}/g" $1
 	[ -n "${SHORT_NAME}" ] && sed -i -e "s/\[-SHORT_NAME-\]/${SHORT_NAME}/g" $1
-	[ -n "${ESERI_DNS_IP_PRIVATE}" ] && sed -i -e "s/\[-ESERI_DNS_IP_PRIVATE-\]/${ESERI_DNS_IP_PRIVATE}/g" $1
-	[ -n "${ESERI_DNS_IP_PUBLIC}" ] && sed -i -e "s/\[-ESERI_DNS_IP_PUBLIC-\]/${ESERI_DNS_IP_PUBLIC}/g" $1
+	[ -n "${SMC_DNS_IP_PUBLIC}" ] && sed -i -e "s/\[-SMC_DNS_IP_PUBLIC-\]/${SMC_DNS_IP_PUBLIC}/g" $1
+	[ -n "${SMC_DNS_IP_PRIVATE}" ] && sed -i -e "s/\[-SMC_DNS_IP_PRIVATE-\]/${SMC_DNS_IP_PRIVATE}/g" $1
+	[ -n "${SMC_MAIL_IP_PRIVATE}" ] && sed -i -e "s/\[-SMC_MAIL_IP_PRIVATE-\]/${SMC_MAIL_IP_PRIVATE}/g" $1
 	[ -n "${ALIAS_DOMAIN}" ] && sed -i -e "s/\[-ALIAS_DOMAIN-\]/${ALIAS_DOMAIN}/g" $1
 }
 

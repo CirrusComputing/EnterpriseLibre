@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-# system_anchor_config.pl - v1.0
+# system_anchor_config.pl - v1.1
 #
 # This script handles the C3 requests for changing the system anchor domain.
 # The logs should be written to /var/log/c4/systemanchor_config.log
@@ -288,6 +288,11 @@ sub generate_copy_certs{
 	scp("$crtfilename", "root\@$cert_containers[$i].$old_system_anchor_domain:/etc/ssl/certs/$destfilename");
  	ssh("$cert_containers[$i].$old_system_anchor_domain", "chmod 640 /etc/ssl/private/$destfilename; chown root:ssl-cert /etc/ssl/private/$destfilename; chmod 644 /etc/ssl/certs/$destfilename");
 
+	# Change DKIM key record in zone file.
+	if ($cert_hosts[$i] eq 'dkim'){
+	    my $domain_key = `openssl rsa -in $keyfilename -pubout -outform pem 2>/dev/null | grep -v "^-" | tr -d '\n'`;
+	    ssh("zeus.$old_system_anchor_domain", "sed -i 's|\\\"k=rsa; p=.*\\\"|\\\"k=rsa; p=$domain_key\\\"|' /etc/bind/db.$old_system_anchor_domain.external");
+	}
     }
 
     #Go back to working dir.

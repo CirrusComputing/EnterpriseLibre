@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-# cloud_boot.pl - v2.7
+# cloud_boot.pl - v2.8
 #
 # This script handles the C3 requests for starting/stopping/rebooting all containers of a cloud
 # The logs should be written to /var/log/c4/cloud_boot.log
@@ -60,9 +60,9 @@ my $veid_base;
 my $short_domain;
 my $alias_domain;
 my $cloud_status;
-my $prime_dns="dns.$system_anchor_domain";
+my $prime_dns="smc-zeus.$system_anchor_domain";
 my $dns_config_folder="/etc/bind";
-my @dns_servers=('dns');
+my @dns_servers=('smc-zeus');
 my $nagios="nagios.$system_anchor_domain";
 my $nagios_config_folder="/etc/nagios3";
 my $amanda_backup_server = "nanook.$system_anchor_domain";
@@ -177,7 +177,7 @@ sub configure_dns{
     if ($boot_action eq 'suspend'){
 	foreach my $dns_server (@dns_servers) {
 	    my $full_hostname = "$dns_server.$system_anchor_domain";
-	    if ($dns_server eq 'dns'){
+	    if ($dns_server eq 'smc-zeus'){
 		ssh("$full_hostname", "sed -i '/^include.*\\\/$network_name.conf/s|include|\\\/\\\/include|' $dns_config_folder/named.conf.internal.customerzones");
 		if($network_name ne $alias_domain){
 		    ssh("$full_hostname", "sed -i '/^include.*\\\/$alias_domain.conf/s|include|\\\/\\\/include|' $dns_config_folder/named.conf.internal.customerzones");
@@ -189,7 +189,7 @@ sub configure_dns{
     elsif ($boot_action eq 'resume'){
 	foreach my $dns_server (@dns_servers) {
 	    my $full_hostname = "$dns_server.$system_anchor_domain";
-	    if ($dns_server eq 'dns'){
+	    if ($dns_server eq 'smc-zeus'){
 		ssh("$full_hostname", "sed -i '/^\\\/\\\/include.*\\\/$network_name.conf/s|\\\/\\\/include|include|' $dns_config_folder/named.conf.internal.customerzones");
 		if($network_name ne $alias_domain){
 		    ssh("$full_hostname", "sed -i '/^\\\/\\\/include.*\\\/$alias_domain.conf/s|\\\/\\\/include|include|' $dns_config_folder/named.conf.internal.customerzones");

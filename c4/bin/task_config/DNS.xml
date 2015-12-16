@@ -4,6 +4,7 @@
 	<host>IP:2</host>
 	<deploy>
 		<arg>system_anchor_domain</arg>
+		<arg>system_anchor_ip</arg>
 		<arg>short_domain</arg>
 		<arg>timezone</arg>
 		<arg>wan_ip</arg>
@@ -17,8 +18,8 @@
 	<kerberos_keys>
 	</kerberos_keys>
 	<deployment_files>
-		<file service="Eseri_DNS1" file="Eseri_DNS_IP.txt" />
-                <file service="Eseri_DNS1" file="Cloud_Secret.txt" />
+		<file service="SMC_DNS1" file="SMC_HOST_IP.txt" />
+                <file service="SMC_DNS1" file="Cloud_Secret.txt" />
 	</deployment_files>
 	<package>
 		<always/>

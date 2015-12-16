@@ -1,6 +1,6 @@
 #!/bin/bash
 # 
-# Cleanup Cloud Move Phase v1.6
+# Cleanup Cloud Move Phase v1.7
 #
 # This script removes and cleans up a cloud created by cloud_move init/commit.  
 # It is called by per-org scripts created by cloud_move like cleanCloudMoveA8.sh
@@ -9,7 +9,7 @@
 #
 # Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Eseri (Free Open Source Solutions Inc.)
+# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
 # All Rights Reserved
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -86,7 +86,7 @@ eseriDeploy()
 
 
 # Cleanup HWH network
-eseriDeploy root@$HWHOST.$SYSTEM_ANCHOR_DOMAIN $C4_FOLDER/storage/Eseri_Network_Remove $ORG $IP $BRIDGE
+eseriDeploy root@$HWHOST.$SYSTEM_ANCHOR_DOMAIN $C4_FOLDER/storage/SMC_Network_Remove $ORG $IP $BRIDGE
 showProgress
 
 # Cleanup HWH storage

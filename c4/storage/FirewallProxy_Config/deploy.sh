@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Firewall Proxy Config Deploy Script - v2.9
+# Firewall Proxy Config Deploy Script - v3.0
 #
 # Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
@@ -59,8 +59,9 @@ if [ $SHORT_NAME == 'hermes' ]; then
     A2ENSITE='default default-ssl desktop custom-*'
 
     # Disable IMAP and SMTP in shorewall rules file
-    sed -i "/^\(DNAT.*net.*loc:.*tcp.*993.*-.*# IMAP.*\)/s||#\1|g" $SHOREWALL_RULES_FILE
-    sed -i "/^\(DNAT.*net.*loc:.*tcp.*465.*-.*# SMTP.*\)/s||#\1|g" $SHOREWALL_RULES_FILE
+    sed -i "/^\(DNAT.*net.*loc:.*tcp.*993.*-.*# IMAPS - .*\)/s||#\1|g" $SHOREWALL_RULES_FILE
+    sed -i "/^\(IMAP\/ACCEPT.*co:10.101.1.31.*loc:.*# IMAP - .*\)/s||#\1|g" $SHOREWALL_RULES_FILE
+    sed -i "/^\(DNAT.*net.*loc:.*tcp.*465.*-.*# SMTPS - .*\)/s||#\1|g" $SHOREWALL_RULES_FILE
 
     # Replacing the old external name with the new one.
     for (( i=0; i<${#CAPABILITIES[@]}; i++ )); do
@@ -69,9 +70,10 @@ if [ $SHORT_NAME == 'hermes' ]; then
 	SSL=${SSLS[$i]}
 	echo "$CAPABILITY $EXTERNAL_NAME $SSL"
 	if [ $CAPABILITY == 'IMAP' ]; then
-	    sed -i "/^#\(DNAT.*net.*loc:.*tcp.*993.*-.*# IMAP.*\)/s||\1|g" $SHOREWALL_RULES_FILE
+	    sed -i "/^#\(DNAT.*net.*loc:.*tcp.*993.*-.*# IMAPS - .*\)/s||\1|g" $SHOREWALL_RULES_FILE
+	    sed -i "/^#\(IMAP\/ACCEPT.*co:10.101.1.31.*loc:.*# IMAP - .*\)/s||\1|g" $SHOREWALL_RULES_FILE
 	elif [ $CAPABILITY == 'SMTP' ]; then
-	    sed -i "/^#\(DNAT.*net.*loc:.*tcp.*465.*-.*# SMTP.*\)/s||\1|g" $SHOREWALL_RULES_FILE
+	    sed -i "/^#\(DNAT.*net.*loc:.*tcp.*465.*-.*# SMTPS - .*\)/s||\1|g" $SHOREWALL_RULES_FILE
 	else 
 	    sed -i "s|\(.*ServerName\).*|\1 $EXTERNAL_NAME.$DOMAIN|" $APACHE2_SITES_AVAILABLE/$(to_lower $CAPABILITY)
 	    sed -i "s|\(.*ServerAlias\).*|\1 $EXTERNAL_NAME.$ALIAS_DOMAIN|" $APACHE2_SITES_AVAILABLE/$(to_lower $CAPABILITY)

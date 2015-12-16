@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Domain Config Deploy Script - v4.1
+# Domain Config Deploy Script - v4.2
 #
 # Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
@@ -20,6 +20,7 @@ eseriGetDNS >/dev/null
 eseriGetNetwork >/dev/null
 
 SYSTEM_ANCHOR_DOMAIN=$(getParameter system_anchor_domain)
+SHORT_DOMAIN=$(getParameter short_domain)
 NEW_CONFIG_VERSION=$(getParameter new_config_version)
 
 # Mark start point in log file.
@@ -67,11 +68,122 @@ flush_dns_cache()
 
 update_apache2_sites()
 {
+    FILES=$4
+    [[ -z "$FILES" ]] && FILES='*'
     for SEARCH_STRING in $3; do
-	sed -i "/$SEARCH_STRING/s|$1|$2|" /etc/apache2/sites-available/*
+	sed -i "/$SEARCH_STRING/s|$1|$2|" /etc/apache2/sites-available/$FILES
     done
     init_process '/etc/init.d/apache2' 'reload'
 }
+
+####################
+##### SMC-ZEUS #####
+####################
+if [ $SHORT_NAME == 'zeus' -a $DOMAIN == $SYSTEM_ANCHOR_DOMAIN ]; then
+    DNS_CONFIG_FOLDER=/etc/bind
+    DNS_NAMED_CONF_INTERNAL_CUSTOMERZONES=$DNS_CONFIG_FOLDER/named.conf.internal.customerzones
+    DNS_NAMED_CONF_EXTERNAL_CUSTOMERZONES=$DNS_CONFIG_FOLDER/named.conf.external.customerzones
+    DNS_ORGS_FOLDER=$DNS_CONFIG_FOLDER/orgs
+    DNS_INTERNAL_ORGS_FOLDER=$DNS_ORGS_FOLDER/internal
+    DNS_EXTERNAL_ORGS_FOLDER=$DNS_ORGS_FOLDER/external
+    if [ $SHORT_NAME == 'zeus' -a $DOMAIN == $SYSTEM_ANCHOR_DOMAIN ]; then
+	DNS_CONF_TEMPLATE_CLOUD_INTERNAL_ZONE_FILE=$DNS_INTERNAL_ORGS_FOLDER/new_domain-internal-master.conf
+	DNS_CONF_TEMPLATE_CLOUD_EXTERNAL_ZONE_FILE=$DNS_EXTERNAL_ORGS_FOLDER/new_domain-external-master.conf
+    fi
+    
+    if [ $NEW_CONFIG_VERSION == '2.3' ]; then
+	DNS_CONF_CLOUD_INTERNAL_ZONE_FILE=$DNS_INTERNAL_ORGS_FOLDER/$NEW_EMAIL_DOMAIN.conf
+	DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE=$DNS_EXTERNAL_ORGS_FOLDER/$NEW_EMAIL_DOMAIN.conf
+	
+	if [ $SHORT_NAME == 'zeus' -a $DOMAIN == $SYSTEM_ANCHOR_DOMAIN ]; then
+	    # Internal
+	    install -o root -g root -m 644 $TEMPLATE_FOLDER/$DNS_CONF_TEMPLATE_CLOUD_INTERNAL_ZONE_FILE $DNS_CONF_CLOUD_INTERNAL_ZONE_FILE
+	    INTERNAL_MASTER=$(grep "masters" $(echo $DNS_CONF_CLOUD_INTERNAL_ZONE_FILE | sed "s|$NEW_EMAIL_DOMAIN|$OLD_EMAIL_DOMAIN|") | awk 'NR==1{print $3}')
+	    sed -i -e  "s|\[-OLD_EMAIL_DOMAIN-\]|$OLD_EMAIL_DOMAIN|" -e "s|\[-NEW_EMAIL_DOMAIN-\]|$NEW_EMAIL_DOMAIN|" -e "s|\[-INTERNAL_MASTER-\]|$INTERNAL_MASTER|" $DNS_CONF_CLOUD_INTERNAL_ZONE_FILE
+	    sed -i "/^include \"$(echo $DNS_CONF_CLOUD_INTERNAL_ZONE_FILE | sed 's|/|\\/|g')\"/d" $DNS_NAMED_CONF_INTERNAL_CUSTOMERZONES
+	    echo "include \"$DNS_CONF_CLOUD_INTERNAL_ZONE_FILE\";" >> $DNS_NAMED_CONF_INTERNAL_CUSTOMERZONES
+	fi
+	if [ $SHORT_NAME == 'zeus' -a $DOMAIN == $SYSTEM_ANCHOR_DOMAIN ]; then
+	    # External
+	    install -o root -g root -m 644 $TEMPLATE_FOLDER/$DNS_CONF_TEMPLATE_CLOUD_EXTERNAL_ZONE_FILE $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE
+	    EXTERNAL_SECRET=$(grep "secret" $(echo $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE | sed "s|$NEW_EMAIL_DOMAIN|$OLD_EMAIL_DOMAIN|") | awk 'NR==1{print $2}' | sed "s|\"\(.*\)\";|\1|")
+	    EXTERNAL_MASTER=$(grep "masters" $(echo $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE | sed "s|$NEW_EMAIL_DOMAIN|$OLD_EMAIL_DOMAIN|") | awk 'NR==1{print $3}')
+	    sed -i -e  "s|\[-OLD_EMAIL_DOMAIN-\]|$OLD_EMAIL_DOMAIN|" -e "s|\[-NEW_EMAIL_DOMAIN-\]|$NEW_EMAIL_DOMAIN|" -e "s|\[-EXTERNAL_MASTER-\]|$EXTERNAL_MASTER|" -e "s|\[-EXTERNAL_SECRET-\]|$EXTERNAL_SECRET|" $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE
+	    sed -i "/^include \"$(echo $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE | sed "s|$NEW_EMAIL_DOMAIN|$OLD_EMAIL_DOMAIN|" | sed 's|/|\\/|g')\"/d" $DNS_NAMED_CONF_EXTERNAL_CUSTOMERZONES
+	    sed -i "/^include \"$(echo $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE | sed 's|/|\\/|g')\"/d" $DNS_NAMED_CONF_EXTERNAL_CUSTOMERZONES
+	    echo "include \"$DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE\";" >> $DNS_NAMED_CONF_EXTERNAL_CUSTOMERZONES
+	fi
+    elif [ $NEW_CONFIG_VERSION == '2.3to1.1' ]; then
+	DNS_CONF_CLOUD_INTERNAL_ZONE_FILE=$DNS_INTERNAL_ORGS_FOLDER/$OLD_EMAIL_DOMAIN.conf
+	DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE=$DNS_EXTERNAL_ORGS_FOLDER/$OLD_EMAIL_DOMAIN.conf
+	
+	if [ $SHORT_NAME == 'zeus' -a $DOMAIN == $SYSTEM_ANCHOR_DOMAIN ]; then
+	    # Internal
+	    rm $DNS_CONF_CLOUD_INTERNAL_ZONE_FILE
+	    sed -i "/^include \"$(echo $DNS_CONF_CLOUD_INTERNAL_ZONE_FILE | sed 's|/|\\/|g')\"/d" $DNS_NAMED_CONF_INTERNAL_CUSTOMERZONES
+	fi
+	if [ $SHORT_NAME == 'zeus' -a $DOMAIN == $SYSTEM_ANCHOR_DOMAIN ]; then
+	    # External
+	    rm $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE
+	    sed -i "/^include \"$(echo $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE | sed "s|$OLD_EMAIL_DOMAIN|$NEW_EMAIL_DOMAIN|" | sed 's|/|\\/|g')\"/d" $DNS_NAMED_CONF_EXTERNAL_CUSTOMERZONES
+	    sed -i "/^include \"$(echo $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE | sed 's|/|\\/|g')\"/d" $DNS_NAMED_CONF_EXTERNAL_CUSTOMERZONES
+	    echo "include \"$(echo $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE | sed "s|$OLD_EMAIL_DOMAIN|$NEW_EMAIL_DOMAIN|")\";" >> $DNS_NAMED_CONF_EXTERNAL_CUSTOMERZONES
+	fi
+    fi
+ 
+    # Remove Cache Files
+    rm -f /var/cache/bind/db.$OLD_EMAIL_DOMAIN.*
+    rm -f /var/cache/bind/db.$NEW_EMAIL_DOMAIN.*
+    # Flush DNS and restart Bind9
+    flush_dns_cache $OLD_EMAIL_DOMAIN $NEW_EMAIL_DOMAIN
+    init_process '/etc/init.d/bind9' 'reload'
+fi
+
+######################
+##### SMC-HERMES #####
+######################
+if [ $SHORT_NAME == 'hermes' -a $DOMAIN == $SYSTEM_ANCHOR_DOMAIN ]; then
+    if [ $NEW_CONFIG_VERSION == '2.3' -o $NEW_CONFIG_VERSION == '2.3to1.1' ]; then
+        # Updating apache2 sites.
+	update_apache2_sites $OLD_EMAIL_DOMAIN $NEW_EMAIL_DOMAIN "ServerAdmin ServerAlias" "custom-$SHORT_DOMAIN-*"
+    fi
+fi
+
+####################
+##### SMC-HERA #####
+####################
+if [ $SHORT_NAME == 'hera' -a $DOMAIN == $SYSTEM_ANCHOR_DOMAIN ]; then
+    POSTFIX_CONFIG_FOLDER=/etc/postfix
+    POSTFIX_TRANSPORT=$POSTFIX_CONFIG_FOLDER/transport
+    POSTFIX_RELAY_DOMAINS=$POSTFIX_CONFIG_FOLDER/relay_domains
+    POSTFIX_RELAY_HOSTS=$POSTFIX_CONFIG_FOLDER/relay_hosts
+
+    if [ $NEW_CONFIG_VERSION == '2.2' -o $NEW_CONFIG_VERSION == '2.3' ]; then
+	# Configure Transport
+	echo "$NEW_EMAIL_DOMAIN smtp:smtp.$NEW_ALIAS_DOMAIN" >> $POSTFIX_TRANSPORT
+	echo "lists.$NEW_EMAIL_DOMAIN smtp:smtp.$NEW_ALIAS_DOMAIN" >> $POSTFIX_TRANSPORT
+	# Configure Relay Domains
+	echo "$NEW_EMAIL_DOMAIN OK" >> $POSTFIX_RELAY_DOMAINS
+	echo "lists.$NEW_EMAIL_DOMAIN OK" >> $POSTFIX_RELAY_DOMAINS
+	# Configure Relay Hosts
+	echo "@$NEW_EMAIL_DOMAIN smtp.$NEW_ALIAS_DOMAIN" >> $POSTFIX_RELAY_HOSTS
+	echo "@lists.$NEW_EMAIL_DOMAIN smtp.$NEW_ALIAS_DOMAIN" >> $POSTFIX_RELAY_HOSTS
+	postmap $POSTFIX_RELAY_HOSTS
+    elif [ $NEW_CONFIG_VERSION == '2.2to1.1' -o $NEW_CONFIG_VERSION == '2.3to1.1' ]; then
+	# Configure Transport
+ 	sed -i "/^$OLD_EMAIL_DOMAIN/d" $POSTFIX_TRANSPORT
+ 	sed -i "/^lists.$OLD_EMAIL_DOMAIN/d" $POSTFIX_TRANSPORT
+	# Configure Relay Domains
+	sed -i "/^$OLD_EMAIL_DOMAIN/d" $POSTFIX_RELAY_DOMAINS
+	sed -i "/^lists.$OLD_EMAIL_DOMAIN/d" $POSTFIX_RELAY_DOMAINS
+	# Configure Relay Hosts
+	sed -i "/^@$OLD_EMAIL_DOMAIN smtp.$OLD_ALIAS_DOMAIN/d" $POSTFIX_RELAY_HOSTS
+	sed -i "/^@lists.$OLD_EMAIL_DOMAIN smtp.$OLD_ALIAS_DOMAIN/d" $POSTFIX_RELAY_HOSTS
+    fi
+    postmap $POSTFIX_TRANSPORT $POSTFIX_RELAY_DOMAINS $POSTFIX_RELAY_HOSTS   
+    # Reload Postfix
+    init_process '/etc/init.d/postfix' 'reload'
+fi
 
 ################
 ##### ZEUS #####
@@ -164,73 +276,10 @@ if [ $SHORT_NAME == 'zeus' -a $DOMAIN != $SYSTEM_ANCHOR_DOMAIN ]; then
     init_process '/etc/init.d/bind9' 'reload'
 fi
     
-##################################
-##### DNS MASTER / DNS SLAVE #####
-##################################
-if [ $SHORT_NAME == 'zeus' -a $DOMAIN == $SYSTEM_ANCHOR_DOMAIN ]; then
-    DNS_CONFIG_FOLDER=/etc/bind
-    DNS_NAMED_CONF_INTERNAL_CUSTOMERZONES=$DNS_CONFIG_FOLDER/named.conf.internal.customerzones
-    DNS_NAMED_CONF_EXTERNAL_CUSTOMERZONES=$DNS_CONFIG_FOLDER/named.conf.external.customerzones
-    DNS_ORGS_FOLDER=$DNS_CONFIG_FOLDER/orgs
-    DNS_INTERNAL_ORGS_FOLDER=$DNS_ORGS_FOLDER/internal
-    DNS_EXTERNAL_ORGS_FOLDER=$DNS_ORGS_FOLDER/external
-    if [ $SHORT_NAME == 'zeus' -a $DOMAIN == $SYSTEM_ANCHOR_DOMAIN ]; then
-	DNS_CONF_TEMPLATE_CLOUD_INTERNAL_ZONE_FILE=$DNS_INTERNAL_ORGS_FOLDER/new_domain-internal-master.conf
-	DNS_CONF_TEMPLATE_CLOUD_EXTERNAL_ZONE_FILE=$DNS_EXTERNAL_ORGS_FOLDER/new_domain-external-master.conf
-    fi
-    
-    if [ $NEW_CONFIG_VERSION == '2.3' ]; then
-	DNS_CONF_CLOUD_INTERNAL_ZONE_FILE=$DNS_INTERNAL_ORGS_FOLDER/$NEW_EMAIL_DOMAIN.conf
-	DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE=$DNS_EXTERNAL_ORGS_FOLDER/$NEW_EMAIL_DOMAIN.conf
-	
-	if [ $SHORT_NAME == 'zeus' -a $DOMAIN == $SYSTEM_ANCHOR_DOMAIN ]; then
-	    # Internal
-	    install -o root -g root -m 644 $TEMPLATE_FOLDER/$DNS_CONF_TEMPLATE_CLOUD_INTERNAL_ZONE_FILE $DNS_CONF_CLOUD_INTERNAL_ZONE_FILE
-	    INTERNAL_MASTER=$(grep "masters" $(echo $DNS_CONF_CLOUD_INTERNAL_ZONE_FILE | sed "s|$NEW_EMAIL_DOMAIN|$OLD_EMAIL_DOMAIN|") | awk 'NR==1{print $3}')
-	    sed -i -e  "s|\[-OLD_EMAIL_DOMAIN-\]|$OLD_EMAIL_DOMAIN|" -e "s|\[-NEW_EMAIL_DOMAIN-\]|$NEW_EMAIL_DOMAIN|" -e "s|\[-INTERNAL_MASTER-\]|$INTERNAL_MASTER|" $DNS_CONF_CLOUD_INTERNAL_ZONE_FILE
-	    sed -i "/^include \"$(echo $DNS_CONF_CLOUD_INTERNAL_ZONE_FILE | sed 's|/|\\/|g')\"/d" $DNS_NAMED_CONF_INTERNAL_CUSTOMERZONES
-	    echo "include \"$DNS_CONF_CLOUD_INTERNAL_ZONE_FILE\";" >> $DNS_NAMED_CONF_INTERNAL_CUSTOMERZONES
-	fi
-	if [ $SHORT_NAME == 'zeus' -a $DOMAIN == $SYSTEM_ANCHOR_DOMAIN ]; then
-	    # External
-	    install -o root -g root -m 644 $TEMPLATE_FOLDER/$DNS_CONF_TEMPLATE_CLOUD_EXTERNAL_ZONE_FILE $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE
-	    EXTERNAL_SECRET=$(grep "secret" $(echo $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE | sed "s|$NEW_EMAIL_DOMAIN|$OLD_EMAIL_DOMAIN|") | awk 'NR==1{print $2}' | sed "s|\"\(.*\)\";|\1|")
-	    EXTERNAL_MASTER=$(grep "masters" $(echo $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE | sed "s|$NEW_EMAIL_DOMAIN|$OLD_EMAIL_DOMAIN|") | awk 'NR==1{print $3}')
-	    sed -i -e  "s|\[-OLD_EMAIL_DOMAIN-\]|$OLD_EMAIL_DOMAIN|" -e "s|\[-NEW_EMAIL_DOMAIN-\]|$NEW_EMAIL_DOMAIN|" -e "s|\[-EXTERNAL_MASTER-\]|$EXTERNAL_MASTER|" -e "s|\[-EXTERNAL_SECRET-\]|$EXTERNAL_SECRET|" $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE
-	    sed -i "/^include \"$(echo $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE | sed "s|$NEW_EMAIL_DOMAIN|$OLD_EMAIL_DOMAIN|" | sed 's|/|\\/|g')\"/d" $DNS_NAMED_CONF_EXTERNAL_CUSTOMERZONES
-	    sed -i "/^include \"$(echo $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE | sed 's|/|\\/|g')\"/d" $DNS_NAMED_CONF_EXTERNAL_CUSTOMERZONES
-	    echo "include \"$DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE\";" >> $DNS_NAMED_CONF_EXTERNAL_CUSTOMERZONES
-	fi
-    elif [ $NEW_CONFIG_VERSION == '2.3to1.1' ]; then
-	DNS_CONF_CLOUD_INTERNAL_ZONE_FILE=$DNS_INTERNAL_ORGS_FOLDER/$OLD_EMAIL_DOMAIN.conf
-	DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE=$DNS_EXTERNAL_ORGS_FOLDER/$OLD_EMAIL_DOMAIN.conf
-	
-	if [ $SHORT_NAME == 'zeus' -a $DOMAIN == $SYSTEM_ANCHOR_DOMAIN ]; then
-	    # Internal
-	    rm $DNS_CONF_CLOUD_INTERNAL_ZONE_FILE
-	    sed -i "/^include \"$(echo $DNS_CONF_CLOUD_INTERNAL_ZONE_FILE | sed 's|/|\\/|g')\"/d" $DNS_NAMED_CONF_INTERNAL_CUSTOMERZONES
-	fi
-	if [ $SHORT_NAME == 'zeus' -a $DOMAIN == $SYSTEM_ANCHOR_DOMAIN ]; then
-	    # External
-	    rm $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE
-	    sed -i "/^include \"$(echo $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE | sed "s|$OLD_EMAIL_DOMAIN|$NEW_EMAIL_DOMAIN|" | sed 's|/|\\/|g')\"/d" $DNS_NAMED_CONF_EXTERNAL_CUSTOMERZONES
-	    sed -i "/^include \"$(echo $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE | sed 's|/|\\/|g')\"/d" $DNS_NAMED_CONF_EXTERNAL_CUSTOMERZONES
-	    echo "include \"$(echo $DNS_CONF_CLOUD_EXTERNAL_ZONE_FILE | sed "s|$OLD_EMAIL_DOMAIN|$NEW_EMAIL_DOMAIN|")\";" >> $DNS_NAMED_CONF_EXTERNAL_CUSTOMERZONES
-	fi
-    fi
- 
-    # Remove Cache Files
-    rm -f /var/cache/bind/db.$OLD_EMAIL_DOMAIN.*
-    rm -f /var/cache/bind/db.$NEW_EMAIL_DOMAIN.*
-    # Flush DNS and restart Bind9
-    flush_dns_cache $OLD_EMAIL_DOMAIN $NEW_EMAIL_DOMAIN
-    init_process '/etc/init.d/bind9' 'reload'
-fi
-
 ##################
 ##### HERMES #####
 ##################
-if [ $SHORT_NAME == 'hermes' ]; then
+if [ $SHORT_NAME == 'hermes' -a $DOMAIN != $SYSTEM_ANCHOR_DOMAIN ]; then
     if [ $NEW_CONFIG_VERSION == '2.3' -o $NEW_CONFIG_VERSION == '2.3to1.1' ]; then
         # Updating apache2 sites.
 	update_apache2_sites $OLD_EMAIL_DOMAIN $NEW_EMAIL_DOMAIN "ServerAdmin ServerAlias"
@@ -240,11 +289,13 @@ fi
 ################
 ##### HERA #####
 ################
-if [ $SHORT_NAME == 'hera' ]; then
-    # Update postfix main.cf
-    POSTFIX_MAIN=/etc/postfix/main.cf
-    POSTFIX_TRANSPORT=/etc/postfix/transport
+if [ $SHORT_NAME == 'hera' -a $DOMAIN != $SYSTEM_ANCHOR_DOMAIN ]; then
+    POSTFIX_CONFIG_FOLDER=/etc/postfix
+    POSTFIX_MAIN=$POSTFIX_CONFIG_FOLDER/main.cf
+    POSTFIX_TRANSPORT=$POSTFIX_CONFIG_FOLDER/transport
     POSTFIX_ALIASES=/etc/aliases
+
+    # Update postfix main.cf
     if [ $NEW_CONFIG_VERSION == '2.11' -o $NEW_CONFIG_VERSION == '2.12' ]; then
 	sed -i 's|^virtual_alias_maps|#virtual_alias_maps|' $POSTFIX_MAIN
     elif [ $NEW_CONFIG_VERSION == '2.11to1.1' -o $NEW_CONFIG_VERSION == '2.12to1.1' ]; then

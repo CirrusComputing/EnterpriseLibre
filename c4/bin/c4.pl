@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-# C4 - v5.7
+# C4 - v5.8
 #
 # Perl script that drives the C4 organization creation process
 #
@@ -66,6 +66,7 @@ my $db_conn = DBI->connect("dbi:Pg:dbname=$DBNAME;host=$DBHOST", "$DBUSER", "$DB
 
 # Get system anchor domain
 my $system_anchor_domain = get_system_anchor_domain($db_conn);
+my $system_anchor_ip;
 
 # From DB rec network.organization 
 my $email_domain;
@@ -198,14 +199,13 @@ my @flow = (
 	{ name => "Update_Cleanup", thread => "no", function => \&update_cleanup},
 	{ name => "Storage", thread => "no"},
 	{ name => "VPS1", thread => "no" },
-	{ name => "Eseri_DNS1", thread => "no" },
+	{ name => "SMC_DNS1", thread => "no" },
 	{ name => "DNS", thread => "no" },
-	{ name => "Eseri_DNS2", thread => "no" },
+	{ name => "SMC_DNS2", thread => "no" },
 	{ name => "Firewall", thread => "no" },
 	{ name => "VPS2", thread => "no" },
 	{ name => "Update_Free_Space", thread => "no", function => \&update_free_space},
 	{ name => "Backup", thread => "no"},
-	#{ name => "Eseri_Backup", thread => "no"},
 	{ name => "Kerberos", thread => "no"},
 	{ name => "LDAP", thread => "no"},
 	{ name => "Database", thread => "no"},
@@ -221,15 +221,14 @@ my @flow = (
 	{ name => "NX_key_entry", thread => "no", function => \&set_org_nx_key},
 	{ name => "Reboot", thread => "no"},
 	{ name => "Backup_Configuration", thread => "no", function => \&backup_configuration},
-	{ name => "Eseri_Nagios", thread => "no"},
-	{ name => "Eseri_C5", thread => "no"},
+	{ name => "SMC_Nagios", thread => "no"},
+	{ name => "SMC_C5", thread => "no"},
+        { name => "SMC_Email", thread => "no"},
 	{ name => "Cloud_Email_SSH_Key", thread => "no", function => \&cloud_email_ssh_key},
     	{ name => "FirewallProxy_Config_Defaults", thread => "no", function => \&firewallproxy_config_defaults},
     	{ name => "CloudCapability_Config_Defaults", thread => "no", function => \&cloudcapability_config_defaults},
 	{ name => "First_user", thread => "no", function => \&create_first_user}
 );
-
-
 
 #System control variables - change these to make C4 more or (yeah, right) less retarded
 my $number_of_threads = 6;
@@ -806,6 +805,14 @@ sub read_db{
 
 	$backup_server .= ".$system_anchor_domain";
 	$backup_target_url="sftp://backup-$short_domain\@$backup_server/www/profile1";
+
+	$db_st = $db_conn->prepare("SELECT address FROM network.address_pool WHERE organization = ?")
+	        or die "Couldn't prepare statement: " . $db_conn->errstr;
+        $db_st->bind_param(1, 1, SQL_INTEGER);
+        $db_st->execute()
+        	or die "Couldn't execute statement: " . $db_st->errstr;
+	($system_anchor_ip) = $db_st->fetchrow();
+        $db_st->finish;
 }
 
 sub make_cleanup{
@@ -933,6 +940,9 @@ sub get_c4_inferred_value{
 	my ( $c4_ref, $arg ) = @_;
 	if ($arg eq 'system_anchor_domain'){
    	        return $system_anchor_domain;
+	}
+	elsif ($arg eq 'system_anchor_ip'){
+   	        return $system_anchor_ip;
 	}
 	elsif ($arg eq 'short_domain'){
    	        return $short_domain;
@@ -1727,7 +1737,7 @@ c4 - generate a new organization
 
 =head1 DESCRIPTION
 
-Script for generating entirely new organizations for Eseri.net. Has preconceptions about the state of affairs before it gets run.
+Script for generating entirely new organizations for domainneverused.net. Has preconceptions about the state of affairs before it gets run.
 
 =head1 SYNOPSIS
 
@@ -1749,12 +1759,12 @@ The XML file that will be loaded by C4.
 
 =head1 COPYRIGHT
 
-Eseri.net, 2009-2012
+cirruscomputing.com, 2009-2015
 
 =head1 AVAILABILITY
 
 =head1 AUTHOR
 
-Gregory Wolgemuth
+Gregory Wolgemuth, Nimesh Jethwa
 
 

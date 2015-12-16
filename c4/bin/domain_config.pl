@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-# domain_config.pl - v2.7
+# domain_config.pl - v2.8
 #
 # This script handles the C3 requests for changing an organization email_domain.
 # Depending on the config version, the script configures an organization.
@@ -8,7 +8,7 @@
 #
 # Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2014 Free Open Source Solutions Inc.
+# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
 # All Rights Reserved 
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -55,14 +55,14 @@ GetOptions('network_name=s' => \$network_name, 'new_config_version=s' => \$new_c
 
 my %capabilities;
 my @capabilities;
-my @containers=('dns', 'zeus', 'hermes', 'hera', 'hades', 'poseidon', 'trident', 'gaia', 'chaos');
+my @containers=('smc-zeus', 'smc-hermes', 'smc-hera', 'zeus', 'hermes', 'hera', 'hades', 'poseidon', 'trident', 'gaia', 'chaos');
 my %userlist;
 my %domain_config_details;
 my $deployment_name = "domain_config-$network_name-".get_random_string(8);
 my $deployment_file = "/tmp/$deployment_name" ;
 my $tar_file = "/tmp/$deployment_name.tar.gz";
 my $script_folder = "$c4_root/storage/Domain_Config/";
-my @deploy_nodes = ("system_anchor_domain", "new_config_version", "old_email_domain", "old_imap_server", "old_alias_domain", "old_website_ip", "new_email_domain", "new_imap_server", "new_alias_domain", "new_website_ip", "username", "email_prefix", "password");
+my @deploy_nodes = ("system_anchor_domain", "short_domain", "new_config_version", "old_email_domain", "old_imap_server", "old_alias_domain", "old_website_ip", "new_email_domain", "new_imap_server", "new_alias_domain", "new_website_ip", "username", "email_prefix", "password");
 my %password_nodes = (
     DB_PASSWORD_MYSQL => {
 	mysql => 'root',	
@@ -78,6 +78,9 @@ sub determine_inferred_value{
     my ($arg) = @_;
     if ($arg eq 'system_anchor_domain'){
 	return $system_anchor_domain;
+    }
+    elsif ($arg eq 'short_domain'){
+	return @{ [ split(/\.$system_anchor_domain/, $network_name) ]}[0];
     }
     elsif ($arg eq 'new_config_version'){
 	($new_config_version eq '1.1') ? (return $domain_config_details{'config_version'}.'to1.1') : (return $new_config_version);

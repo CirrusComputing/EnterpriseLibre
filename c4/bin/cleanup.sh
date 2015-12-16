@@ -1,6 +1,6 @@
 #!/bin/bash
 # 
-# Cleanup script v6.8
+# Cleanup script v6.9
 #
 # This script removes and cleans up an org.  
 # It is called by per-org scripts like cleanA873.sh 
@@ -8,7 +8,7 @@
 #
 # Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Eseri (Free Open Source Solutions Inc.)
+# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
 # All Rights Reserved
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -80,15 +80,17 @@ fi
 # Variables
 SYSTEM_ANCHOR_DOMAIN=$(perl -M"common 'get_system_anchor_domain'" -we "print get_system_anchor_domain (undef);")
 CLOUD_DOMAIN=$(perl -M"common 'get_domain_config_details'" -we "my %domain_config_details; get_domain_config_details(undef, '$DOMAIN', \%domain_config_details); print \$domain_config_details{'email_domain'};")
+ALIAS_DOMAIN=$(perl -M"common 'get_domain_config_details'" -we "my %domain_config_details; get_domain_config_details(undef, '$DOMAIN', \%domain_config_details); print \$domain_config_details{'alias_domain'};")
 DOMAIN_CONFIG_VERSION=$(perl -M"common 'get_domain_config_details'" -we "my %domain_config_details; get_domain_config_details(undef, '$DOMAIN', \%domain_config_details); print \$domain_config_details{'config_version'};")
 [[ -z "$CLOUD_DOMAIN" ]] && CLOUD_DOMAIN=$DOMAIN
+[[ -z "$ALIAS_DOMAIN" ]] && ALIAS_DOMAIN=$DOMAIN
 [[ -z "$DOMAIN_CONFIG_VERSION" ]] && DOMAIN_CONFIG_VERSION='1.1'
 
 # Remove Cache folder
 [ -d $CACHE_FOLDER ] && rm -r $CACHE_FOLDER
 showProgress
 
-# Cleanup configuration in Nagios
+# Cleanup SMC Nagios
 # Running sed command on SHORT_DOMAIN to replace . with _
 SED_SHORT_DOMAIN=$(echo $SHORT_DOMAIN | sed "s|\.|\_|g")
 perl -M"common 'acquire_ssh_fingerprint'" -we "acquire_ssh_fingerprint('nagios.$SYSTEM_ANCHOR_DOMAIN')"
@@ -119,13 +121,19 @@ eseriDeploy()
 	ssh $SSH_HOST "rm -r /root/deploy$ORG"                            $DEBUG_SSH 
 }
 
-# Cleanup Email
-# Done in cleanup_db.
+# Cleanup SMC Proxy
+perl -M"common 'acquire_ssh_fingerprint'" -we "acquire_ssh_fingerprint('smc-hermes.$SYSTEM_ANCHOR_DOMAIN')"
+ssh root@smc-hermes.$SYSTEM_ANCHOR_DOMAIN "rm -f /etc/apache2/sites-enabled/custom-$SHORT_DOMAIN-*; rm -f /etc/apache2/sites-available/custom-$SHORT_DOMAIN-*; /etc/init.d/apache2 reload"
+showProgress
+
+# Cleanup SMC Email
+perl -M"common 'acquire_ssh_fingerprint'" -we "acquire_ssh_fingerprint('smc-hera.$SYSTEM_ANCHOR_DOMAIN')"
+eseriDeploy root@smc-hera.$SYSTEM_ANCHOR_DOMAIN $C4_FOLDER/storage/SMC_Email_Remove $DOMAIN $CLOUD_DOMAIN $ALIAS_DOMAIN
 showProgress
 
 # Cleanup HWH network
 perl -M"common 'acquire_ssh_fingerprint'" -we "acquire_ssh_fingerprint('$HWHOST.$SYSTEM_ANCHOR_DOMAIN')"
-eseriDeploy root@$HWHOST.$SYSTEM_ANCHOR_DOMAIN $C4_FOLDER/storage/Eseri_Network_Remove $ORG $IP $BRIDGE
+eseriDeploy root@$HWHOST.$SYSTEM_ANCHOR_DOMAIN $C4_FOLDER/storage/SMC_Network_Remove $ORG $IP $BRIDGE
 showProgress
 
 # Cleanup HWH storage
@@ -156,22 +164,18 @@ showProgress
 
 # Order shouldn't matter here so pushed down.
 # Check if you can ping to one of the containers before removing the route. This is because if a cloud fails to create, the next cloud that is successfully created might have the same network ip. If one tries to cleanup the failed cloud, then it would remove the network route that is actually assigned to the new cloud. Therefore, a quick ping check would show if the network is up or down. Since we remove all the containers before removing the route, the ping should fail. If it succeeds, then we know something is wrong.
-# Eseri_DNS_Remove also removes the network from the internal acls, so we should stop this from happening if the network is still in use.
+# SMC_DNS_Remove also removes the network from the internal acls, so we should stop this from happening if the network is still in use.
 if ping -c 1 $NETWORK.50 &> /dev/null; then
     echo "Error: Network $NETWORK is still in use (ie. Two clouds must be having the same network ip). Not removing the route or dns config."
     exit 1
-else
-    # Cleanup Master/Slave DNS configuration
-    DNS_SERVERS='dns'
-    for DNS_SERVER in $DNS_SERVERS; do
-	perl -M"common 'acquire_ssh_fingerprint'" -we "acquire_ssh_fingerprint('$DNS_SERVER.$SYSTEM_ANCHOR_DOMAIN')"
-	eseriDeploy root@$DNS_SERVER.$SYSTEM_ANCHOR_DOMAIN $C4_FOLDER/storage/Eseri_DNS_Remove $DOMAIN $NETWORK
-	if [ $DOMAIN_CONFIG_VERSION == '2.3' ] && [ $DOMAIN != $CLOUD_DOMAIN ]; then
-	    perl -M"common 'acquire_ssh_fingerprint'" -we "acquire_ssh_fingerprint('$DNS_SERVER.$SYSTEM_ANCHOR_DOMAIN')"
-	    eseriDeploy root@$DNS_SERVER.$SYSTEM_ANCHOR_DOMAIN $C4_FOLDER/storage/Eseri_DNS_Remove $CLOUD_DOMAIN $NETWORK
-	fi
-	showProgress
-    done
+else    
+    # Cleanup SMC DNS
+    perl -M"common 'acquire_ssh_fingerprint'" -we "acquire_ssh_fingerprint('smc-zeus.$SYSTEM_ANCHOR_DOMAIN')"
+    eseriDeploy root@smc-zeus.$SYSTEM_ANCHOR_DOMAIN $C4_FOLDER/storage/SMC_DNS_Remove $DOMAIN $NETWORK
+    if [ $DOMAIN_CONFIG_VERSION == '2.3' ] && [ $DOMAIN != $CLOUD_DOMAIN ]; then
+	eseriDeploy root@smc-zeus.$SYSTEM_ANCHOR_DOMAIN $C4_FOLDER/storage/SMC_DNS_Remove $CLOUD_DOMAIN $NETWORK
+    fi
+    showProgress
 fi
 
 # Cleanup DB: Free the external IP and remove org from the Org table.

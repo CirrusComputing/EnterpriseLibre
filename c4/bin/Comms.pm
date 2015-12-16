@@ -1,4 +1,4 @@
-# Comms.pm - v1.3
+# Comms.pm - v1.4
 #
 # Module to use ssh and scp with error checking and retries
 #
@@ -21,7 +21,7 @@ use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use Net::SSH2;
 
-$VERSION     = 1.30;
+$VERSION     = 1.40;
 @ISA         = qw(Exporter);
 @EXPORT      = ();
 @EXPORT_OK   = qw(ssh scp ssh_key);
@@ -40,7 +40,8 @@ sub scp{
 	    foreach ($src, $dest){
 		my $full_hostname = `echo "$_" | sed 's|.*@\\(.*\\):.*|\\1|g'`;
 		chomp($full_hostname);
-		`host '$full_hostname'`;
+		# Don't interpret full hostname value as relative names.	
+		`host -N 0 '$full_hostname'`;
 		if ($? == 0){
 		    ssh_key($full_hostname);
 		}

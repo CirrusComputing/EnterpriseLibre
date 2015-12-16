@@ -10,6 +10,7 @@
 		<arg>network</arg>
 		<arg>bridge</arg>
 		<arg>wan_ip</arg>
+		<arg>wan_netmask</arg>
 		<arg>timezone</arg>
 		<arg>vps1_list</arg>
 	</deploy>

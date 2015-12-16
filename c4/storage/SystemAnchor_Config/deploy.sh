@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# System Anchor Config Deploy Script - v1.0
+# System Anchor Config Deploy Script - v1.1
 #
 # Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
@@ -165,8 +165,6 @@ $BIND_CONFIG_FOLDER/named.conf.external
 $BIND_CONFIG_FOLDER/named.conf.internal 
 $BIND_CONFIG_FOLDER/zones/internal/$(to_lower $NEW_SYSTEM_ANCHOR_DOMAIN).conf 
 $BIND_CONFIG_FOLDER/zones/external/$(to_lower $NEW_SYSTEM_ANCHOR_DOMAIN).conf "
-
-    replace_anchor_ip "$BIND_CONFIG_FOLDER/db.$(to_lower $NEW_SYSTEM_ANCHOR_DOMAIN).external"
 
     # Update serial
     dns_update_serial "$BIND_CONFIG_FOLDER/db.$(to_lower $NEW_SYSTEM_ANCHOR_DOMAIN).internal"
@@ -370,12 +368,14 @@ if [ $SHORT_NAME == 'hera' ]; then
 /etc/default/dk-filter 
 /etc/aliases 
 $APACHE2_CONFIG_FOLDER/sites-available/* 
+$DOVECOT_CONFIG_FOLDER/dovecot-sql.conf 
 $DOVECOT_CONFIG_FOLDER/dovecot-ldap.conf 
 $DOVECOT_CONFIG_FOLDER/dovecot.conf 
 $MAILMAN_CONFIG_FOLDER/mm_cfg.py 
 $DSPAM_CONFIG_FOLDER/dspam.conf 
 $POSTFIX_CONFIG_FOLDER/ldap/* 
 $POSTFIX_CONFIG_FOLDER/transport 
+$POSTFIX_CONFIG_FOLDER/relay_domains 
 $POSTFIX_CONFIG_FOLDER/main.cf"
     
     replace_ldap_base "/etc/ldap.conf 
@@ -386,12 +386,11 @@ $DOVECOT_CONFIG_FOLDER/dovecot.conf
 $MAILMAN_CONFIG_FOLDER/mm_cfg.py 
 $DSPAM_CONFIG_FOLDER/dspam.conf 
 $POSTFIX_CONFIG_FOLDER/ldap/* 
-$POSTFIX_CONFIG_FOLDER/transport 
 $POSTFIX_CONFIG_FOLDER/main.cf"
     
     replace_short_domain "/etc/aliases"
     
-    postmap $POSTFIX_CONFIG_FOLDER/transport
+    postmap $POSTFIX_CONFIG_FOLDER/transport $POSTFIX_CONFIG_FOLDER/relay_domains
     postalias /etc/aliases
 
     # Change the password for the dovecot proxy user

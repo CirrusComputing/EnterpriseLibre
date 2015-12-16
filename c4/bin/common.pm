@@ -31,7 +31,7 @@ $VERSION     = 3.70;
 		 userprimaryemail_config    => [qw(acquire_ssh_fingerprint ssh scp mylog get_random_string determine_capabilities determine_entity_password deploy_capabilities deploy_parameters deploy_passwords run_script get_domain_config_details)],
 		 userfullname_config    => [qw(acquire_ssh_fingerprint ssh scp mylog get_random_string determine_capabilities determine_entity_password deploy_capabilities deploy_parameters deploy_passwords run_script)],
 		 domain_config    => [qw(acquire_ssh_fingerprint ssh scp mylog get_random_string get_system_anchor_domain determine_capabilities determine_entity_password deploy_capabilities deploy_parameters deploy_passwords run_script get_userlist get_domain_config_details)],
-		 firewallproxy_config    => [qw(acquire_ssh_fingerprint ssh scp mylog get_random_string deploy_parameters deploy_passwords run_script get_domain_config_details)],
+		 firewallproxy_config    => [qw(acquire_ssh_fingerprint ssh scp mylog get_random_string get_system_anchor_domain deploy_parameters deploy_passwords run_script get_domain_config_details)],
 		 cloudcapability_config    => [qw(acquire_ssh_fingerprint ssh scp mylog get_random_string get_system_anchor_domain determine_capabilities determine_entity_password deploy_capabilities deploy_parameters deploy_passwords run_script get_userlist get_domain_config_details get_superuser_details has_capability get_deployment_xml)],
 		 cloud_boot    => [qw(acquire_ssh_fingerprint ssh scp mylog get_random_string get_system_anchor_domain determine_capabilities determine_entity_password deploy_capabilities deploy_parameters deploy_passwords run_script get_deployment_xml)],
 		 timezone_config => [qw(acquire_ssh_fingerprint ssh scp mylog get_random_string determine_capabilities determine_all_containers determine_entity_password deploy_capabilities deploy_parameters deploy_passwords run_script get_userlist)],
@@ -85,7 +85,8 @@ sub scp{
 	foreach ($src, $dest){
 	    my $full_hostname = `echo "$_" | sed 's|.*@\\(.*\\):.*|\\1|g'`;
 	    chomp($full_hostname);
-	    `host '$full_hostname'`;
+	    # Don't interpret full hostname value as relative names.
+	    `host -N 0 '$full_hostname'`;
 	    if ($? == 0){
                 acquire_ssh_fingerprint($full_hostname);
 	    }
