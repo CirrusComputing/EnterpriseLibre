@@ -1,11 +1,11 @@
 #!/bin/bash
 #
-# Email server deploy script - v3.2
+# Email server deploy script - v3.4
 #
 # Created by Karoly Molnar <kmolnar@cirruscomputing.com>
 # Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -13,12 +13,13 @@
 # readable forms.
 #
 
-# Include eseri functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 # Mark start point in log file
 echo "$(date) Deploy Email Server"
 
+SYSTEM_ANCHOR_DOMAIN=$(getParameter system_anchor_domain)
 EMAIL_DOMAIN=$(getParameter email_domain)
 IT_MAN_USER=$(getParameter manager_username)
 LDAP_LIBNSS_PW=$(getPassword LDAP_PASSWORD_LIBNSS)
@@ -239,7 +240,7 @@ adduser $POSTFIX_USER ssl-cert
 
 # Create aliases database
 sed -i -e "s/^\(postmaster: *\)root/\1 postmaster@$DOMAIN/g"  /etc/aliases
-echo "root: sysadmin@lists.cirruscomputing.com" >> /etc/aliases
+echo "root: sysadmin@$SYSTEM_ANCHOR_DOMAIN" >> /etc/aliases
 postalias /etc/aliases
 
 # Purge ssmtp
@@ -261,6 +262,8 @@ adduser clamav amavis
 sed -i -e "s/ \(\['SpamAssassin', 'Amavis::SpamControl::SpamAssassin' \],\)/ ###C4 \1/g" /usr/sbin/amavisd-new
 # Amavis it was too aggressive for us. permit the banned content
 sed -i -e "s/\(\$final_banned_destiny *= \)D_BOUNCE;/\1 D_PASS;/g" /etc/amavis/conf.d/20-debian_defaults
+# Allow attachments with .bat - This is for EnterpriseLibre new user welcome email with attachement.
+sed -i -e 's/|bat|/|/g' /etc/amavis/conf.d/20-debian_defaults
 
 # uncommented to enable:
 sed -i -e "s/\#\(\@bypass_virus_checks_maps\)/\1/g" /etc/amavis/conf.d/15-content_filter_mode
