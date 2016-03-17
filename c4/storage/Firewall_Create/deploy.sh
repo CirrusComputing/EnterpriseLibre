@@ -1,10 +1,10 @@
 #!/bin/bash
 #
-# Firewall deploy script - v2.1
+# Firewall deploy script - v2.2
 #
 # Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Eseri (Free Open Source Solutions Inc.)
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -12,7 +12,7 @@
 # readable forms.
 #
 
-# Include cirrus functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 # Mark start point in log file
@@ -90,8 +90,15 @@ sed -i "/^nagios    ALL=NOPASSWD:.*/ {s||\0, $NAGIOS_PLUGINS_FOLDER/$NAGIOS_SHOR
 echo "net.ipv4.conf.eth0.send_redirects = 0" >> /etc/sysctl.conf
 sysctl -p
 
+# Since hermes WAN IP cannot be resolved using the cloud's DNS, add to /etc/hosts to avoid below warning.
+# (EAI 2)Name or service not known: Failed to resolve server name for x.x.x.x (check DNS) -- or specify an explicit ServerName
+echo "$WAN_IP localhost.localdomain localhost" >> /etc/hosts
 # Install and configure Apache2
 aptGetInstall apache2
+# Manually install Apache2 updates
+dpkg -i $ARCHIVE_FOLDER/packages/apache2/*.deb
+# Install ssl.conf which disables SSLv3 and certain Cipher Suites
+install -o root -g root -m 644 $ARCHIVE_FOLDER/files/$APACHE_CONFIG_FOLDER/mods-available/ssl.conf $APACHE_CONFIG_FOLDER/mods-available/
 install -o root -g root -m 644 $ARCHIVE_FOLDER/files/$APACHE_DEFAULT_PAGE $APACHE_DEFAULT_PAGE
 install -o root -g root -m 644 $TEMPLATE_FOLDER/$APACHE_CONFIG_FOLDER/ports.conf $APACHE_CONFIG_FOLDER/
 eseriReplaceValues $APACHE_CONFIG_FOLDER/ports.conf
