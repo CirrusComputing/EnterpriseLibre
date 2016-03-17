@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-# cloud_move.pl - v2.3
+# cloud_move.pl - v2.4
 #
 # This script moves a cloud from one server to another while keeping the network name and internal IP intact.
 # The move can be to any specified physical server across any subnet (will have different external IP).
@@ -14,7 +14,7 @@
 #
 # Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved 
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -566,6 +566,9 @@ sub update_firewall{
     # Update Cloud Firewall shorewall configuration
     ssh("$cloud_firewall", "sed -i 's|$current_wan_ip|$new_wan_ip|' $firewall_config_folder/*");
     ssh("$cloud_firewall", "/etc/init.d/shorewall restart");
+
+    # Update hosts file
+    ssh("$cloud_firewall", "sed -i 's|$current_wan_ip|$new_wan_ip|' /etc/hosts");
 
     # Update Cloud Firewall apache configuration    
     ssh("$cloud_firewall", "sed -i 's|$current_wan_ip|$new_wan_ip|' $apache_config_folder/ports.conf");

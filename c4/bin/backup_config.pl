@@ -67,7 +67,7 @@ mylog("-- ".Dumper($enabled)) && check_value($enabled);
 mylog("-- ".Dumper($snapshot)) && check_value($snapshot);
 
 my $system_anchor_domain=get_system_anchor_domain($db_conn);
-my $backup_server = "nanook.$system_anchor_domain";
+my $backup_server = "storage.$system_anchor_domain";
 my $profile;
 my $next_profile_id;
 

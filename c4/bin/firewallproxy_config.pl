@@ -132,6 +132,8 @@ sub configure_smc_proxy{
 
     # Remove old sites.
     ssh("smc-hermes.$system_anchor_domain", "rm -f $sites_available_folder/custom-$short_domain-*");
+    # Also remove lingering non-existent links, if at all.
+    ssh("smc-hermes.$system_anchor_domain", "rm -f $sites_enabled_folder/custom-$short_domain-*");
 
     # Copy Certificate and Private key.
     `mkdir -p $deployment_file`;

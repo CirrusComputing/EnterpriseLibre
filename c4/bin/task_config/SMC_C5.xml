@@ -15,6 +15,6 @@
 	<deployment_files>
 	</deployment_files>
 	<package>
-		<always/>
+		<required>NoMachine</required>
 	</package>
 </c4:boot>

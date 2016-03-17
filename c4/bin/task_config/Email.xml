@@ -3,6 +3,7 @@
 	<name>Email</name>
 	<host>hera</host>
 	<deploy>
+                <arg>system_anchor_domain</arg>
 		<arg>email_domain</arg>
 		<arg>manager_username</arg>
 		<arg>backup_server</arg>

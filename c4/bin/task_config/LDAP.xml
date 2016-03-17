@@ -3,6 +3,7 @@
 	<name>LDAP</name>
 	<host>aphrodite</host>
 	<deploy>
+                <arg>system_anchor_domain</arg>
 		<arg>manager_username</arg>
 	</deploy>
 	<certificates>

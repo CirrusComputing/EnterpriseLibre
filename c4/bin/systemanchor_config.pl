@@ -1,13 +1,13 @@
 #!/usr/bin/perl -w
 #
-# system_anchor_config.pl - v1.1
+# system_anchor_config.pl - v1.2
 #
 # This script handles the C3 requests for changing the system anchor domain.
 # The logs should be written to /var/log/c4/systemanchor_config.log
 #
 # Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved 
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -218,8 +218,8 @@ sub generate_copy_certs{
 
     mylog(" -- Generating CA certificate");
     `sed -e "s|\\\[-SYSTEM_ANCHOR_DOMAIN-\\\]|$new_system_anchor_domain|g" -e "s|\\\[-SHORT_DOMAIN-\\\]|$new_short_domain|g" -e "s|\\\[-SHORT_NAME-\\\]|$new_short_name|g" $script_folder/template/transient/openssl.cnf > $c4_cert_folder/caconfig.txt`;
-    `openssl req -x509 -newkey rsa:2048 -out cacert.pem -outform PEM -days 1825 -passout "pass:$root_ca_password" -config ./caconfig.txt 2>&1 > /dev/null`;
-    `openssl dsaparam -out dsaparam.pem 1024 2>&1 > /dev/null`;
+    `openssl req -x509 -newkey rsa:4096 -out cacert.pem -outform PEM -days 1825 -passout "pass:$root_ca_password" -config ./caconfig.txt 2>&1 > /dev/null`;
+    `openssl dsaparam -out dsaparam.pem 4096 2>&1 > /dev/null`;
 
     for (my $i=0; $i<scalar @ca_cert_files; $i++){
 	my $file_contents = read_file("$c4_cert_folder/$ca_cert_files[$i]");
@@ -250,7 +250,9 @@ sub generate_copy_certs{
 	my $keyfilename = "${host}_key.pem";
 	my $crtfilename = "${host}_crt.pem";
 	my $destfilename = "${host}.pem";
-	my $keyparams = 'rsa:1024';
+	my $keyparams;
+	# Set 1024 key size for dkim, since bind9 does not accept > 255 characters for a TXT pointer.
+	($host =~ m/^dkim./) ? ($keyparams = 'rsa:1024') : ($keyparams = 'rsa:4096');
 
 	if ($cert_types[$i] eq "DSA"){
 	    $reqfilename = "${host}_dsa_req.pem";

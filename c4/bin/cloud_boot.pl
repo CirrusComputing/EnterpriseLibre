@@ -65,7 +65,7 @@ my $dns_config_folder="/etc/bind";
 my @dns_servers=('smc-zeus');
 my $nagios="nagios.$system_anchor_domain";
 my $nagios_config_folder="/etc/nagios3";
-my $amanda_backup_server = "nanook.$system_anchor_domain";
+my $amanda_backup_server = "storage.$system_anchor_domain";
 my $amanda_backup_pids = "";
 my $amanda_backup_config = "DailySet";
 

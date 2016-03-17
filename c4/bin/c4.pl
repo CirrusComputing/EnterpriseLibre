@@ -1,12 +1,12 @@
 #!/usr/bin/perl -w
 #
-# C4 - v5.8
+# C4 - v5.9
 #
 # Perl script that drives the C4 organization creation process
 #
 # Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved 
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -405,7 +405,7 @@ sub backup_configuration{
 	    or die "Couldn't prepare statement: " . $db_conn->errstr;
 	$backup_ins_query->bind_param(1, $org_id, SQL_INTEGER);
 	$backup_ins_query->bind_param(2, $backup_target_url);
-	$backup_ins_query->bind_param(3, "t", PG_BOOL);
+	$backup_ins_query->bind_param(3, "f", PG_BOOL);
 	
 	$backup_ins_query->execute()
 	    or die "Couldn't execute statement: " . $backup_ins_query->errstr;
@@ -1077,7 +1077,7 @@ serial                  = \$dir/serial
 #
 default_crl_days        = 365
 default_days            = 1825
-default_md              = sha1
+default_md              = sha256
 
 policy                  = local_ca_policy
 x509_extensions         = local_ca_extensions
@@ -1108,9 +1108,9 @@ nsCertType              = server
 # The default root certificate generation policy.
 #
 [ req ]
-default_bits            = 2048
+default_bits            = 4096
 default_keyfile         = ./private/cakey.pem
-default_md              = sha1
+default_md              = sha256
 #
 prompt                  = no
 distinguished_name      = root_ca_distinguished_name
@@ -1132,8 +1132,8 @@ basicConstraints        = CA:true
 EOF
 
         close(CACONFIG);
-        `openssl req -x509 -newkey rsa:2048 -out cacert.pem -outform PEM -days 1825 -passout "pass:$password" -config ./caconfig.txt 2>&1 > /dev/null`;
-        `openssl dsaparam -out dsaparam.pem 1024 2>&1 > /dev/null`;
+        `openssl req -x509 -newkey rsa:4096 -out cacert.pem -outform PEM -days 1825 -passout "pass:$password" -config ./caconfig.txt 2>&1 > /dev/null`;
+        `openssl dsaparam -out dsaparam.pem 4096 2>&1 > /dev/null`;
 
 	sub wanted{
 		return if -d $_;
@@ -1267,7 +1267,13 @@ EOF
         my $keyfilename = ""; my $crtfilename = "";
         my $key = "", my $crt = "";
 	if ($type eq "RSA"){
-                `openssl req -newkey rsa:1024 -nodes -keyout ${host}_key.pem -keyform PEM -out ${host}_req.pem -outform PEM -config ./${host}.cnf`;
+                # Set 1024 key size for dkim, since bind9 does not accept > 255 characters for a TXT pointer.
+	        if ($host =~ m/^dkim./){
+		    `openssl req -newkey rsa:1024 -nodes -keyout ${host}_key.pem -keyform PEM -out ${host}_req.pem -outform PEM -config ./${host}.cnf`;
+		}
+		else{
+		    `openssl req -newkey rsa:4096 -nodes -keyout ${host}_key.pem -keyform PEM -out ${host}_req.pem -outform PEM -config ./${host}.cnf`;
+		}
                 `openssl ca -batch -in ${host}_req.pem -out ${host}_crt.pem -config ./caconfig.txt -passin "pass:$password"`;
                 unlink("${host}_req.pem");
                 $keyfilename = "${host}_key.pem";
@@ -1759,7 +1765,7 @@ The XML file that will be loaded by C4.
 
 =head1 COPYRIGHT
 
-cirruscomputing.com, 2009-2015
+Free Open Source Solutions Inc., 2009-2016
 
 =head1 AVAILABILITY
 
