@@ -1,11 +1,11 @@
 #!/bin/bash
 #
-# Desktop deploy script - v6.1
+# Desktop deploy script - v6.2
 #
 # Created by Karoly Molnar <kmolnar@cirruscomputing.com>
 # Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved 
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -13,7 +13,7 @@
 # readable forms.
 #
 
-# Include eseri functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 # Mark start point in log file
@@ -182,16 +182,6 @@ fi
 # Open all libreoffice apps in un-maximized windows - writer, base and math already open un-maximized.
 sed -i -e 's|"ooSetupFactoryWindowAttributes"><value>,,,;4;</value>|"ooSetupFactoryWindowAttributes"><value/>|g' /usr/lib/libreoffice/share/registry/calc.xcd /usr/lib/libreoffice/share/registry/impress.xcd /usr/lib/libreoffice/share/registry/draw.xcd
 
-# Install NX
-dpkg -i $ARCHIVE_FOLDER/packages/nx/nx-3.5/*.deb
-
-# Deploy nxclient modification for hiding printer attach dialog
-dpkg-divert --add --rename --divert /usr/NX/bin/nxclient.bin /usr/NX/bin/nxclient
-install -o root -g root -m 755 -t /usr/NX/bin $ARCHIVE_FOLDER/files/usr/NX/bin/nxclient
-
-# Remove NXClient application links
-rm -f /etc/xdg/menus/applications-merged/nxclient.menu
-
 # Install more packages (These eventually need to be added to the eseri-desktop-openvz package as dependency)
 echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula boolean true" | debconf-set-selections
 aptGetInstall gnucash flashplugin-nonfree ttf-mscorefonts-installer unixodbc unrar zip unzip rar tofrodos db4.6-util gnucash-docs menu libnss3-tools sun-java6-plugin language-pack-gnome-en keepassx
@@ -259,30 +249,29 @@ fi
 aptGetInstall gnomenu
 
 # Set gnomenu defaults
-install -o root -g root -m 644 -t /usr/share/gconf/defaults/ $TEMPLATE_FOLDER/usr/share/gconf/defaults/99_CirrusOpen-gnomenu
-eseriReplaceValues /usr/share/gconf/defaults/99_CirrusOpen-gnomenu
+install -o root -g root -m 644 -t /usr/share/gconf/defaults/ $TEMPLATE_FOLDER/usr/share/gconf/defaults/99_EnterpriseLibre-gnomenu
+eseriReplaceValues /usr/share/gconf/defaults/99_EnterpriseLibre-gnomenu
 
 # Deploy files
 install -o root -g root -m 644 -t /etc/default/ $ARCHIVE_FOLDER/files/etc/default/locale
 install -o root -g root -m 644 -t /etc/firefox/pref/ $ARCHIVE_FOLDER/files/etc/firefox/pref/homepage.properties
 install -o root -g root -m 644 -t /etc/auth-client-config/profile.d $ARCHIVE_FOLDER/files/etc/auth-client-config/profile.d/eseri
-install -o root -g root -m 440 -t /etc/sudoers.d $ARCHIVE_FOLDER/files/etc/sudoers.d/CirrusOpenCloudManager
-install -o root -g root -m 440 -t /etc/sudoers.d $ARCHIVE_FOLDER/files/etc/sudoers.d/CirrusOpenNXDisconnect
-install -o root -g root -m 440 -t /etc/sudoers.d $ARCHIVE_FOLDER/files/etc/sudoers.d/CirrusOpenDSPAMTrain
+install -o root -g root -m 440 -t /etc/sudoers.d $ARCHIVE_FOLDER/files/etc/sudoers.d/EnterpriseLibreCloudManager
+install -o root -g root -m 440 -t /etc/sudoers.d $ARCHIVE_FOLDER/files/etc/sudoers.d/EnterpriseLibreLeaveSession
+install -o root -g root -m 440 -t /etc/sudoers.d $ARCHIVE_FOLDER/files/etc/sudoers.d/EnterpriseLibreDSPAMTrain
 install -o root -g root -m 440 -t /etc/sudoers.d $ARCHIVE_FOLDER/files/etc/sudoers.d/eseriman
 install -o root -g root -m 755 -t /usr/bin $ARCHIVE_FOLDER/files/usr/bin/bogofilter
 install -o root -g root -m 755 -t /usr/local/bin $ARCHIVE_FOLDER/files/usr/local/bin/eseriKrb5Renew
-install -o root -g root -m 755 -t /usr/local/bin $ARCHIVE_FOLDER/files/usr/local/bin/CirrusOpenLeaveSession
-install -o root -g root -m 700 -t /usr/local/bin $ARCHIVE_FOLDER/files/usr/local/bin/CirrusOpenCloudManager
-eseriReplaceValues /usr/local/bin/CirrusOpenCloudManager
-install -o root -g root -m 755 -d /usr/local/share/CirrusOpen
-install -o root -g root -m 755 -t /usr/local/share/CirrusOpen $ARCHIVE_FOLDER/files/usr/local/share/CirrusOpen/CirrusOpenLeaveSession.py
-install -o root -g root -m 755 -t /usr/local/share/CirrusOpen $ARCHIVE_FOLDER/files/usr/local/share/CirrusOpen/CirrusOpenNXDisconnect
-install -o root -g root -m 755 -t /usr/local/share/CirrusOpen $TEMPLATE_FOLDER/usr/local/share/CirrusOpen/CirrusOpenDSPAMTrain
-eseriReplaceValues /usr/local/share/CirrusOpen/CirrusOpenDSPAMTrain
-install -o root -g root -m 755 -d /usr/local/share/CirrusOpen/glade
-install -o root -g root -m 644 -t /usr/local/share/CirrusOpen/glade $ARCHIVE_FOLDER/files/usr/local/share/CirrusOpen/glade/CirrusOpenLeaveSession.glade
-install -o root -g root -m 644 -t /usr/local/share/CirrusOpen/glade $ARCHIVE_FOLDER/files/usr/local/share/CirrusOpen/glade/CirrusOpenCloudManager.glade
+install -o root -g root -m 700 -t /usr/local/bin $ARCHIVE_FOLDER/files/usr/local/bin/EnterpriseLibreLeaveSession
+install -o root -g root -m 700 -t /usr/local/bin $ARCHIVE_FOLDER/files/usr/local/bin/EnterpriseLibreCloudManager
+eseriReplaceValues /usr/local/bin/EnterpriseLibreCloudManager
+install -o root -g root -m 755 -d /usr/local/share/EnterpriseLibre
+install -o root -g root -m 755 -t /usr/local/share/EnterpriseLibre $ARCHIVE_FOLDER/files/usr/local/share/EnterpriseLibre/EnterpriseLibreLeaveSession.py
+install -o root -g root -m 755 -t /usr/local/share/EnterpriseLibre $TEMPLATE_FOLDER/usr/local/share/EnterpriseLibre/EnterpriseLibreDSPAMTrain
+eseriReplaceValues /usr/local/share/EnterpriseLibre/EnterpriseLibreDSPAMTrain
+install -o root -g root -m 755 -d /usr/local/share/EnterpriseLibre/glade
+install -o root -g root -m 644 -t /usr/local/share/EnterpriseLibre/glade $ARCHIVE_FOLDER/files/usr/local/share/EnterpriseLibre/glade/EnterpriseLibreLeaveSession.glade
+install -o root -g root -m 644 -t /usr/local/share/EnterpriseLibre/glade $ARCHIVE_FOLDER/files/usr/local/share/EnterpriseLibre/glade/EnterpriseLibreCloudManager.glade
 install -o root -g root -m 755 -d /usr/local/share/desktop-directories/
 install -o root -g root -m 644 -t /usr/local/share/desktop-directories/ $ARCHIVE_FOLDER/files/usr/local/share/desktop-directories/collaboration.directory
 install -o root -g root -m 644 -t /usr/local/share/desktop-directories/ $ARCHIVE_FOLDER/files/usr/local/share/desktop-directories/projects.directory
@@ -350,12 +339,12 @@ if [ $? -eq 0 ] ; then
 fi
 install -o root -g root -m 644 -t /usr/local/share/applications/ $ARCHIVE_FOLDER/files/usr/local/share/applications/gnucash.desktop
 install -o root -g root -m 644 -t /usr/local/share/applications/ $ARCHIVE_FOLDER/files/usr/local/share/applications/gnomecc.desktop
-install -o root -g root -m 644 -t /usr/local/share/applications/ $ARCHIVE_FOLDER/files/usr/local/share/applications/cirrusopen-cloudmanager.desktop
+install -o root -g root -m 644 -t /usr/local/share/applications/ $ARCHIVE_FOLDER/files/usr/local/share/applications/enterpriselibre-cloudmanager.desktop
 install -o root -g root -m 644 -t /usr/local/share/applications/ $ARCHIVE_FOLDER/files/usr/local/share/applications/gedit.desktop
 install -o root -g root -m 644 -t /usr/local/share/applications/ $ARCHIVE_FOLDER/files/usr/local/share/applications/keepassx.desktop
 install -o root -g root -m 755 -d /usr/local/share/icons/hicolor/64x64/apps/
-install -o root -g root -m 644 -t /usr/local/share/icons/hicolor/64x64/apps/ $ARCHIVE_FOLDER/files/usr/local/share/icons/hicolor/64x64/apps/EseriHelpAndSupport.png
-install -o root -g root -m 644 -t /usr/local/share/icons/hicolor/64x64/apps/ $ARCHIVE_FOLDER/files/usr/local/share/icons/hicolor/64x64/apps/CirrusOpenCloudManager.png
+install -o root -g root -m 644 -t /usr/local/share/icons/hicolor/64x64/apps/ $ARCHIVE_FOLDER/files/usr/local/share/icons/hicolor/64x64/apps/EnterpriseLibreHelpAndSupport.png
+install -o root -g root -m 644 -t /usr/local/share/icons/hicolor/64x64/apps/ $ARCHIVE_FOLDER/files/usr/local/share/icons/hicolor/64x64/apps/EnterpriseLibreCloudManager.png
 install -o root -g root -m 644 -t /usr/local/share/icons/hicolor/64x64/apps/ $ARCHIVE_FOLDER/files/usr/local/share/icons/hicolor/64x64/apps/drupal.png
 install -o root -g root -m 644 -t /usr/local/share/icons/hicolor/64x64/apps/ $ARCHIVE_FOLDER/files/usr/local/share/icons/hicolor/64x64/apps/mailinglists.png
 install -o root -g root -m 644 -t /usr/local/share/icons/hicolor/64x64/apps/ $ARCHIVE_FOLDER/files/usr/local/share/icons/hicolor/64x64/apps/wiki.png
@@ -415,20 +404,11 @@ install -o root -g root -m 644 -t /usr/local/share/eseri/ffautomation/shared $AR
 install -o root -g root -m 755 -d /usr/local/share/eseri/pidgin/
 install -o root -g root -m 755 -d /usr/local/share/mime/packages/
 install -o root -g root -m 755 -d /usr/local/share/icons/showtime/32x32/mimetypes/
-install -o root -g root -m 644 -t /usr/share/gconf/defaults/ $ARCHIVE_FOLDER/files/usr/share/gconf/defaults/99_CirrusOpen-artwork
-install -o root -g root -m 644 -t /usr/share/gconf/defaults/ $ARCHIVE_FOLDER/files/usr/share/gconf/defaults/99_CirrusOpen-metacity
-install -o root -g root -m 644 -t /usr/share/gconf/defaults/ $ARCHIVE_FOLDER/files/usr/share/gconf/defaults/99_CirrusOpen-panel-default-setup.entries
-install -o root -g root -m 755 -d /usr/share/themes/CirrusOpen/
-install -o root -g root -m 644 -t /usr/share/themes/CirrusOpen/ $ARCHIVE_FOLDER/files/usr/share/themes/CirrusOpen/index.theme 
-install -o root -g root -m 755 -d /usr/NX/scripts/eseriEvents/
-install -o root -g root -m 755 -t /usr/NX/scripts/eseriEvents/ $ARCHIVE_FOLDER/files/usr/NX/scripts/eseriEvents/NodeBeforeSessionClose
-install -o root -g root -m 755 -t /usr/NX/scripts/eseriEvents/ $ARCHIVE_FOLDER/files/usr/NX/scripts/eseriEvents/NodeAfterSessionReconnect
-install -o root -g root -m 755 -t /usr/NX/scripts/eseriEvents/ $ARCHIVE_FOLDER/files/usr/NX/scripts/eseriEvents/NodeAfterSessionClose
-install -o root -g root -m 755 -t /usr/NX/scripts/eseriEvents/ $ARCHIVE_FOLDER/files/usr/NX/scripts/eseriEvents/NodeBeforeSessionSuspend
-install -o root -g root -m 755 -t /usr/NX/scripts/eseriEvents/ $ARCHIVE_FOLDER/files/usr/NX/scripts/eseriEvents/NodeBeforeSessionReconnect
-install -o root -g root -m 755 -t /usr/NX/scripts/eseriEvents/ $ARCHIVE_FOLDER/files/usr/NX/scripts/eseriEvents/NodeAfterSessionStart
-install -o root -g root -m 755 -t /usr/NX/scripts/eseriEvents/ $ARCHIVE_FOLDER/files/usr/NX/scripts/eseriEvents/NodeAfterSessionSuspend
-install -o root -g root -m 755 -t /usr/NX/scripts/eseriEvents/ $ARCHIVE_FOLDER/files/usr/NX/scripts/eseriEvents/NodeBeforeSessionStart
+install -o root -g root -m 644 -t /usr/share/gconf/defaults/ $ARCHIVE_FOLDER/files/usr/share/gconf/defaults/99_EnterpriseLibre-artwork
+install -o root -g root -m 644 -t /usr/share/gconf/defaults/ $ARCHIVE_FOLDER/files/usr/share/gconf/defaults/99_EnterpriseLibre-metacity
+install -o root -g root -m 644 -t /usr/share/gconf/defaults/ $ARCHIVE_FOLDER/files/usr/share/gconf/defaults/99_EnterpriseLibre-panel-default-setup.entries
+install -o root -g root -m 755 -d /usr/share/themes/EnterpriseLibre/
+install -o root -g root -m 644 -t /usr/share/themes/EnterpriseLibre/ $ARCHIVE_FOLDER/files/usr/share/themes/EnterpriseLibre/index.theme
 install -o root -g root -m 755 -d /usr/share/gnomenu/Themes/Button/Ubuntu_Button_Gnomenu/
 install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Button/Ubuntu_Button_Gnomenu/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Button/Ubuntu_Button_Gnomenu/___start-here-glow.png
 install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Button/Ubuntu_Button_Gnomenu/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Button/Ubuntu_Button_Gnomenu/_start-here-glow.png
@@ -437,19 +417,19 @@ install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Button/Ubuntu_Button
 install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Button/Ubuntu_Button_Gnomenu/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Button/Ubuntu_Button_Gnomenu/start-here.png
 install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Button/Ubuntu_Button_Gnomenu/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Button/Ubuntu_Button_Gnomenu/themedata.xml
 install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Button/Ubuntu_Button_Gnomenu/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Button/Ubuntu_Button_Gnomenu/themepreview.png
-install -o root -g root -m 755 -d /usr/share/gnomenu/Themes/Menu/CirrusOpen/
-install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/CirrusOpen/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/CirrusOpen/CirrusOpen.png
-install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/CirrusOpen/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/CirrusOpen/applications-accessories.png
-install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/CirrusOpen/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/CirrusOpen/emblem-favorite.png
-install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/CirrusOpen/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/CirrusOpen/folder-documents.png
-install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/CirrusOpen/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/CirrusOpen/folder-recent.png
-install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/CirrusOpen/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/CirrusOpen/m_tab.png
-install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/CirrusOpen/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/CirrusOpen/search-frame.png
-install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/CirrusOpen/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/CirrusOpen/start-menu.png
-install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/CirrusOpen/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/CirrusOpen/system-search.png
-install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/CirrusOpen/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/CirrusOpen/system-shutdown.png
-install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/CirrusOpen/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/CirrusOpen/themedata.xml
-install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/CirrusOpen/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/CirrusOpen/themepreview.png
+install -o root -g root -m 755 -d /usr/share/gnomenu/Themes/Menu/EnterpriseLibre/
+install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/EnterpriseLibre/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/EnterpriseLibre/EnterpriseLibre.png
+install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/EnterpriseLibre/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/EnterpriseLibre/applications-accessories.png
+install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/EnterpriseLibre/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/EnterpriseLibre/emblem-favorite.png
+install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/EnterpriseLibre/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/EnterpriseLibre/folder-documents.png
+install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/EnterpriseLibre/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/EnterpriseLibre/folder-recent.png
+install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/EnterpriseLibre/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/EnterpriseLibre/m_tab.png
+install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/EnterpriseLibre/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/EnterpriseLibre/search-frame.png
+install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/EnterpriseLibre/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/EnterpriseLibre/start-menu.png
+install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/EnterpriseLibre/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/EnterpriseLibre/system-search.png
+install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/EnterpriseLibre/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/EnterpriseLibre/system-shutdown.png
+install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/EnterpriseLibre/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/EnterpriseLibre/themedata.xml
+install -o root -g root -m 644 -t /usr/share/gnomenu/Themes/Menu/EnterpriseLibre/ $ARCHIVE_FOLDER/files/usr/share/gnomenu/Themes/Menu/EnterpriseLibre/themepreview.png
 
 # Apply authentication configuration
 auth-client-config -p eseri -a
@@ -483,69 +463,6 @@ eseriReplaceValues $APPLICATION_ESERI_FOLDER/syncthing.desktop
 # Create the global shared folder 
 mkdir /srv/shared
 chmod go+w /srv/shared
-
-# Generate a new SSH key
-/usr/NX/scripts/setup/nxserver --keygen
-chown nx:root /usr/NX/home/nx/.ssh/authorized_keys2 && \
-chmod 0644 /usr/NX/home/nx/.ssh/authorized_keys2 && \
-chown nx:root /usr/NX/home/nx/.ssh/default.id_dsa.pub && \
-chmod 0644 /usr/NX/home/nx/.ssh/default.id_dsa.pub
-
-# Copy the new key to the result folder for further processing
-cp /usr/NX/share/keys/default.id_dsa.key $RESULT_FOLDER/
-
-# Modify the NX server configuration
-NX_SERVER_CONFIG=/usr/NX/etc/server.cfg
-sed -i '/^#SessionUserLimit/ a\
-SessionUserLimit = "1"' $NX_SERVER_CONFIG
-
-# Modify the NX node configuration
-NX_NODE_CONFIG=/usr/NX/etc/node.cfg
-sed -i '/^#AgentExtraOptions/ a\
-AgentExtraOptions = "-noshpix"' $NX_NODE_CONFIG
-sed -i '/^#UserScriptBeforeSessionStart/ a\
-UserScriptBeforeSessionStart = "/usr/NX/scripts/eseriEvents/NodeBeforeSessionStart"' $NX_NODE_CONFIG
-sed -i '/^#UserScriptAfterSessionStart/ a\
-UserScriptAfterSessionStart = "/usr/NX/scripts/eseriEvents/NodeAfterSessionStart"' $NX_NODE_CONFIG
-sed -i '/^#UserScriptBeforeSessionSuspend/ a\
-UserScriptBeforeSessionSuspend = "/usr/NX/scripts/eseriEvents/NodeBeforeSessionSuspend"' $NX_NODE_CONFIG
-sed -i '/^#UserScriptAfterSessionSuspend/ a\
-UserScriptAfterSessionSuspend = "/usr/NX/scripts/eseriEvents/NodeAfterSessionSuspend"' $NX_NODE_CONFIG
-sed -i '/^#UserScriptBeforeSessionClose/ a\
-UserScriptBeforeSessionClose = "/usr/NX/scripts/eseriEvents/NodeBeforeSessionClose"' $NX_NODE_CONFIG
-sed -i '/^#UserScriptAfterSessionClose/ a\
-UserScriptAfterSessionClose = "/usr/NX/scripts/eseriEvents/NodeAfterSessionClose"' $NX_NODE_CONFIG
-sed -i '/^#UserScriptBeforeSessionReconnect/ a\
-UserScriptBeforeSessionReconnect = "/usr/NX/scripts/eseriEvents/NodeBeforeSessionReconnect"' $NX_NODE_CONFIG
-sed -i '/^#UserScriptAfterSessionReconnect/ a\
-UserScriptAfterSessionReconnect = "/usr/NX/scripts/eseriEvents/NodeAfterSessionReconnect"' $NX_NODE_CONFIG
-sed -i '/^#EnableFileSharing/ a\
-EnableFileSharing = "1"' $NX_NODE_CONFIG
-sed -i 's/^MountShareProtocol =.*/MountShareProtocol = "both"/' $NX_NODE_CONFIG
-
-# Fine tune the SSH Daemon's config file
-sed -i '/PasswordAuthentication/d' /etc/ssh/sshd_config
-cat >>/etc/ssh/sshd_config <<EOF
-
-# Disallow users in mailonly group
-DenyGroups mailonly
-
-# Tunnelled clear text passwords authentication is enabled only on localhost for NX auth
-PasswordAuthentication no
-Match Address 127.0.0.1
-PasswordAuthentication yes
-Match Address $SMC_C3_IP_PRIVATE
-PasswordAuthentication yes
-EOF
-
-#Copy the SSH/authorized_keys2 file into /etc/skel with the right permissions
-if [ ! -d /etc/skel/.ssh ] ; then
-	mkdir /etc/skel/.ssh
-	chmod 700 /etc/skel/.ssh
-fi
-echo -n 'no-port-forwarding,no-agent-forwarding,command="/usr/NX/bin/nxnode" ' > /etc/skel/.ssh/authorized_keys2
-cat /usr/NX/etc/keys/node.localhost.id_dsa.pub >> /etc/skel/.ssh/authorized_keys2
-chmod 600 /etc/skel/.ssh/authorized_keys2
 
 # Set Firefox trusted uris for negotiation
 cat >>/etc/firefox/pref/firefox.js <<EOF
@@ -704,7 +621,7 @@ install -o root -g root -m 644 -t /etc/pam.d/ $ARCHIVE_FOLDER/files/etc/pam.d/gn
 install -o root -g root -m 644 -t /etc/xdg/autostart/ $ARCHIVE_FOLDER/files/etc/xdg/autostart/gnome-screensaver-command.desktop
 install -o root -g root -m 755 -t /usr/lib/gnome-screensaver $ARCHIVE_FOLDER/files/usr/lib/gnome-screensaver/gnome-screensaver-dialog
 install -o root -g root -m 644 -t /usr/share/gnome-screensaver $ARCHIVE_FOLDER/files/usr/share/gnome-screensaver/lock-dialog-default.ui
-install -o root -g root -m 644 -t /usr/share/gnome-screensaver $ARCHIVE_FOLDER/files/usr/share/gnome-screensaver/CirrusOpen.png
+install -o root -g root -m 644 -t /usr/share/gnome-screensaver $ARCHIVE_FOLDER/files/usr/share/gnome-screensaver/EnterpriseLibre.png
 
 install -o root -g root -m 644 -t /lib/security/ $ARCHIVE_FOLDER/files/lib/security/pam_obc.so
 
@@ -758,7 +675,7 @@ install -o root -g root -m 755 -t /usr/bin $ARCHIVE_FOLDER/files/usr/bin/gnome-p
 #Gnome Applet Reload script
 #This script detects when there is an applet failure and recovers from it at startup only.
 install -o root -g root -m 644 -t /etc/xdg/autostart/ $ARCHIVE_FOLDER/files/etc/xdg/autostart/gnome-applet-reload.desktop
-install -o root -g root -m 755 -t /usr/local/share/CirrusOpen $ARCHIVE_FOLDER/files/usr/local/share/CirrusOpen/CirrusOpenGnomeAppletReload
+install -o root -g root -m 755 -t /usr/local/share/EnterpriseLibre $ARCHIVE_FOLDER/files/usr/local/share/EnterpriseLibre/EnterpriseLibreGnomeAppletReload
 
 # Timezone Config extra pkg
 aptGetInstall python-tz 
@@ -844,5 +761,134 @@ EOF
 # Install a script to set the total procs limit for nagios
 install -o root -g root -m 440 -t /etc/sudoers.d $ARCHIVE_FOLDER/files/etc/sudoers.d/eseriConfigureNagiosProcsLimit
 install -o root -g root -m 700 -t $ESERIMAN_HOME/bin/ $ARCHIVE_FOLDER/files/$ESERIMAN_HOME/bin/eseriConfigureNagiosProcsLimit
+
+hasCapability NoMachine
+if [ $? -eq 0 ] ; then
+    # Install NX
+    dpkg -i $ARCHIVE_FOLDER/packages/nx/nx-3.5/*.deb
+
+    # Deploy nxclient modification for hiding printer attach dialog
+    dpkg-divert --add --rename --divert /usr/NX/bin/nxclient.bin /usr/NX/bin/nxclient
+    install -o root -g root -m 755 -t /usr/NX/bin $ARCHIVE_FOLDER/files/usr/NX/bin/nxclient
+
+    # Remove NXClient application links
+    rm -f /etc/xdg/menus/applications-merged/nxclient.menu
+
+    install -o root -g root -m 755 -d /usr/NX/scripts/eseriEvents/
+    install -o root -g root -m 755 -t /usr/NX/scripts/eseriEvents/ $ARCHIVE_FOLDER/files/usr/NX/scripts/eseriEvents/NodeBeforeSessionClose
+    install -o root -g root -m 755 -t /usr/NX/scripts/eseriEvents/ $ARCHIVE_FOLDER/files/usr/NX/scripts/eseriEvents/NodeAfterSessionReconnect
+    install -o root -g root -m 755 -t /usr/NX/scripts/eseriEvents/ $ARCHIVE_FOLDER/files/usr/NX/scripts/eseriEvents/NodeAfterSessionClose
+    install -o root -g root -m 755 -t /usr/NX/scripts/eseriEvents/ $ARCHIVE_FOLDER/files/usr/NX/scripts/eseriEvents/NodeBeforeSessionSuspend
+    install -o root -g root -m 755 -t /usr/NX/scripts/eseriEvents/ $ARCHIVE_FOLDER/files/usr/NX/scripts/eseriEvents/NodeBeforeSessionReconnect
+    install -o root -g root -m 755 -t /usr/NX/scripts/eseriEvents/ $ARCHIVE_FOLDER/files/usr/NX/scripts/eseriEvents/NodeAfterSessionStart
+    install -o root -g root -m 755 -t /usr/NX/scripts/eseriEvents/ $ARCHIVE_FOLDER/files/usr/NX/scripts/eseriEvents/NodeAfterSessionSuspend
+    install -o root -g root -m 755 -t /usr/NX/scripts/eseriEvents/ $ARCHIVE_FOLDER/files/usr/NX/scripts/eseriEvents/NodeBeforeSessionStart
+
+    # Generate a new SSH key
+    /usr/NX/scripts/setup/nxserver --keygen
+    chown nx:root /usr/NX/home/nx/.ssh/authorized_keys2 && \
+	chmod 0644 /usr/NX/home/nx/.ssh/authorized_keys2 && \
+	chown nx:root /usr/NX/home/nx/.ssh/default.id_dsa.pub && \
+	chmod 0644 /usr/NX/home/nx/.ssh/default.id_dsa.pub
+    
+    # Modify the NX server configuration
+    NX_SERVER_CONFIG=/usr/NX/etc/server.cfg
+    sed -i '/^#SessionUserLimit/ a\
+SessionUserLimit = "1"' $NX_SERVER_CONFIG
+
+    # Modify the NX node configuration
+    NX_NODE_CONFIG=/usr/NX/etc/node.cfg
+    sed -i '/^#AgentExtraOptions/ a\
+AgentExtraOptions = "-noshpix"' $NX_NODE_CONFIG
+    sed -i '/^#UserScriptBeforeSessionStart/ a\
+UserScriptBeforeSessionStart = "/usr/NX/scripts/eseriEvents/NodeBeforeSessionStart"' $NX_NODE_CONFIG
+    sed -i '/^#UserScriptAfterSessionStart/ a\
+UserScriptAfterSessionStart = "/usr/NX/scripts/eseriEvents/NodeAfterSessionStart"' $NX_NODE_CONFIG
+    sed -i '/^#UserScriptBeforeSessionSuspend/ a\
+UserScriptBeforeSessionSuspend = "/usr/NX/scripts/eseriEvents/NodeBeforeSessionSuspend"' $NX_NODE_CONFIG
+    sed -i '/^#UserScriptAfterSessionSuspend/ a\
+UserScriptAfterSessionSuspend = "/usr/NX/scripts/eseriEvents/NodeAfterSessionSuspend"' $NX_NODE_CONFIG
+    sed -i '/^#UserScriptBeforeSessionClose/ a\
+UserScriptBeforeSessionClose = "/usr/NX/scripts/eseriEvents/NodeBeforeSessionClose"' $NX_NODE_CONFIG
+    sed -i '/^#UserScriptAfterSessionClose/ a\
+UserScriptAfterSessionClose = "/usr/NX/scripts/eseriEvents/NodeAfterSessionClose"' $NX_NODE_CONFIG
+    sed -i '/^#UserScriptBeforeSessionReconnect/ a\
+UserScriptBeforeSessionReconnect = "/usr/NX/scripts/eseriEvents/NodeBeforeSessionReconnect"' $NX_NODE_CONFIG
+    sed -i '/^#UserScriptAfterSessionReconnect/ a\
+UserScriptAfterSessionReconnect = "/usr/NX/scripts/eseriEvents/NodeAfterSessionReconnect"' $NX_NODE_CONFIG
+    sed -i '/^#EnableFileSharing/ a\
+EnableFileSharing = "1"' $NX_NODE_CONFIG
+    sed -i 's/^MountShareProtocol =.*/MountShareProtocol = "both"/' $NX_NODE_CONFIG
+
+    # Copy the new key to the result folder for further processing - used for user login
+    cp /usr/NX/share/keys/default.id_dsa.key $RESULT_FOLDER/default.id_dsa.key
+
+    # Fine tune the SSH Daemon's config file
+    sed -i '/PasswordAuthentication/d' /etc/ssh/sshd_config
+    cat >>/etc/ssh/sshd_config <<EOF
+
+# Disallow users in mailonly group
+DenyGroups mailonly
+
+# Tunnelled clear text passwords authentication is enabled only on localhost for NX auth
+PasswordAuthentication no
+Match Address 127.0.0.1
+PasswordAuthentication yes
+Match Address $SMC_C3_IP_PRIVATE
+PasswordAuthentication yes
+EOF
+
+    #Copy the SSH/authorized_keys2 file into /etc/skel with the right permissions
+    if [ ! -d /etc/skel/.ssh ] ; then
+	mkdir /etc/skel/.ssh
+	chmod 700 /etc/skel/.ssh
+    fi
+    echo -n 'no-port-forwarding,no-agent-forwarding,command="/usr/NX/bin/nxnode" ' > /etc/skel/.ssh/authorized_keys2
+    cat /usr/NX/etc/keys/node.localhost.id_dsa.pub >> /etc/skel/.ssh/authorized_keys2
+    chmod 600 /etc/skel/.ssh/authorized_keys2
+fi
+
+hasCapability X2Go
+if [ $? -eq 0 ] ; then
+    aptGetInstall gnome-colors-common libconfig-simple-perl pwgen libdbd-sqlite3-perl libfile-basedir-perl libfile-which-perl libcapture-tiny-perl libdbd-pg-perl
+    dpkg -i $ARCHIVE_FOLDER/packages/x2go/*
+
+    install -o root -g root -m 755 -t /usr/lib/x2go/extensions/post-resume.d/ $ARCHIVE_FOLDER/files/usr/lib/x2go/extensions/post-resume.d/010_post_resume
+    install -o root -g root -m 755 -t /usr/lib/x2go/extensions/post-start.d/ $ARCHIVE_FOLDER/files/usr/lib/x2go/extensions/post-start.d/010_post_start
+    install -o root -g root -m 755 -t /usr/lib/x2go/extensions/post-suspend.d/ $ARCHIVE_FOLDER/files/usr/lib/x2go/extensions/post-suspend.d/010_post_suspend
+    install -o root -g root -m 755 -t /usr/lib/x2go/extensions/post-terminate.d/ $ARCHIVE_FOLDER/files/usr/lib/x2go/extensions/post-terminate.d/010_post_terminate
+    install -o root -g root -m 755 -t /usr/lib/x2go/extensions/pre-resume.d/ $ARCHIVE_FOLDER/files/usr/lib/x2go/extensions/pre-resume.d/010_pre_resume
+    install -o root -g root -m 755 -t /usr/lib/x2go/extensions/pre-start.d/ $ARCHIVE_FOLDER/files/usr/lib/x2go/extensions/pre-start.d/010_pre_start
+    install -o root -g root -m 755 -t /usr/lib/x2go/extensions/pre-suspend.d/ $ARCHIVE_FOLDER/files/usr/lib/x2go/extensions/pre-suspend.d/010_pre_suspend
+    install -o root -g root -m 755 -t /usr/lib/x2go/extensions/pre-terminate.d/ $ARCHIVE_FOLDER/files/usr/lib/x2go/extensions/pre-terminate.d/010_pre_terminate
+
+    # Copy the SSH DSA key to the result folder for further processing - not used after replacement of NoMachine.
+    cp /etc/ssh/ssh_host_dsa_key $RESULT_FOLDER/default.id_dsa.key
+    
+    # Fine tune the SSH Daemon's config file
+    sed -i '/PasswordAuthentication/d' /etc/ssh/sshd_config
+    cat >>/etc/ssh/sshd_config <<EOF
+
+# Disallow users in mailonly group
+DenyGroups mailonly
+
+PasswordAuthentication yes
+Match Address 127.0.0.1
+PasswordAuthentication yes
+Match Address $SMC_C3_IP_PRIVATE
+PasswordAuthentication yes
+EOF
+
+    #Copy the SSH/authorized_keys2 file into /etc/skel with the right permissions - not used after replacement of NoMachine.
+    if [ ! -d /etc/skel/.ssh ] ; then
+	mkdir /etc/skel/.ssh
+	chmod 700 /etc/skel/.ssh
+    fi
+    cat /etc/ssh/ssh_host_dsa_key.pub >> /etc/skel/.ssh/authorized_keys2
+    chmod 600 /etc/skel/.ssh/authorized_keys2
+fi
+
+# Evolution cannot connect to IMAP server with SSL3 disabled. Installed the following compiled package which includes evolution poodle patch.
+dpkg -i $ARCHIVE_FOLDER/packages/evolution/evolution-data-server*.deb
 
 exit 0
