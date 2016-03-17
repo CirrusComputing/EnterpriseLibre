@@ -1,0 +1,110 @@
+#!/bin/bash
+########################
+##### DO NOT EDIT! #####
+########################
+#
+# Open X2Go Client session - OS X - v1.0
+#
+# Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+SESSION_ID=[-SESSION_ID-]
+SESSION_NAME=[-SESSION_NAME-]
+USERNAME=[-USERNAME-]
+SERVER_HOST=[-SERVER_HOST-]
+SERVER_PORT=[-SERVER_PORT-]
+PROXY_ENABLED=[-PROXY_ENABLED-]
+PROXY_HOST=[-PROXY_HOST-]
+PROXY_PORT=[-PROXY_PORT-]
+RESOLUTION_WIDTH=[-RESOLUTION_WIDTH-]
+RESOLUTION_HEIGHT=[-RESOLUTION_HEIGHT-]
+FULLSCREEN=[-FULLSCREEN-]
+CONNECTION_SPEED=[-CONNECTION_SPEED-]
+
+SESSION_CONF_FILE=$HOME/.x2goclient/session-$SESSION_NAME-$SESSION_ID
+SESSION_CONF="[$SESSION_ID]
+speed=$CONNECTION_SPEED
+pack=16m-jpeg
+quality=9
+fstunnel=true
+export=
+iconvto=UTF-8
+iconvfrom=ISO8859-1
+useiconv=false
+fullscreen=$FULLSCREEN
+multidisp=false
+display=1
+maxdim=false
+rdpclient=rdesktop
+directrdpsettings=
+width=$RESOLUTION_WIDTH
+height=$RESOLUTION_HEIGHT
+dpi=96
+setdpi=true
+xinerama=false
+clipboard=both
+usekbd=true
+type=auto
+sound=true
+soundsystem=pulse
+startsoundsystem=true
+soundtunnel=true
+defsndport=true
+sndport=4713
+print=true
+name=$SESSION_NAME
+icon=:/img/icons/128x128/x2gosession.png
+host=$SERVER_HOST
+user=$USERNAME
+key=
+rdpport=3389
+sshport=$SERVER_PORT
+autologin=false
+krblogin=false
+krbdelegation=false
+directrdp=false
+rootless=false
+published=false
+applications=WWWBROWSER, MAILCLIENT, OFFICE, TERMINAL
+command=GNOME
+rdpoptions=
+rdpserver=
+xdmcpserver=localhost
+usesshproxy=$PROXY_ENABLED
+sshproxytype=HTTP
+sshproxyuser=
+sshproxykeyfile=
+sshproxyhost=$PROXY_HOST
+sshproxyport=$PROXY_PORT
+sshproxysamepass=true
+sshproxysameuser=true
+sshproxyautologin=false
+sshproxykrblogin=false
+"
+
+X2GOCLIENT_PATH=/Applications/x2goclient.app
+if ! ls "$X2GOCLIENT_PATH" > /dev/null 2>&1; then
+    X2GOCLIENT_PATH=$HOME/Applications/x2goclient.app
+    if ! ls "$X2GOCLIENT_PATH" > /dev/null 2>&1; then
+	X2GOCLIENT_PATH=$(system_profiler SPApplicationsDataType | grep -i x2goclient | grep Location | awk 'NR==1{print $2}')
+	if [ -z "$X2GOCLIENT_PATH" ]; then
+	    echo "Please install the X2Go Client first..."
+	    exit 1
+	fi
+    fi
+fi
+
+mkdir -p ~/.x2goclient
+
+[ ! -f $SESSION_CONF_FILE ] && echo "$SESSION_CONF" > $SESSION_CONF_FILE
+
+open -n -a "$X2GOCLIENT_PATH" --args --portable --session-conf="$SESSION_CONF_FILE" --sessionid="$SESSION_ID"
+
+exit 0

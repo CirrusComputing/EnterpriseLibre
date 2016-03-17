@@ -1,0 +1,117 @@
+::::::::::::::::::::::::
+::::: DO NOT EDIT! :::::
+::::::::::::::::::::::::
+::
+:: Open X2Go Client session - Windows - v1.0
+::
+:: Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
+::
+:: Copyright (c) 1996-2016 Free Open Source Solutions Inc.
+:: All Rights Reserved
+::
+:: Free Open Source Solutions Inc. owns and reserves all rights, title,
+:: and interest in and to this software in both machine and human
+:: readable forms.
+::
+
+@set SESSION_ID=[-SESSION_ID-]
+@set SESSION_NAME=[-SESSION_NAME-]
+@set USERNAME=[-USERNAME-]
+@set SERVER_HOST=[-SERVER_HOST-]
+@set SERVER_PORT=[-SERVER_PORT-]
+@set PROXY_ENABLED=[-PROXY_ENABLED-]
+@set PROXY_HOST=[-PROXY_HOST-]
+@set PROXY_PORT=[-PROXY_PORT-]
+@set RESOLUTION_WIDTH=[-RESOLUTION_WIDTH-]
+@set RESOLUTION_HEIGHT=[-RESOLUTION_HEIGHT-]
+@set FULLSCREEN=[-FULLSCREEN-]
+@set CONNECTION_SPEED=[-CONNECTION_SPEED-]
+
+@set SESSION_CONF_FILE=%HOMEPATH%\.x2goclient\session-%SESSION_NAME%-%SESSION_ID%
+@setlocal enableDelayedExpansion
+@set NL=^
+
+
+@set SESSION_CONF=[%SESSION_ID%]!NL!
+@set SESSION_CONF=!SESSION_CONF!!NL!speed=%CONNECTION_SPEED%
+@set SESSION_CONF=!SESSION_CONF!!NL!pack=16m-jpeg
+@set SESSION_CONF=!SESSION_CONF!!NL!quality=9
+@set SESSION_CONF=!SESSION_CONF!!NL!fstunnel=true
+@set SESSION_CONF=!SESSION_CONF!!NL!export=
+@set SESSION_CONF=!SESSION_CONF!!NL!iconvto=UTF-8
+@set SESSION_CONF=!SESSION_CONF!!NL!iconvfrom=ISO8859-1
+@set SESSION_CONF=!SESSION_CONF!!NL!useiconv=false
+@set SESSION_CONF=!SESSION_CONF!!NL!fullscreen=%FULLSCREEN%
+@set SESSION_CONF=!SESSION_CONF!!NL!SESSION_CONFdisp=false
+@set SESSION_CONF=!SESSION_CONF!!NL!display=1
+@set SESSION_CONF=!SESSION_CONF!!NL!maxdim=false
+@set SESSION_CONF=!SESSION_CONF!!NL!rdpclient=rdesktop
+@set SESSION_CONF=!SESSION_CONF!!NL!directrdpsettings=
+@set SESSION_CONF=!SESSION_CONF!!NL!width=%RESOLUTION_WIDTH%
+@set SESSION_CONF=!SESSION_CONF!!NL!height=%RESOLUTION_HEIGHT%
+@set SESSION_CONF=!SESSION_CONF!!NL!dpi=96
+@set SESSION_CONF=!SESSION_CONF!!NL!setdpi=true
+@set SESSION_CONF=!SESSION_CONF!!NL!xinerama=false
+@set SESSION_CONF=!SESSION_CONF!!NL!clipboard=both
+@set SESSION_CONF=!SESSION_CONF!!NL!usekbd=true
+@set SESSION_CONF=!SESSION_CONF!!NL!type=auto
+@set SESSION_CONF=!SESSION_CONF!!NL!sound=true
+@set SESSION_CONF=!SESSION_CONF!!NL!soundsystem=pulse
+@set SESSION_CONF=!SESSION_CONF!!NL!startsoundsystem=true
+@set SESSION_CONF=!SESSION_CONF!!NL!soundtunnel=true
+@set SESSION_CONF=!SESSION_CONF!!NL!defsndport=true
+@set SESSION_CONF=!SESSION_CONF!!NL!sndport=4713
+@set SESSION_CONF=!SESSION_CONF!!NL!print=true
+@set SESSION_CONF=!SESSION_CONF!!NL!name=%SESSION_NAME%
+@set SESSION_CONF=!SESSION_CONF!!NL!icon=:/img/icons/128x128/x2gosession.png
+@set SESSION_CONF=!SESSION_CONF!!NL!host=%SERVER_HOST%
+@set SESSION_CONF=!SESSION_CONF!!NL!user=%USERNAME%
+@set SESSION_CONF=!SESSION_CONF!!NL!key=
+@set SESSION_CONF=!SESSION_CONF!!NL!rdpport=3389
+@set SESSION_CONF=!SESSION_CONF!!NL!sshport=%SERVER_PORT%
+@set SESSION_CONF=!SESSION_CONF!!NL!autologin=false
+@set SESSION_CONF=!SESSION_CONF!!NL!krblogin=false
+@set SESSION_CONF=!SESSION_CONF!!NL!krbdelegation=false
+@set SESSION_CONF=!SESSION_CONF!!NL!directrdp=false
+@set SESSION_CONF=!SESSION_CONF!!NL!rootless=false
+@set SESSION_CONF=!SESSION_CONF!!NL!published=false
+@set SESSION_CONF=!SESSION_CONF!!NL!applications=WWWBROWSER, MAILCLIENT, OFFICE, TERMINAL
+@set SESSION_CONF=!SESSION_CONF!!NL!command=GNOME
+@set SESSION_CONF=!SESSION_CONF!!NL!rdpoptions=
+@set SESSION_CONF=!SESSION_CONF!!NL!rdpserver=
+@set SESSION_CONF=!SESSION_CONF!!NL!xdmcpserver=localhost
+@set SESSION_CONF=!SESSION_CONF!!NL!usesshproxy=%PROXY_ENABLED%
+@set SESSION_CONF=!SESSION_CONF!!NL!sshproxytype=HTTP
+@set SESSION_CONF=!SESSION_CONF!!NL!sshproxyuser=
+@set SESSION_CONF=!SESSION_CONF!!NL!sshproxykeyfile=
+@set SESSION_CONF=!SESSION_CONF!!NL!sshproxyhost=%PROXY_HOST%
+@set SESSION_CONF=!SESSION_CONF!!NL!sshproxyport=%PROXY_PORT%
+@set SESSION_CONF=!SESSION_CONF!!NL!sshproxysamepass=true
+@set SESSION_CONF=!SESSION_CONF!!NL!sshproxysameuser=true
+@set SESSION_CONF=!SESSION_CONF!!NL!sshproxyautologin=false
+@set SESSION_CONF=!SESSION_CONF!!NL!sshproxykrblogin=false
+@set SESSION_CONF=!SESSION_CONF!!NL!
+
+@set X2GOCLIENT_PATH_REGKEY=HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\x2goclient
+@echo off
+REG QUERY "%X2GOCLIENT_PATH_REGKEY%" /v InstallLocation >nul 2>&1
+@if %ERRORLEVEL% EQU 1 (
+	@setlocal enableDelayedExpansion
+	@set X2GOCLIENT_PATH_REGKEY=HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\x2goclient
+	REG QUERY "!X2GOCLIENT_PATH_REGKEY!" /v InstallLocation >nul 2>&1
+	@if !ERRORLEVEL! EQU 1 (
+		@echo Please install the X2Go Client first...
+		@pause
+		@exit
+	)
+)
+@for /f "tokens=2*" %%a in ('REG QUERY "%X2GOCLIENT_PATH_REGKEY%" /v InstallLocation') do set "X2GOCLIENT_PATH=%%~b"
+
+@echo off
+mkdir "%HOMEPATH%\.x2goclient" >nul 2>&1
+
+@if not exist "%SESSION_CONF_FILE%" (
+	@echo !SESSION_CONF! > "%SESSION_CONF_FILE%"
+)
+
+@start "" "%X2GOCLIENT_PATH%"\x2goclient.exe --portable --session-conf="%SESSION_CONF_FILE%" --sessionid="%SESSION_ID%"
