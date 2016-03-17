@@ -1,6 +1,10 @@
-<html><body>
-<p>Dear [%=firstname%] [%=lastname%],</p>
-<p>Your Cloud is now being created at CirrusComputing! You can expect to log in to your new Cloud within a few hours. You will receive a welcome e-mail with details on your account when your Cloud is ready.</p>
-<p>Sincerely,</p>
-<p>The CirrusComputing Team</p>
-</body></html>
+<html>
+ <body>
+   <p>Dear [%=firstname%] [%=lastname%],</p>
+   <p>Your Cloud is now being created at EnterpriseLibre! You can expect to log in to your new Cloud within a few hours. You will receive a welcome e-mail with details on your account when your Cloud is ready.</p>
+<p>Sincerely,<p>
+</p>The EnterpriseLibre Team </p>
+---
+  <p>You received this email because you just subscribed to an EnterpriseLibre cloud. If this email reached you in error for any reason, please let us know immediately.</p>
+ </body>
+</html>

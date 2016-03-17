@@ -1,9 +1,13 @@
 <html>
-<body>
-<p>Dear Admin,</p>
-<p>A customer tried to create the following organization with an Email Domain (or corresponding Network Name) that is used by another organization. Please clean the existing organization first before running C4.</p>
-<p>Organization's Formal Name: [%=firstname%] </p>
-<p>Email Domain: [%=lastname%] </p>
-<p>Network Name: [%=lastname%] </p>
-</body>
+ <body>
+   <p>Dear Admin,</p>
+   <p>A customer tried to create the following organization with an Email Domain (or corresponding Network Name) that is used by another organization. Please clean the existing organization first before running C4.</p>
+   <p>Organization's Formal Name: [%=firstname%] </p>
+   <p>Email Domain: [%=lastname%] </p>
+   <p>Network Name: [%=lastname%] </p>
+<p>Sincerely,</p>
+<p>The EnterpriseLibre Team </p>
+---
+  <p>You received this email because you just changed the settings of your EnterpriseLibre cloud. If this email reached you in error for any reason, please let us know immediately.</p>
+ </body>
 </html>
