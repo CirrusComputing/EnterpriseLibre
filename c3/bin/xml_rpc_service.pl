@@ -1,12 +1,12 @@
 #!/usr/bin/perl -w
 #
-# xml_rpc_service.pl - v9.1
+# xml_rpc_service.pl - v9.2
 #
 # XML RPC Service for C3 host. Responsible for creation of new users, Changing user passwords, deleting old users, etc
 #
 # Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved 
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -27,6 +27,7 @@ use threads;
 use threads::shared;
 use Thread::Queue;
 use Config::General;
+use MIME::Lite::TT;
 use MIME::Lite::TT::HTML;
 use XML::Simple;
 use Comms qw(ssh_key get_system_anchor_domain);
@@ -358,9 +359,8 @@ sub makeUsername{
 	return $username;
 }
 
-sub sendEmail{
-    my ($userrealm, $from, $to, $cc, $bcc, $subject, $tpl_txt, $tpl_html, $params) = @_;
-
+sub realToAddress{
+    my ($to) = @_;
     # Additional code to make sure that email is not sent to the superuser's cloud address incase domain version is 2.11 or 2.12
     my $tdb_conn = DBI->connect("dbi:Pg:dbname=$DBNAME;host=$DBHOST", "$DBUSER", "$DBPASS") || fail "Failed to establish database link from second thread";
     my ($domain_config_version) = $tdb_conn->selectall_arrayref("SELECT config_version FROM network.domain_config WHERE organization = (SELECT id FROM network.organization WHERE network_name = ?)", {}, $userrealm)->[0]->[0];
@@ -374,7 +374,12 @@ sub sendEmail{
 	    $to = $admin_details->{'real_email'};
 	}
     }
+    return $to;
+}
 
+sub sendEmail{
+    my ($userrealm, $from, $to, $cc, $bcc, $subject, $tpl_txt, $tpl_html, $params) = @_;
+    $to = realToAddress($to);
     # Send email
     my %options;
     $options{'INCLUDE_PATH'} = $MAILTEMPLATEDIR;
@@ -394,6 +399,40 @@ sub sendEmail{
     unless ($msg->send()) {
 	mylog ("Failed to send e-mail");
     }
+}
+
+sub sendEmailAttachment{
+    my ($userrealm, $from, $to, $cc, $bcc, $subject, $tpl_html, $content_type, $att_type, $att_path, $att_name, $params) = @_;
+    $to = realToAddress($to);
+    # Send email
+    my %options;
+    $options{'INCLUDE_PATH'} = $MAILTEMPLATEDIR;
+    my $msg;
+    $msg = MIME::Lite::TT->new(
+	From => $from,
+	To =>  $to,
+	Cc => $cc,
+	Bcc => $bcc,
+	Subject => $subject,
+	Template => $tpl_html,
+	TmplOptions => \%options,
+	TmplParams => \%$params
+	);
+    $msg->attr('content-type', $content_type);
+    $msg->attach (
+	Encoding => 'base64',
+	Type => $att_type,
+	Path => "$att_path/$att_name",
+	Filename => $att_name,
+	Id => $att_name,
+	Disposition => 'inline'
+	) or die "Error adding : $!\n";
+
+    unless ($msg->send()) {
+	mylog ("Failed to send e-mail");
+    }
+
+    ($att_path eq '/tmp') ? (`rm -f "$att_path/$att_name"`) : ();
 }
 
 sub sendUserFailMail{
@@ -548,7 +587,7 @@ END_SQL2
 	    $params{'openerp_master_password'} = $openerp_master_pw;
 	}
 
-	$subject = 'Your cloud in Cirrus Open';
+	$subject = 'Your cloud in EnterpriseLibre';
 	$template = 'cloudcapability_config_message_itman';
 	
 	#Getting the Super User details from the database.
@@ -753,31 +792,78 @@ sub processNewUsers{
 			    sendCloudCapabilityMail($userrealm);
 			}
 
+			my $caps = $tdb_conn->selectall_arrayref("SELECT name FROM packages.capabilities WHERE capid IN (SELECT capability FROM packages.organizationcapabilities WHERE organization = (SELECT id from network.organization WHERE network_name=?) and enabled = ?)", {}, $userrealm, "t");
+			my $uses_x2go = 0;
+			my $uses_nomachine = 0;
+			foreach my $cap (@{ $caps }){
+			    if ($cap->[0] eq 'X2Go'){$uses_x2go = 1;}
+			    if ($cap->[0] eq 'NoMachine'){$uses_nomachine = 1;}
+			}
+			
 			#Send success e-mail to the user
 			my %params;
-			$params{'first_name'} = $first_name;
-			$params{'last_name'} = $last_name;
+			($number_of_users == 1) ? ($params{'full_name'} = "Superuser") : ($params{'full_name'} = "$first_name $last_name");
 			$params{'username'} = $username;
 			$params{'password'} = $password;
 			$params{'email_prefix'} = $email_prefix;
 			$params{'domain'} = $admin_details->{'email_domain'};
 			$params{'system_anchor_domain'} = $system_anchor_domain;
-			sendEmail($userrealm,
-				  $FROMEMAILADDRESS,
-				  $params{'email_prefix'} . "@" . $admin_details->{'email_domain'},
-				  $user_email,
-				  $BCCEMAILADDRESS,
-				  'Welcome to Cirrus Open',
-				  'welcome_message_user.txt.tt',
-				  'welcome_message_user.html.tt',
-				  \%params);
-			
+			$params{'x2go'} = $uses_x2go;
+			$params{'nomachine'} = $uses_nomachine;
+
+			if ($uses_x2go == 1){
+			    my $short_domain = `DOMAIN=$admin_details->{'email_domain'}; echo \${DOMAIN%%.*}`;
+			    chomp($short_domain);
+			    my ($alias_domain) = $tdb_conn->selectall_arrayref("SELECT alias_domain FROM network.domain_config WHERE organization = (SELECT id FROM network.organization WHERE network_name = ?)", {}, $userrealm)->[0]->[0];
+			    my $session_id = `date +"%Y%m%d%H%M%S000"`;
+			    chomp($session_id);
+			    my $session_name = "$username-$short_domain";
+			    my $server_host = "desktop.$alias_domain";
+			    my $server_port = '80';
+			    my $proxy_enabled = 'true';
+			    my $proxy_host = "desktop.$alias_domain";
+			    my $proxy_port = '80';
+			    my $fullscreen = 'false';
+			    my $resolution_width = '800';
+			    my $resolution_height = '600';
+			    my $connection_speed = '2';
+			    `mkdir -p /tmp/$session_name`;
+			    `cat $ENV{'HOME'}/bin/nx_templates/x2go_windows.template | sed -e "s|\\[-SESSION_ID-\\]|$session_id|;s|\\[-SESSION_NAME-\\]|$session_name|;s|\\[-USERNAME-\\]|$username|;s|\\[-SERVER_HOST-\\]|$server_host|;s|\\[-SERVER_PORT-\\]|$server_port|;s|\\[-PROXY_ENABLED-\\]|$proxy_enabled|;s|\\[-PROXY_HOST-\\]|$proxy_host|;s|\\[-PROXY_PORT-\\]|$proxy_port|;s|\\[-RESOLUTION_WIDTH-\\]|$resolution_width|;s|\\[-RESOLUTION_HEIGHT-\\]|$resolution_height|;s|\\[-FULLSCREEN-\\]|$fullscreen|;s|\\[-CONNECTION_SPEED-\\]|$connection_speed|" > /tmp/$session_name/$session_name-windows.bat`;
+			    `cat $ENV{'HOME'}/bin/nx_templates/x2go_linux.template | sed -e "s|\\[-SESSION_ID-\\]|$session_id|;s|\\[-SESSION_NAME-\\]|$session_name|;s|\\[-USERNAME-\\]|$username|;s|\\[-SERVER_HOST-\\]|$server_host|;s|\\[-SERVER_PORT-\\]|$server_port|;s|\\[-PROXY_ENABLED-\\]|$proxy_enabled|;s|\\[-PROXY_HOST-\\]|$proxy_host|;s|\\[-PROXY_PORT-\\]|$proxy_port|;s|\\[-RESOLUTION_WIDTH-\\]|$resolution_width|;s|\\[-RESOLUTION_HEIGHT-\\]|$resolution_height|;s|\\[-FULLSCREEN-\\]|$fullscreen|;s|\\[-CONNECTION_SPEED-\\]|$connection_speed|" > /tmp/$session_name/$session_name-linux.sh`;
+			    `cat $ENV{'HOME'}/bin/nx_templates/x2go_osx.template | sed -e "s|\\[-SESSION_ID-\\]|$session_id|;s|\\[-SESSION_NAME-\\]|$session_name|;s|\\[-USERNAME-\\]|$username|;s|\\[-SERVER_HOST-\\]|$server_host|;s|\\[-SERVER_PORT-\\]|$server_port|;s|\\[-PROXY_ENABLED-\\]|$proxy_enabled|;s|\\[-PROXY_HOST-\\]|$proxy_host|;s|\\[-PROXY_PORT-\\]|$proxy_port|;s|\\[-RESOLUTION_WIDTH-\\]|$resolution_width|;s|\\[-RESOLUTION_HEIGHT-\\]|$resolution_height|;s|\\[-FULLSCREEN-\\]|$fullscreen|;s|\\[-CONNECTION_SPEED-\\]|$connection_speed|" > /tmp/$session_name/$session_name-mac.command`;
+			    `chmod a+x /tmp/$session_name/*`;
+			    `zip -r -j /tmp/$session_name.zip /tmp/$session_name/`;
+
+
+			    sendEmailAttachment($userrealm,
+				      $FROMEMAILADDRESS,
+				      $params{'email_prefix'} . "@" . $admin_details->{'email_domain'},
+				      $user_email,
+				      $BCCEMAILADDRESS,
+				      'Welcome to EnterpriseLibre',
+				      'welcome_message_user.html.tt',
+				      'text/html',
+				      'application/zip',
+				      "/tmp",
+				      "$session_name.zip",
+				      \%params);		       			    
+			}
+			else{
+			    sendEmail($userrealm,
+				      $FROMEMAILADDRESS,
+				      $params{'email_prefix'} . "@" . $admin_details->{'email_domain'},
+				      $user_email,
+				      $BCCEMAILADDRESS,
+				      'Welcome to EnterpriseLibre',
+				      'welcome_message_user.txt.tt',
+				      'welcome_message_user.html.tt',
+				      \%params);
+			}
+			    
 			#Don't send redundant welcome message for first user
 			unless ($number_of_users == 1){
 				mylog("Sending welcome message copy to admin");
 				my %admin_params;
-				$admin_params{'administrator_first_name'} = $admin_details->{'first_name'};
-				$admin_params{'administrator_last_name'} = $admin_details->{'last_name'};
 				$admin_params{'first_name'} = $first_name;
 				$admin_params{'last_name'} = $last_name;
 				$admin_params{'external_email'} = $user_email;
@@ -790,7 +876,7 @@ sub processNewUsers{
 					  $admin_details->{'email_prefix'} . "@" . $admin_details->{'email_domain'},
 					  '',
 					  '',
-					  'Welcome to Cirrus Open',
+					  'Welcome to EnterpriseLibre',
 					  'welcome_message_itman.txt.tt',
 					  'welcome_message_itman.html.tt',
 					  \%admin_params);
@@ -887,6 +973,10 @@ sub processChangeUserPasswords{
 		my ($alias_domain) = $tdb_conn->selectall_arrayref("SELECT alias_domain FROM network.domain_config WHERE organization = (SELECT id FROM network.organization WHERE network_name = ?)", {}, $userrealm)->[0]->[0];
 		my ($user_type) = $tdb_conn->selectall_arrayref("SELECT type FROM network.eseri_user WHERE username = ? AND organization = (SELECT id FROM network.organization WHERE network_name = ?)", {}, $username, $userrealm)->[0]->[0];
 		my ($user_status) = $tdb_conn->selectall_arrayref("SELECT status FROM network.eseri_user WHERE username = ? AND organization = (SELECT id FROM network.organization WHERE network_name = ?)", {}, $username, $userrealm)->[0]->[0];
+		my $num_users = $tdb_conn->prepare("SELECT count(*) FROM network.eseri_user WHERE organization = (SELECT id FROM network.organization WHERE network_name = ?)");
+		$num_users->bind_param(1, $userrealm);
+		$num_users->execute();
+		my ($number_of_users) = $num_users->fetchrow();
 		my $host = "chaos.$userrealm";
 		ssh_key($host);
 		`ssh eseriman\@$host ./bin/eseriChangePassword "$username" "$newPassword"`;
@@ -948,8 +1038,6 @@ sub processChangeUserPasswords{
 			my ($admin_details) = getUserDetails($userrealm, 'admin');
                         my ($user_details) = getUserDetails($userrealm, 'user', $username);
 			my %admin_params;
-			$admin_params{'administrator_first_name'} = $admin_details->{'first_name'};
-			$admin_params{'administrator_last_name'} = $admin_details->{'last_name'};
 			$admin_params{'email_prefix'} = $user_details->{'email_prefix'};
 			$admin_params{'first_name'} = $user_details->{'first_name'};
 			$admin_params{'last_name'} = $user_details->{'last_name'};
@@ -969,8 +1057,7 @@ sub processChangeUserPasswords{
 			#Send e-mail to the user themselves
 			my %params;
 			$params{'email_prefix'} = $user_details->{'email_prefix'};
-			$params{'first_name'} = $user_details->{'first_name'};
-			$params{'last_name'}  = $user_details->{'last_name'};
+			($number_of_users == 1) ? ($params{'full_name'} = "Superuser") : ($params{'full_name'} = $user_details->{'first_name'}.' '.$user_details->{'last_name'});
 			$params{'password'} = $newPassword;
 			$params{'is_reset'} = $isReset;
 			$params{'system_anchor_domain'} = $system_anchor_domain;
@@ -1031,6 +1118,10 @@ sub processResetUsers{
 		my $userArray = $reset_user_queue->dequeue();
 		my $username = $userArray->[0];
 		my $userrealm = $userArray->[1];
+		my $num_users = $tdb_conn->prepare("SELECT count(*) FROM network.eseri_user WHERE organization = (SELECT id FROM network.organization WHERE network_name = ?)");
+		$num_users->bind_param(1, $userrealm);
+		$num_users->execute();
+		my ($number_of_users) = $num_users->fetchrow();
 		my $host = "chaos.$userrealm";
 		our $db_log = $tdb_log;
 		eseriKillNXSessionExecute($userrealm, $username, 'processResetUsers');
@@ -1038,19 +1129,16 @@ sub processResetUsers{
 		my ($admin_details) = getUserDetails($userrealm, 'admin');
 		my ($user_details) = getUserDetails($userrealm, 'user', $username);
 		my $user_email = $user_details->{'real_email'};
-		my $user_fname = $user_details->{'first_name'};
-		my $user_lname = $user_details->{'last_name'};
 		my %params;
 		$params{'username'} = $username;
 		$params{'domain'} = $user_details->{'email_domain'};
-		$params{'first_name'} = $user_fname;
-		$params{'last_name'} = $user_lname;
+		($number_of_users == 1) ? ($params{'full_name'} = "Superuser") : ($params{'full_name'} = $user_details->{'first_name'}.' '.$user_details->{'last_name'});
 		sendEmail($userrealm,
 			  $FROMEMAILADDRESS,
 			  $user_email,
 			  '',
 			  '',
-			  'Your Cirrus Open desktop has been rebooted',
+			  'Your EnterpriseLibre desktop has been rebooted',
 			  'reboot_desktop_message.txt.tt',
 			  'reboot_desktop_message.html.tt',
 			  \%params);
@@ -1073,6 +1161,10 @@ sub processChangeExternalEmail{
                 my $username = $externalemailArray->[0];
                 my $userrealm = $externalemailArray->[1];
                 my $newExternalEmail = $externalemailArray->[2];
+		my $num_users = $tdb_conn->prepare("SELECT count(*) FROM network.eseri_user WHERE organization = (SELECT id FROM network.organization WHERE network_name = ?)");
+		$num_users->bind_param(1, $userrealm);
+		$num_users->execute();
+		my ($number_of_users) = $num_users->fetchrow();
                 mylog("Changing real email for $username at $userrealm to $newExternalEmail");
 		my $host = "chaos.$userrealm";
                 $change_externalemail = $tdb_conn->prepare("UPDATE network.eseri_user SET real_email = ? WHERE username = ? AND organization = (SELECT id FROM network.organization WHERE network_name = ?)");
@@ -1093,8 +1185,6 @@ sub processChangeExternalEmail{
 		    fail("eseriChangeExternalEmail returned $exit_code");
                 }
                 my %admin_params;
-                $admin_params{'administrator_first_name'} = $admin_details->{'first_name'};
-                $admin_params{'administrator_last_name'} = $admin_details->{'last_name'};
 		$admin_params{'email_prefix'} = $user_details->{'email_prefix'};
                 $admin_params{'first_name'} = $user_details->{'first_name'};
                 $admin_params{'last_name'} = $user_details->{'last_name'};
@@ -1114,8 +1204,7 @@ sub processChangeExternalEmail{
                 #Send e-mail to the user themselves
                 my %params;
 		$params{'email_prefix'} = $user_details->{'email_prefix'};
-                $params{'first_name'} = $user_details->{'first_name'};
-                $params{'last_name'}  = $user_details->{'last_name'};
+		($number_of_users == 1) ? ($params{'full_name'} = "Superuser") : ($params{'full_name'} = $user_details->{'first_name'}.' '.$user_details->{'last_name'});
                 $params{'real_email'} = $user_details->{'real_email'};
 		sendEmail($userrealm,
 			  $FROMEMAILADDRESS,
@@ -1454,6 +1543,10 @@ sub processTimezoneConfig{
 	my $new_timezone = $timezoneconfigArray->[1];
 	my $server_user = $timezoneconfigArray->[2];
 	my $username = $timezoneconfigArray->[3];
+	my $num_users = $tdb_conn->prepare("SELECT count(*) FROM network.eseri_user WHERE organization = (SELECT id FROM network.organization WHERE network_name = ?)");
+	$num_users->bind_param(1, $userrealm);
+	$num_users->execute();
+	my ($number_of_users) = $num_users->fetchrow();
 	
 	mylog("Configuring Timezone at $userrealm to $new_timezone - $server_user - $username");
 	ssh_key("c4.$system_anchor_domain");
@@ -1472,8 +1565,7 @@ sub processTimezoneConfig{
 	    my %params;
 	    $params{'new_timezone'} = $new_timezone;
 	    $params{'username'} = $username;
-	    $params{'first_name'} = $user_details->{'first_name'};
-	    $params{'last_name'} = $user_details->{'last_name'};
+	    ($number_of_users == 1) ? ($params{'full_name'} = "Superuser") : ($params{'full_name'} = $user_details->{'first_name'}.' '.$user_details->{'last_name'});
 	    my $subject;
 	    if ($server_user eq 'server'){
 		$subject = 'Default Timezone Change';
