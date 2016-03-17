@@ -1,12 +1,12 @@
 #!/bin/bash
 #
-# VPS Creation script - Phase One - v3.3
+# VPS Creation script - Phase One - v3.4
 #  DNS and Firewall server
 #
 # Created by Karoly Molnar <kmolnar@eseri.com>
 # Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Eseri (Free Open Source Solutions Inc.)
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -14,7 +14,7 @@
 # readable forms.
 #
 
-# Include eseri functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 # Mark start point in log file
@@ -27,7 +27,7 @@ DOMAIN=$(getParameter domain)
 NETWORK=$(getParameter network)
 BRIDGE=$(getParameter bridge)
 WAN_IP=$(getParameter wan_ip)
-NETMASK=$(getParameter wan_netmask)
+WAN_NETMASK=$(getParameter wan_netmask)
 TIMEZONE=$(getParameter timezone)
 VPS_LIST=$(getParameter vps1_list)
 
@@ -38,9 +38,9 @@ CreateVPS() {
 
     # Hermes uses the 12.04 template. 
     if [ $VEID_INDEX -eq 3 ]; then
-	VPS_TEMPLATE_NAME="ubuntu-12.04-i386-eseri-1.1"
+	VPS_TEMPLATE_NAME="ubuntu-12.04-i386-eseri-1.2"
     else
-	VPS_TEMPLATE_NAME="ubuntu-10.04-i386-eseri-1.9"
+	VPS_TEMPLATE_NAME="ubuntu-10.04-i386-eseri-2.0"
     fi
 
     # Create VPS
@@ -84,10 +84,10 @@ ConfigureVPS() {
 
     if [ $VEID_INDEX -eq 3 ]; then
 	INIT_FOLDER=$VZ_BASE_PATH/private/$VEID/etc/init.d
-	install -o root -g root -m 755 $TEMPLATE_FOLDER/etc/init.d/cirrus_add_route $INIT_FOLDER/cirrus_add_route
-	eseriReplaceValues $INIT_FOLDER/cirrus_add_route
-	vzctl exec $VEID "update-rc.d cirrus_add_route defaults"
-	vzctl exec $VEID "/etc/init.d/cirrus_add_route"
+	install -o root -g root -m 755 $TEMPLATE_FOLDER/etc/init.d/enterpriselibre_add_route $INIT_FOLDER/enterpriselibre_add_route
+	eseriReplaceValues $INIT_FOLDER/enterpriselibre_add_route
+	vzctl exec $VEID "update-rc.d enterpriselibre_add_route defaults"
+	vzctl exec $VEID "/etc/init.d/enterpriselibre_add_route"
 
 	# Since IP of storage server is external, Zeus will not be able to ping it since shorewall that does the masquerading at Hermes is not yet installed. So at hermes, manually add rule
 	vzctl exec $VEID "iptables -t nat -A POSTROUTING -o venet0 -j SNAT -s $NETWORK.0/24 --to $WAN_IP"

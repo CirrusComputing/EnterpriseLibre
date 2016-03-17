@@ -1,12 +1,12 @@
 #!/bin/bash
 #
-# VPS Creation script - Phase Two - v3.4
+# VPS Creation script - Phase Two - v3.5
 #  Creating all remaining servers
 #
 # Created by Karoly Molnar <kmolnar@cirruscomputing.com>
 # Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -14,7 +14,7 @@
 # readable forms.
 #
 
-# Include eseri functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 # Mark start point in log file
@@ -49,11 +49,11 @@ CreateVPS() {
 
 	# Two VPS's use a new template. 
 	if [ $VEID_INDEX -eq 4 ]; then
-	    VPS_TEMPLATE_NAME="ubuntu-14.04-i386-eseri-1.4"
+	    VPS_TEMPLATE_NAME="ubuntu-14.04-i386-eseri-1.5"
 	elif [ $VEID_INDEX -eq 39 ]; then
-	    VPS_TEMPLATE_NAME="ubuntu-12.04-i386-eseri-1.1"
+	    VPS_TEMPLATE_NAME="ubuntu-12.04-i386-eseri-1.2"
 	else
-	    VPS_TEMPLATE_NAME="ubuntu-10.04-i386-eseri-1.9"
+	    VPS_TEMPLATE_NAME="ubuntu-10.04-i386-eseri-2.0"
 	fi
 
 	# Create VPS
@@ -93,19 +93,22 @@ ConfigureVPS() {
 		echo `cat $ARCHIVE_FOLDER/root/ssh/authorized_keys.c3` >> $SSH_FOLDER/authorized_keys
 	fi
 
-	# Deploy extra SSH Keys on Chaos
-        if [ $VEID_INDEX -eq 50 ]; then
+	hasCapability NoMachine
+        if [ $? -eq 0 ] ; then
+	    # Deploy extra SSH Keys on Chaos
+            if [ $VEID_INDEX -eq 50 ]; then
                 echo `cat $ARCHIVE_FOLDER/root/ssh/authorized_keys.c5` >> $SSH_FOLDER/authorized_keys
-        fi
+            fi
+	fi
 
 	# Start the server
 	vzctl start $VEID
 
 	if [ $VEID_INDEX -eq 4 ]; then
             INIT_FOLDER=$VZ_BASE_PATH/private/$VEID/etc/init.d
-            install -o root -g root -m 755 $ARCHIVE_FOLDER/files/etc/init.d/cirrusopen_container_config $INIT_FOLDER/cirrusopen_container_config
-            vzctl exec $VEID "update-rc.d cirrusopen_container_config defaults"
-            vzctl exec $VEID "/etc/init.d/cirrusopen_container_config"
+            install -o root -g root -m 755 $ARCHIVE_FOLDER/files/etc/init.d/enterpriselibre_container_config $INIT_FOLDER/enterpriselibre_container_config
+            vzctl exec $VEID "update-rc.d enterpriselibre_container_config defaults"
+            vzctl exec $VEID "/etc/init.d/enterpriselibre_container_config"
         fi
 
 	# Wait for the sshd to start, once that's running we should have network
