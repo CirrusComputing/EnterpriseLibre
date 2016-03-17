@@ -4,15 +4,15 @@ Welcome to your cloud desktop!  As described below, the Superuser can manage you
 
 This email contains important passwords for the collaboration applications, and has been emailed only to your Superuser desktop.  Therefore, please keep this information where you will be able to find it easily later.
 
-Cloud Manager
+EnterpriseLibre Manager
 
-In addition to regular functions like changing their password, the Superuser has extra cloud management capability under "Start / Favorites / Cirrus Open Cloud Manager".
+In addition to regular functions like changing their password, the Superuser has extra cloud management capability under "Start / Favorites / EnterpriseLibre Manager".
 
-One of the first things the Superuser often does with their Cloud Manager is change the domain name of their cloud, from the placeholder assigned by Cirrus, to a domain name used by their team.  You can also configure your email to use an existing email server if you have one, instantly adding your cloud to your existing systems.  If you wish you can keep your Cirrus email servers, or switch to them later, to simplify your systems and reduce costs.
+One of the first things the Superuser often does with their EnterpriseLibre Manager is change the domain name of their cloud, from the placeholder assigned by EnterpriseLibre, to a domain name used by their team.  You can also configure your email to use an existing email server if you have one, instantly adding your cloud to your existing systems.  If you wish you can keep your EnterpriseLibre email servers, or switch to them later, to simplify your systems and reduce costs.
 
-You can also use the Cloud Manager to add new users to your cloud, and send them their own pre-configured and ready to go cloud desktops.  You can also archive and later restore users and their desktops whenever required.  The can change a variety of user settings, such as notification email addresses, and use of two-factor authentication.
+You can also use the EnterpriseLibre Manager to add new users to your cloud, and send them their own pre-configured and ready to go cloud desktops.  You can also archive and later restore users and their desktops whenever required.  The can change a variety of user settings, such as notification email addresses, and use of two-factor authentication.
 
-More information about the Cloud Manager can be found in the Cirrus Open Wiki here.
+More information about the EnterpriseLibre Manager can be found in the EnterpriseLibre Wiki here.
 [% IF sqlledger %]
 Accounting (SQL-Ledger)
 
@@ -65,6 +65,6 @@ You can manage your OpenERP databases (Create, Duplicate, Drop, Backup, Restore)
 Enjoy your cloud to the fullest!  If you have any questions at or need any assistance at all, please don't hesitate to contact us through our website support page and we will be glad to help.
 
 Best regards,
-Cirrus Open
+EnterpriseLibre
 ---
-You received this email because you just subscribed to a Cirrus Open cloud. If this email reached you in error for any reason, please let us know immediately.
+You received this email because you just subscribed to an EnterpriseLibre cloud. If this email reached you in error for any reason, please let us know immediately.

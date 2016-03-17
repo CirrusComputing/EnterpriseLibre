@@ -22,7 +22,7 @@
       [% mx2_server %]
     </ul>
     [% END %]
-    <p>You no longer need to use any external email services!  Please have all your users configure their smartphones and any other external clients to send and receive email as described on the help Wiki available within your desktop <a href="http://wiki.cirrusopen.org/index.php/Applications#Server_Settings_.28Smartphones.2C_Tablets.2C_Other_Email_Applications.29">here</a>.</p>
+    <p>You no longer need to use any external email services!  Please have all your users configure their smartphones and any other external clients to send and receive email as described on the help Wiki available within your desktop <a href="http://wiki.enterpriselibre.org/index.php/Applications#Server_Settings_.28Smartphones.2C_Tablets.2C_Other_Email_Applications.29">here</a>.</p>
 [% ELSIF config_version == '2.11' || config_version == '2.12' %]
     <p>For your records, you just configured your organization to use the following external IMAP server for incoming email:</p>
     <ul>
@@ -30,11 +30,11 @@
     </ul>
     <p>In order for your desktops to receive email the IMAP passwords need to be set, therefore please:</p>
     <ul>
-      <li>Simply change each user's desktop password to match their corresponding external IMAP account password with <b>Start / Favorites / Cirrus Open System Manager</b>, or ask the user to do so from within their desktop with the same System Manager.</li>
+      <li>Simply change each user's desktop password to match their corresponding external IMAP account password with <b>Start / Favorites / EnterpriseLibre Manager</b>, or ask the user to do so from within their desktop with the same EnterpriseLibre Manager.</li>
       <p></p>
-      <li>Or, if you do not wish to have user desktop passwords match the external IMAP account password, then have each user manually change just their Evolution email and vTiger CRM email passwords to match the external IMAP password as described on the help Wiki available within your desktop <a href="http://wiki.cirrusopen.org/index.php/Organizations_and_Desktops#Change_Your_Password">here</a>.</li>
+      <li>Or, if you do not wish to have user desktop passwords match the external IMAP account password, then have each user manually change just their Evolution email and vTiger CRM email passwords to match the external IMAP password as described on the help Wiki available within your desktop <a href="http://wiki.enterpriselibre.org/index.php/Enterprises_and_Desktops#Change_Your_Password">here</a>.</li>
     </ul>
-    <p>Smartphones and other external clients may not need any configuration if they are working now.  For incoming email, just ensure they are configured to use the external IMAP server you have specified.  For sending email, they may already be configured to use your own SMTP server and working fine, or they can be configured to use your Cirrus Open managed SMTP server as follows:</p>
+    <p>Smartphones and other external clients may not need any configuration if they are working now.  For incoming email, just ensure they are configured to use the external IMAP server you have specified.  For sending email, they may already be configured to use your own SMTP server and working fine, or they can be configured to use your EnterpriseLibre managed SMTP server as follows:</p>
     <ul>
       <li> SMTP Server - [% smtp_server %]</li>
       <li>Secure Type - SSL</li>
@@ -60,16 +60,16 @@
       <li>[% website_ip %]</li>
     </ul>
     [% END %]
-    <p>Please have all your users configure their smartphones and any other external clients to send and receive email as described on the help Wiki available within your desktop <a href="http://wiki.cirrusopen.org/index.php/Applications#Server_Settings_.28Smartphones.2C_Tablets.2C_Other_Email_Applications.29">here</a>.</p>
-    <p>Please set the domain name servers at your registrar managing your domain "[% email_domain %]" to the Cirrus protected gateway addresses as per below:</p>
+    <p>Please have all your users configure their smartphones and any other external clients to send and receive email as described on the help Wiki available within your desktop <a href="http://wiki.enterpriselibre.org/index.php/Applications#Server_Settings_.28Smartphones.2C_Tablets.2C_Other_Email_Applications.29">here</a>.</p>
+    <p>Please set the domain name servers at your registrar managing your domain "[% email_domain %]" to the EnterpriseLibre protected gateway addresses as per below:</p>
     <ul>
       [% ns1_server %]<br/>
       [% ns2_server %]
     </ul>
 [% END %]
     <p>Enjoy!<br/>
-The Cirrus Open Team </p>
+The EnterpriseLibre Team </p>
 ---
-    <p>You received this email because you just changed the settings of your Cirrus Open cloud. If this email reached you in error for any reason, please let us know immediately.</p>
+    <p>You received this email because you just changed the settings of your EnterpriseLibre cloud. If this email reached you in error for any reason, please let us know immediately.</p>
   </body>
 </html>

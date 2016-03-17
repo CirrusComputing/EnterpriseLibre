@@ -1,6 +1,6 @@
-Dear [% administrator_first_name %] [% administrator_last_name %],
+Dear Superuser,
 
-The Cirrus Open desktop for [% first_name %] [% last_name %] has been created and a welcome email was sent to [% external_email %].
+The EnterpriseLibre desktop for [% first_name %] [% last_name %] has been created and a welcome email was sent to [% external_email %].
 
 For your information the desktop login credentials are as follows:
 
@@ -8,9 +8,9 @@ For your information the desktop login credentials are as follows:
     Password: [% password %]
 
 Enjoy!
-The Cirrus Open Team
+The EnterpriseLibre Team
 ---
-You received this email because you just subscribed to a Cirrus Open cloud. If this email reached you in error for any reason, please let us know immediately.
+You received this email because you just subscribed to an EnterpriseLibre cloud. If this email reached you in error for any reason, please let us know immediately.
 
 
  

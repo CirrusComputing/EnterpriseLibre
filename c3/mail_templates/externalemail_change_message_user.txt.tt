@@ -1,4 +1,4 @@
-Dear [% first_name %] [% last_name %],
+Dear [% full_name %],
 
 Your Notify Address has been changed. 
 
@@ -7,6 +7,6 @@ For your information the details are as follows:
     Notify Address: [% real_email %]
 
 Enjoy!
-The Cirrus Open Team
+The EnterpriseLibre Team
 ---
-You received this email because you just changed the settings of your Cirrus Open user account. If this email reached you in error for any reason, please let us know immediately.
+You received this email because you just changed the settings of your EnterpriseLibre user account. If this email reached you in error for any reason, please let us know immediately.

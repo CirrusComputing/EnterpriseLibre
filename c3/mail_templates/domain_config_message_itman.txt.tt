@@ -28,11 +28,11 @@
     
     In order for your desktops to receive email the IMAP passwords need to be set, therefore please:
     
-      Simply change each user's desktop password to match their corresponding external IMAP account password with Start / Favorites / Cirrus Open System Manager, or ask the user to do so from within their desktop with the same System Manager.
+      Simply change each user's desktop password to match their corresponding external IMAP account password with Start / Favorites / EnterpriseLibre Manager, or ask the user to do so from within their desktop with the same EnterpriseLibre Manager.
       
       Or, if you do not wish to have user desktop passwords match the external IMAP account password, then have each user manually change just their Evolution email and vTiger CRM email passwords to match the external IMAP password as described on the help Wiki available within your desktop here.
     
-    Smartphones and other external clients may not need any configuration if they are working now.  For incoming email, just ensure they are configured to use the external IMAP server you have specified.  For sending email, they may already be configured to use your own SMTP server and working fine, or they can be configured to use your Cirrus Open managed SMTP server as follows:
+    Smartphones and other external clients may not need any configuration if they are working now.  For incoming email, just ensure they are configured to use the external IMAP server you have specified.  For sending email, they may already be configured to use your own SMTP server and working fine, or they can be configured to use your EnterpriseLibre managed SMTP server as follows:
     
        SMTP Server - [% smtp_server %]
       Secure Type - SSL
@@ -58,14 +58,14 @@
     [% END %]
     
     Please have all your users configure their smartphones and any other external clients to send and receive email as described on the help Wiki available within your desktop here.
-    Please set the domain name servers at your registrar managing your domain "[% email_domain %] to the Cirrus protected gateway addresses as per below:
+    Please set the domain name servers at your registrar managing your domain "[% email_domain %] to the EnterpriseLibre protected gateway addresses as per below:
     
       [% ns1_server %]
       [% ns2_server %]
     
 [% END %]
 Enjoy!
-The Cirrus Open Team 
+The EnterpriseLibre Team 
 ---
-You received this email because you just changed the settings of your Cirrus Open cloud. If this email reached you in error for any reason, please let us know immediately.
+You received this email because you just changed the settings of your EnterpriseLibre cloud. If this email reached you in error for any reason, please let us know immediately.
     

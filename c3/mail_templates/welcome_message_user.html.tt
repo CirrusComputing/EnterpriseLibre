@@ -1,16 +1,26 @@
 <html>
  <body>
-  <p>Dear [% first_name %] [% last_name %],</p>
-  <p>Welcome to your Cirrus Open desktop!  Please visit the <a href="http://login.[% system_anchor_domain %]">Cirrus Open login</a> page and follow the instructions.</p>
+[% IF x2go %]
+  <p>Dear [% full_name %], welcome to your EnterpriseLibre desktop! Your email address and password are:</p>
+  <ul>
+   <li>Email Address:&emsp;[% email_prefix %]@[% domain %]</li>
+   <li>Password:&emsp;[% password %]</li>
+  </ul>
+  <p>First, download and install the secure desktop client X2Go from here: <a href="https://wiki.enterpriselibre.org/index.php/X2Go_Clients">https://wiki.enterpriselibre.org/index.php/X2Go_Clients</a></p>
+  <p>Then, to start your desktop, save the attached start file to your computer, double-click to run, and enter your password shown above. (If you copy and paste your password, make sure it does not have a leading or trailing space.) You can also download an easy start file on any computer at any time from the login page: <a href="http://login.[% system_anchor_domain %]/">http://login.[% system_anchor_domain %]/</a></p>
+[% ELSIF nomachine %]
+  <p>Dear [% full_name %],
+  <p>Welcome to your EnterpriseLibre desktop! Please visit the <a href="http://login.[% system_anchor_domain %]">EnterpriseLibre login</a> page and follow the instructions.</p>
   <p>Your desktop login credentials are as follows:</p>
   <ul>
    <li>Email Address: [% email_prefix %]@[% domain %]</li>
    <li>Password: [% password %]</li>
   </ul>
   <p>(If you copy-and-paste the password, make sure there isn't an extra space added onto the end as a ninth character by your browser.)</p>
+[% END %]
   <p>Enjoy!<br/>
-The Cirrus Open Team</p>
+The EnterpriseLibre Team</p>
 ---
-  <p>You received this email because you just subscribed to a Cirrus Open cloud. If this email reached you in error for any reason, please let us know immediately.</p>
+  <p>You received this email because you just subscribed to an EnterpriseLibre cloud. If this email reached you in error for any reason, please let us know immediately.</p>
  </body>
 </html>

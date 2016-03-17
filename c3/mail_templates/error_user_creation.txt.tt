@@ -1,2 +1,7 @@
+Dear Superuser,
 C3 has reported an error while creating [% username %] with email prefix [% email_prefix %] for cloud [% network_name %].
 [% email_message %]
+Best regards,
+EnterpriseLibre
+---
+You received this email because you just changed the settings of your EnterpriseLibre cloud. If this email reached you in error for any reason, please let us know immediately.

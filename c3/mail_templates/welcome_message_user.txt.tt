@@ -1,16 +1,24 @@
-Dear [% first_name %] [% last_name %],
+[% IF x2go %]
+Dear [% full_name %], welcome to your EnterpriseLibre desktop! Your email address and password are:
 
-Welcome to your Cirrus Open desktop!  Please visit the Cirrus Open login page http://login.[% system_anchor_domain %] and follow the instructions.
+     Email Address:   [% email_prefix %]@[% domain %]
+     Password:	      [% password %]
+
+First, download and install the secure desktop client X2Go from here: https://wiki.enterpriselibre.org/index.php/X2Go_Clients
+Then, to start your desktop, save the attached start file to your computer, double-click to run, and enter your password shown above. (If you copy and paste your password, make sure it does not have a leading or trailing space.) You can also download an easy start file on any computer at any time from the login page: http://login.[% system_anchor_domain %]/
+[% ELSIF nomachine %]
+Dear [% full_name %],
+Welcome to your EnterpriseLibre desktop! Please visit the EnterpriseLibre login page http://login.[% system_anchor_domain %] and follow the instructions.
 
 Your desktop login credentials are as follows:
 
-    Email Address: [% email_prefix %]@[% domain %]
-    Password: [% password %]
+     Email Address: [% email_prefix %]@[% domain %]
+     Password: [% password %]
 
 (If you copy-and-paste the password, make sure there isn't an extra
 space added onto the end as a ninth character by your browser.)
-
+[% END %]
 Enjoy!
-The Cirrus Open Team
+The EnterpriseLibre Team
 ---
-You received this email because you just subscribed to a Cirrus Open cloud. If this email reached you in error for any reason, please let us know immediately.
+You received this email because you just subscribed to an EnterpriseLibre cloud. If this email reached you in error for any reason, please let us know immediately.
