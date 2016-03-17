@@ -1,16 +1,21 @@
 
-CIRRUS OPEN SYSTEM MANAGER - CHANGELOG
-======================================
+ENTERPRISELIBRE SYSTEM MANAGER - CHANGELOG
+==========================================
 
-THIS VERSION MIGHT BE OLD! Get the latest at: http://wiki.cirrusopen.org/index.php/Development
+THIS VERSION MIGHT BE OLD! Get the latest at: http://wiki.enterpriselibre.org/index.php/Development
 
-VERSION - 2015-12-04
---------------------
+VERSION 1.20 - 2016-03-16
+-------------------------
+
+Name change from CirrusOpen to EnterpriseLibre including introduction of X2Go.
+
+VERSION 1.10 - 2015-12-04
+-------------------------
 
 Only one IP needed for any number of clouds.
 
-VERSION - 2015-11-14
---------------------
+VERSION 1.00 - 2015-11-14
+-------------------------
 
 Initial release.  No changes.
 
