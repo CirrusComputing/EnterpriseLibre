@@ -36,10 +36,10 @@ HTTP/ACCEPT		$FW:[-NETWORK-].3 	loc:[-NETWORK-].32							# Poseidon apps
 HTTP/ACCEPT		$FW:[-NETWORK-].3 	loc:[-NETWORK-].37							# SOGo
 HTTP/ACCEPT		$FW:[-NETWORK-].3 	loc:[-NETWORK-].39							# Trident apps
 ############################################################################################################################################
-# CirrusOpen
+# EnterpriseLibre
 ############################################################################################################################################
 #
-#		Accepted connections from CirrusOpen to Local				co -> loc
+#		Accepted connections from EnterpriseLibre to Local				co -> loc
 #
 Ping/ACCEPT             co                      loc
 DNAT			co:10.101.1.3		loc:[-NETWORK-].50:22	tcp	80	-	[-NETWORK-].50		# Apache2 Tunnel Proxy for NX Desktop from SMC Proxy
@@ -57,7 +57,7 @@ ACCEPT			co:10.101.1.4		loc									# Nagios
 SSH/ACCEPT		co:10.101.1.50		loc									# SSH from SMC Desktop
 ACCEPT			co:10.101.1.4		loc			tcp,udp	10080					# Amanda Backup [-DELETE_UNLESS_Amanda-]
 #
-#		Accepted connections from the CirrusOpen to Firewall			co -> $FW
+#		Accepted connections from the EnterpriseLibre to Firewall			co -> $FW
 #
 Ping/ACCEPT		co			$FW
 SSH/ACCEPT		co:10.101.1.4		$FW:[-NETWORK-].3 							# C4
@@ -73,7 +73,7 @@ Ping/ACCEPT		loc			$FW
 SSH/ACCEPT		loc:[-NETWORK-].50	$FW									# Amanda Chaos Backup Script [-DELETE_UNLESS_Amanda-]
 SSH/ACCEPT              loc:[-NETWORK-].4	$FW                                                                     # Duplicity Pre-Backup Script [-DELETE_UNLESS_Duplicity-]
 #
-#		Accepted connections from Local to CirrusOpen				loc -> co
+#		Accepted connections from Local to EnterpriseLibre				loc -> co
 #
 DNS/ACCEPT		loc:[-NETWORK-].2 	co:10.101.1.2
 SMTP/ACCEPT		loc:[-NETWORK-].31	co:10.101.1.31

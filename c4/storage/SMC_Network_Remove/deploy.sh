@@ -12,7 +12,7 @@
 # readable forms.
 #
 
-# Include eseri functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 # Mark start point in log file
@@ -29,5 +29,5 @@ SHORTNAME=$1
 WAN_IP=$2
 BRIDGE=$3
 
-chmod +x $ARCHIVE_FOLDER/cirrus_del_*
-$ARCHIVE_FOLDER/cirrus_del_cloud "$SHORTNAME" "$WAN_IP" "$BRIDGE" "$ARCHIVE_FOLDER" "$TEMPLATE_FOLDER"
+chmod +x $ARCHIVE_FOLDER/enterpriselibre_del_*
+$ARCHIVE_FOLDER/enterpriselibre_del_cloud "$SHORTNAME" "$WAN_IP" "$BRIDGE" "$ARCHIVE_FOLDER" "$TEMPLATE_FOLDER"

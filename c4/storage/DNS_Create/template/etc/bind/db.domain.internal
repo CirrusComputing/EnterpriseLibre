@@ -49,7 +49,7 @@ smtp			IN	CNAME	hera [-DELETE_UNLESS_Email-]
 lists			IN	CNAME	hera [-DELETE_UNLESS_MailingLists-]
 desktop			IN	CNAME	chaos [-DELETE_UNLESS_Desktop-]
 help			IN	CNAME	poseidon
-sys			IN	CNAME	poseidon
+cloudmanager		IN	CNAME	poseidon
 pgsql			IN	CNAME	hades
 mysql			IN	CNAME	hades
 backup			IN	CNAME	apollo [-DELETE_UNLESS_Duplicity-]

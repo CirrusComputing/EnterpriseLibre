@@ -60,7 +60,7 @@ case "$1" in
 		TEST=`echo "$MESSAGE" | grep "Press the disconnect button to disconnect the running session."`
 		if [ -n "$TEST" ]; then
 			export DISPLAY="${10}.0"
-			/usr/local/bin/CirrusOpenLeaveSession
+			/usr/local/bin/EnterpriseLibreLeaveSession
 			exit 0
 		fi
 

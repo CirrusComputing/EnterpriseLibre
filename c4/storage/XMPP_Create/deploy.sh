@@ -6,7 +6,7 @@
 # Modified by Karoly Molnar <kmolnar@cirruscomputing.com>
 # Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Eseri (Free Open Source Solutions Inc.)
+# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
 # All Rights Reserved
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -14,7 +14,7 @@
 # readable forms.
 #
 
-# Include cirrus functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 eseriGetDNS

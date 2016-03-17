@@ -1,12 +1,12 @@
 #!/bin/bash
 #
-# eseriConfigureNagiosProcsLimit - v1.0
+# eseriConfigureNagiosProcsLimit - v1.1
 #
 # This script is responsible for setting the nagios limit for total processes.
 #
 # Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Eseri (Free Open Source Solutions Inc.)
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -22,7 +22,12 @@ NAGIOS_LOCAL_CONFIG_FILE=$NAGIOS_CONFIG_FOLDER/nrpe_local.cfg
 DEFAULT_PROCS_WARN=100
 DEFAULT_PROCS_CRIT=125
 PROCS_PER_USER=60
-USER_SESSIONS=$(/usr/NX/bin/nxserver --list | sed -n '/^---.*/,/^[ ]*$/{/^---.*/d;/^[ ]*$/d;p;}' | wc -l)
+# Count number of sessions based on what is installed - X2Go or NoMachine.
+if pgrep -n -f x2gocleansessions > /dev/null; then
+    USER_SESSIONS=$(x2golistsessions_root | wc -l)
+else
+    USER_SESSIONS=$(/usr/NX/bin/nxserver --list | sed -n '/^---.*/,/^[ ]*$/{/^---.*/d;/^[ ]*$/d;p;}' | wc -l)
+fi
 
 # If number of user sessions <= 1, then update the nagios local config file with default values.
 if [ $USER_SESSIONS -le 1 ]; then

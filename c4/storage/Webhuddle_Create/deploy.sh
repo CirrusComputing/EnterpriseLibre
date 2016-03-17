@@ -4,7 +4,7 @@
 #
 # Created by Karoly Molnar <kmolnar@eseri.com>
 #
-# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# Copyright (c) 1996-2010 Free Open Source Solutions Inc.
 # All Rights Reserved
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -14,7 +14,7 @@
 # TODO: keystore generation
 # TODO: changing the pages based on the info provided by Bill
 
-# Include eseri functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 # Mark start point in log file

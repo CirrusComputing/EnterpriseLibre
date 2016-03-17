@@ -1,0 +1,10 @@
+[X-GNOME-Metatheme]
+Name=EnterpriseLibre
+Type=X-GNOME-Metatheme
+Comment=Default theme provided by EnterpriseLibre
+Encoding=UTF-8
+GtkTheme=Clearlooks
+MetacityTheme=Clearlooks
+IconTheme=Faenza
+CursorTheme=DMZ-White
+BackgroundImage=/usr/share/backgrounds/infinity.jpg

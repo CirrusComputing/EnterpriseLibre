@@ -13,11 +13,11 @@
 # readable forms.
 #
 
-# Include cirrus functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 SHORTNAME=$(getParameter shortname)
 CLOUD_VOLUME_SIZE=$(getParameter volume_size)
 
-chmod +x $ARCHIVE_FOLDER/cirrus-create-lvolume
-$ARCHIVE_FOLDER/cirrus-create-lvolume "$SHORTNAME" "$CLOUD_VOLUME_SIZE"
+chmod +x $ARCHIVE_FOLDER/enterpriselibre_create_lvolume
+$ARCHIVE_FOLDER/enterpriselibre_create_lvolume "$SHORTNAME" "$CLOUD_VOLUME_SIZE"

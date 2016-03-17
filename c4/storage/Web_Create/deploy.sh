@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# Web server deploy script - v3.3
+# Web server deploy script - v3.4
 #
 # Created by Gregory Wolgemuth <gwolgemuth@cirruscomputing.com>
 # Modified by Karoly Molnar <kmolnar@cirruscomputing.com> and Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
 # 2013 Feb RWL Upgraded SQL-ledger to 3.0.4 
 #
-# Copyright (c) 1996-2015 Eseri (Free Open Source Solutions Inc.)
+# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
 # All Rights Reserved
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -535,14 +535,13 @@ echo " ============login to test "
 	install -o root -g root -m 600 -t /var/lib/eseriman/bin/awk $archive/sql-ledger/urlencode.awk 
 fi
 
-#Setup system manager
-mkdir -p /var/www/acc
-tar -xzf $archive/sysmanager/sysmanager.tar.gz -C /var/www/acc
-install -o root -g root -m 644 $template/etc/apache2/sites-available/sys /etc/apache2/sites-available/sys
-sed -i -e "s/\[-DOMAIN-\]/$DOMAIN/;s/\[-REALM-\]/$REALM/;s/\[-IP_ADDRESS-\]/$IP_ADDRESS/" /etc/apache2/sites-available/sys
-eseriReplaceValues /var/www/acc/cirrusopen_accountmanager.conf
+# Setup Cloud Manager
+tar -C /var/www/ -zxf $ARCHIVE_FOLDER/cloudmanager/cloudmanager.tar.gz
+install -o root -g root -m 644 $template/etc/apache2/sites-available/cloudmanager /etc/apache2/sites-available/cloudmanager
+sed -i -e "s/\[-DOMAIN-\]/$DOMAIN/;s/\[-REALM-\]/$REALM/;s/\[-IP_ADDRESS-\]/$IP_ADDRESS/" /etc/apache2/sites-available/cloudmanager
+eseriReplaceValues /var/www/cloudmanager/enterpriselibre_cloudmanager.conf
 echo " ============"
-a2ensite sys
+a2ensite cloudmanager
 
 #Setup default site
 install -o root -g root -m 644 $template/etc/apache2/sites-available/default /etc/apache2/sites-available/default

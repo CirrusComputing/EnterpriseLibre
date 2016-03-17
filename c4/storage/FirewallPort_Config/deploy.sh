@@ -12,7 +12,7 @@
 # readable forms.
 #
 
-# Include eseri functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 # Get the system parameters.

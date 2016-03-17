@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Name=EnterpriseLibre Help & Support
+GenericName=Start Here...
+Comment=Main help and support page
+Type=Application
+Exec=firefox "http://wiki.enterpriselibre.org/"
+Terminal=false
+StartupNotify=true
+Icon=EnterpriseLibreHelpAndSupport.svg

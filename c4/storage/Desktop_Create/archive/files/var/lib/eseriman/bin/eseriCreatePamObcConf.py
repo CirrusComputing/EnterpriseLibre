@@ -37,7 +37,7 @@ class AccountManager(object):
         Creates the pam_obc.conf file to with the server's most up-to-date list from the database
         '''
 	c = pycurl.Curl()
-        c.setopt(c.URL, 'http://sys')
+        c.setopt(c.URL, 'http://cloudmanager')
         c.setopt(c.USERPWD, ':')
         c.setopt(c.WRITEFUNCTION, self.buffer_callback)
         c.setopt(c.HTTPAUTH, c.HTTPAUTH_GSSNEGOTIATE) 

@@ -128,7 +128,7 @@ eseriMailAlternateAddress: postmaster@[-DOMAIN-]
 eseriMailAlternateAddress: abuse@[-DOMAIN-]
 eseriMailAlternateAddress: root@[-DOMAIN-]
 eseriMailAlternateAddress: webmaster@[-DOMAIN-]
-eseriMailForwardingAddress: sysadmin@lists.team.eseri.net
+eseriMailForwardingAddress: sysadmin@[-SYSTEM_ANCHOR_DOMAIN-]
 displayName: RFC emails to Eseri system administrator
 
 # Organization Unit: NuxeoGroups

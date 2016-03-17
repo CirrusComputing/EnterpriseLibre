@@ -12,7 +12,7 @@
 # readable forms.
 #
 
-# Include cirrus functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 SYSTEM_ANCHOR_DOMAIN=$(getParameter system_anchor_domain)

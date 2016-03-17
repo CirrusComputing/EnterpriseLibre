@@ -13,12 +13,13 @@
 # readable forms.
 #
 
-# Include eseri functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 # Mark start point in log file
 echo "$(date) Deploy LDAP Server"
 
+SYSTEM_ANCHOR_DOMAIN=$(getParameter system_anchor_domain)
 IT_MAN_USER=$(getParameter manager_username)
 SLAPD_CONFIG_DIT_PASSWORD=$(getPassword SLAPD_CONFIG_PASSWORD)
 LDAP_LIBNSS_PW=$(getPassword LDAP_PASSWORD_LIBNSS)

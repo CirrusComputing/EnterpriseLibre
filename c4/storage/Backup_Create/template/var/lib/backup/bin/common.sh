@@ -19,7 +19,7 @@ BACKUP_SRC_FOLDER=$BACKUP_HOME_FOLDER/files
 MOUNT_CONTAINERS=("chaos" "hera")
 MOUNT_SRC_FOLDERS=("/home" "/var/spool/vmail")
 MOUNT_DST_FOLDERS=("$BACKUP_SRC_FOLDER/chaos" "$BACKUP_SRC_FOLDER/hera")
-ERROR_EMAIL='sysadmin@lists.cirruscomputing.com'
+ERROR_EMAIL='sysadmin@[-SYSTEM_ANCHOR_DOMAIN-]'
 
 acquire_ssh_fingerprint()
 {

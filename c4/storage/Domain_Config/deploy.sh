@@ -12,7 +12,7 @@
 # readable forms.
 #
 
-# Include eseri functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 # Get the system parameters.
@@ -524,7 +524,7 @@ if [ $SHORT_NAME == 'chaos' ]; then
 	    if [[ $gnome_panel_pid -ne '' ]]; then
 		# Reload gnome-panel
 		su - -c "killall gnome-panel" $USERNAME
-		su - -c "/usr/local/share/CirrusOpen/CirrusOpenGnomeAppletReload &" $USERNAME
+		su - -c "/usr/local/share/EnterpriseLibre/EnterpriseLibreGnomeAppletReload &" $USERNAME
 	    fi
 	    # Pidgin
 	    pidgin_pid=$(ps -C pidgin -o pid= -o ruser= | grep $USERNAME | awk '{print $1}')
@@ -551,7 +551,7 @@ if [ $SHORT_NAME == 'chaos' ]; then
 	# Update application shortcuts
 	sed -i "s|$OLD_EMAIL_DOMAIN|$NEW_EMAIL_DOMAIN|g" /usr/local/share/applications/*
 	# Update favorites menu
-	sed -i "s|$OLD_EMAIL_DOMAIN|$NEW_EMAIL_DOMAIN|g" /usr/share/gconf/defaults/99_CirrusOpen-gnomenu
+	sed -i "s|$OLD_EMAIL_DOMAIN|$NEW_EMAIL_DOMAIN|g" /usr/share/gconf/defaults/99_EnterpriseLibre-gnomenu
 	update-gconf-defaults
     fi
 fi

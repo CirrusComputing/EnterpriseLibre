@@ -1,10 +1,11 @@
 #!/bin/bash
 #
-# Kill the NX session - v1.0
+# Kill the NX session - v1.1
 #
-# Created by Karoly Molnar <kmolnar@eseri.com>
+# Created by Karoly Molnar <kmolnar@cirruscomputing.com>
+# Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -12,7 +13,7 @@
 # readable forms.
 #
 
-# Include eseri functions
+# Include EnterpriseLibre functions
 . ${0%/*}/eseriCommon
 
 # Mark start point in log file
@@ -49,9 +50,14 @@ ESERI_USERNAME=$1
 # Log to eseri.log via syslog
 /usr/local/share/eseri/EseriLog "$ESERI_USERNAME - Kill NX Session"
 
-# Terminate the NX session
-/usr/NX/bin/nxserver --terminate $ESERI_USERNAME
-/usr/NX/bin/nxserver --kill $ESERI_USERNAME
+# Terminate the NX session based on what is installed X2Go or NoMachine.
+if pgrep -n -f x2gocleansessions > /dev/null; then
+    SESSION=$(x2golistsessions_root  | grep "|$ESERI_USERNAME|" |  awk -F '|' '{print $2}')
+    su - -c "x2goterminate-session $SESSION" $ESERI_USERNAME
+else
+    /usr/NX/bin/nxserver --terminate $ESERI_USERNAME
+    /usr/NX/bin/nxserver --kill $ESERI_USERNAME
+fi
 
 # Terminate any remaining processes
 if [ $KILLALL -eq 1 ]; then

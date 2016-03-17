@@ -3,7 +3,7 @@
 # SMC central Email configuration script (Delete Org) - v1.2
 #
 # Created by Karoly Molnar <kmolnar@cirruscomputing.com>
-# Edited by Nimesh Jethwa <njethwa@cirruscomputing.com>
+# Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
 # Copyright (c) 1996-2015 Free Open Source Solutions Inc.
 # All Rights Reserved
@@ -13,7 +13,7 @@
 # readable forms.
 #
 
-# Include eseri functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 # Mark start point in log file

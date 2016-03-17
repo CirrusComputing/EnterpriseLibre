@@ -1,0 +1,180 @@
+#!/usr/bin/perl -w
+#
+# enterpriselibre_add_cloud v1.2
+#
+# Created by Gregory Wolgemuth <woogie@cirruscomputing.com>
+# Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+use Regexp::Common qw(net);
+use Tie::File;
+use POSIX qw(ceil floor);
+use File::Copy::Recursive qw(dircopy);
+use Git;
+
+if ($#ARGV != 5){
+	print "Usage: enterpriselibre_add_cloud ORGNAME publicip netmask privatenetwork archive_folder template_folder\n";
+	print "E.g: ./enterpriselibre_add_cloud ACME1 1.2.3.4 255.255.255.240 10.101.1.0 /root/deployA1067/archive /root/deployA1067/template\n";
+	exit 1;
+}
+my $ORGNAME = $ARGV[0];
+my $PUBLICIP = $ARGV[1];
+my $NETMASK = $ARGV[2];
+my $PRIVATENET = $ARGV[3];
+my $ARCHIVE_FOLDER = $ARGV[4];
+my $TEMPLATE_FOLDER = $ARGV[5];
+
+print "add org $ORGNAME $PUBLICIP $NETMASK $PRIVATENET $ARCHIVE_FOLDER $TEMPLATE_FOLDER\n";
+
+if ( -d "/etc/shorewall/orgs.local/" . uc($ORGNAME) ){
+	print "Shorewall directory for organization $ORGNAME already exists\n";
+	exit 1;
+}
+
+unless ($PUBLICIP =~ m/^$RE{net}{IPv4}$/){
+	print "Public IP $PUBLICIP must be an IPv4 IP address\n";
+	exit 1;
+}
+
+unless ($PRIVATENET =~ m/^$RE{net}{IPv4}$/){
+	print "Private IP $PRIVATENET must be an IPv4 IP address\n";
+	exit 1;
+}
+
+my @private_elements = split(/\./, $PRIVATENET);
+if ( $private_elements[3] != 0){
+	print "Private IP $PRIVATENET must designate a network (end in 0)\n";
+	exit 1;
+}
+
+#Now, get a unique 4-character alpha out of the orgname
+my @org_chars = split(//, $ORGNAME);
+my @alpha_chars = ();
+foreach my $x (@org_chars){
+	if ($x =~ m/[A-Za-z]/){
+		push @alpha_chars, uc($x);
+	}
+}
+#Pad until 4 characters
+while (@alpha_chars < 4){
+	push @alpha_chars, "A";
+}
+my $fourchar;
+my $counter = 0;
+until ($fourchar){
+	#Our "total offset" will be counter div 4
+	#The number of characters we shuffle will then be counter modulo 4
+	my $potential_fourchar = "";
+	if (@alpha_chars >= 4 + ceil($counter / 4)){
+		#Group of 4 offset
+		my $offset = floor($counter / 4);
+		#Number of characters to shuffle
+		my $chars = $counter % 4;
+		for (my $i = 3; $i >= 0; $i--){
+			$potential_fourchar = $alpha_chars[ $i + (4*$offset) + (($chars > 0) ? 1 : 0) ] . $potential_fourchar;
+			$chars--;
+		}
+		unless (-e "/etc/sysconfig/network-scripts/ifcfg-br$potential_fourchar"){
+			$fourchar = $potential_fourchar;
+		}
+	}
+	else{
+		#Oh man, we've run out of characters. Just start exhaustively grabbing 4 character combinations
+		#There's 26^5 - 1 available, we can find an unused one no problem
+		my @alphabet = qw(A B C D E F G H I J K L M N O P Q R S T U V W X Y Z);
+		for (my $i = 0; $i < 26**5 - 1; $i++){
+			$potential_fourchar = $alphabet[ $i % 26**4 ] . $alphabet[ $i % 26**3 ] . $alphabet[ $i % 26**2 ] . $alphabet[ $i % 26 ];
+			unless (-e "/etc/sysconfig/network-scripts/ifcfg-br$potential_fourchar"){
+				$fourchar = $potential_fourchar;
+				last;
+			}
+		}
+		unless ($fourchar){
+			print "Out of potential 4-alpha names for bridges and zones\n";
+			exit 1;
+		}
+	}
+	$counter++;
+}
+# for org names which are Annn we can just use the org name
+# by the way, it can be more than 4 chars
+if( $ORGNAME =~ /^A[0-9][0-9]*$/) {
+	#$fourchar = $ORGNAME;
+	# remove the leading A
+	$fourchar = substr $ORGNAME, 1;
+}
+#Now that we have our fourchar, 
+#Add the bridge, the routes and set up the shorewall tables
+my $ucfc = uc($fourchar);
+my $lcfc = lc($fourchar);
+my $private_three = $PRIVATENET;
+$private_three =~ s/\.0$//;
+
+#Set netmask from script input
+my $netmask = $NETMASK;
+
+#This is now handled by hermes container which brings up interface venet0
+#system("$ARCHIVE_FOLDER/enterpriselibre_add_ip", "$PUBLICIP", "$netmask");
+#if ($? != 0){
+#	print "Error adding IP: $PUBLICIP $netmask \n";
+#	exit 1;
+#}
+
+system("$ARCHIVE_FOLDER/enterpriselibre_add_bridge_route", "br$ucfc", "$PRIVATENET");
+if ($? != 0){
+	print "Error adding bridge: br$ucfc $PRIVATENET \n";
+	exit 1;
+}
+
+print "\nBridge name is: br$ucfc\n\n";
+dircopy("$TEMPLATE_FOLDER/etc/shorewall/orgs.local/template", "/etc/shorewall/orgs.local/$ORGNAME");
+
+foreach my $file (</etc/shorewall/orgs.local/$ORGNAME/*>){
+	tie my @contents, 'Tie::File', $file;
+	foreach my $line (@contents){
+		$line =~ s/ FULLNAME/ $ORGNAME/g;
+		$line =~ s/cNAME/c$lcfc/g;
+		$line =~ s/brNAME/br$ucfc/g;	
+		$line =~ s/PUBLICIP/$PUBLICIP/g;
+		$line =~ s/PRIVATEIP/$private_three/g;
+	}
+	untie @contents;
+}
+
+#Add to the master shorewall configs
+foreach my $file ("interfaces", "masq", "policy", "routestopped", "rules", "zones", "proxyarp"){
+	tie my @contents, 'Tie::File', "/etc/shorewall/$file";
+	for (my $i = 0; $i < @contents; $i++){
+		if ($contents[$i] eq "#LOCAL ORGS BEGIN"){
+			#Put line into config file in correct location
+			splice @contents, $i+1, 0, "INCLUDE /etc/shorewall/orgs.local/$ORGNAME/$file";
+			last;
+		}
+	}
+	untie @contents;
+}
+#Restart the shorewall service
+my $git = Git->repository("/etc/shorewall");
+system("service", "shorewall", "restart");
+#Do manual fix - NJ March 2014
+#if ($? != 0){
+#	print "Error restarting shorewall: firewall misconfigured\n";
+#	print "Rolling back networking config and restarting\n";
+#	$git->command("reset", "--hard", "HEAD");
+#	system("service", "shorewall", "restart");
+#	exit 1;
+#}
+$git->command("add", "/etc/shorewall/orgs.local/$ORGNAME");
+foreach my $file ("interfaces", "masq", "policy", "routestopped", "rules", "zones", "proxyarp"){
+	$git->command("add", "/etc/shorewall/$file");
+}
+$git->command("commit", "-m", "Automated commit to add $ORGNAME to networking config");
+
+print "Success\n";

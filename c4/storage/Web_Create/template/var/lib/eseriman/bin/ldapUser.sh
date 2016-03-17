@@ -7,7 +7,7 @@
 # 
 # RWL Dec 2013 
 # 
-# Copyright (c) 1996-2013 Eseri (Free Open Source Solutions Inc.) 
+# Copyright (c) 1996-2013 Free Open Source Solutions Inc. 
 # All Rights Reserved 
 # 
 # Free Open Source Solutions Inc. owns and reserves all rights, title, 

@@ -1,11 +1,11 @@
 #!/bin/bash
 #
-# VPS Reboot script - v2.9
+# VPS Reboot script - v3.0
 #
 # Created by Karoly Molnar <kmolnar@cirruscomputing.com>
 # Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -13,7 +13,7 @@
 # readable forms.
 #
 
-# Include eseri functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 # Mark start point in log file
@@ -89,7 +89,12 @@ VPS_INIT_SCRIPTS_35=( "/etc/init.d/openfire" )
 VPS_INIT_SCRIPTS_36=( "/etc/init.d/funambol" )
 VPS_INIT_SCRIPTS_37=( "/etc/init.d/apache2" "/etc/init.d/sogo" "/etc/init.d/memcached" "/etc/init.d/dovecot" )
 VPS_INIT_SCRIPTS_39=( "/etc/init.d/apache2" )
-VPS_INIT_SCRIPTS_50=( "/etc/init.d/nxserver" "service dbus" "/etc/init.d/cups" "/etc/init.d/nscd" )
+hasCapability X2Go
+if [ $? -eq 0 ] ; then
+    VPS_INIT_SCRIPTS_50=( "/etc/init.d/x2goserver" "service dbus" "/etc/init.d/cups" "/etc/init.d/nscd" )
+else
+    VPS_INIT_SCRIPTS_50=( "/etc/init.d/nxserver" "service dbus" "/etc/init.d/cups" "/etc/init.d/nscd" )
+fi
 
 stopVPS()
 {

@@ -1,10 +1,10 @@
 #!/bin/bash
 #
-# System Anchor Config Deploy Script - v1.1
+# System Anchor Config Deploy Script - v1.2
 #
 # Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved 
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -12,7 +12,7 @@
 # readable forms.
 #
 
-# Include eseri functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 # Get the system parameters.
@@ -180,7 +180,8 @@ fi
 if [ $SHORT_NAME == 'hermes' ]; then
     remove_old_cert_key "ssl.$OLD_SYSTEM_ANCHOR_DOMAIN"
     replace_anchor_domain "$APACHE2_CONFIG_FOLDER/sites-available/*"
-    replace_anchor_ip "$APACHE2_CONFIG_FOLDER/ports.conf 
+    replace_anchor_ip "/etc/hosts 
+$APACHE2_CONFIG_FOLDER/ports.conf 
 $APACHE2_CONFIG_FOLDER/sites-available/* 
 $SHOREWALL_CONFIG_FOLDER/rules 
 $SHOREWALL_CONFIG_FOLDER/masq"
@@ -191,6 +192,7 @@ fi
 ##################
 if [ $SHORT_NAME == 'apollo' ]; then
     replace_anchor_domain "$APACHE2_CONFIG_FOLDER/sites-available/* 
+/var/lib/backup/bin/common.sh 
 /var/lib/backup/.duply/*/exclude 
 /var/lib/backup/.duply/*/conf 
 /etc/nagios3/nagios.cfg 
@@ -198,7 +200,7 @@ if [ $SHORT_NAME == 'apollo' ]; then
 /etc/nagios3/conf.d/contacts_nagios2.cfg 
 /etc/nagios3/servers/* 
 /etc/nagios3/clouds/* 
-/var/www/loginsite/cirrusopen_loginsite.conf"
+/var/www/loginsite/enterpriselibre_loginsite.conf"
     replace_short_domain "/etc/nagios3/clouds/$(to_lower $OLD_SHORT_DOMAIN).cfg"
 
     mv /etc/nagios3/clouds/$(to_lower $OLD_SHORT_DOMAIN).cfg /etc/nagios3/clouds/$(to_lower $NEW_SHORT_DOMAIN).cfg
@@ -402,8 +404,8 @@ fi
 ####################
 if [ $SHORT_NAME == 'poseidon' ]; then
     replace_anchor_domain "/etc/mediawiki/LocalSettings.php 
-/var/www/acc/cirrusopen_accountmanager.conf 
-/var/www/sysman/cirrusopen_systemmanager.conf 
+/var/www/cloudmanager/enterpriselibre_cloudmanager.conf 
+/var/www/systemmanager/enterpriselibre_systemmanager.conf 
 $APACHE2_CONFIG_FOLDER/sites-available/* 
 $ORANGEHRM_FOLDER/lib/confs/Conf.php 
 $SQLLEDGER_FOLDER/users/members 
@@ -537,11 +539,11 @@ if [ $SHORT_NAME == 'chaos' ]; then
     replace_anchor_domain "/etc/ldap.conf 
 /etc/firefox/pref/firefox.js 
 /etc/Muttrc 
-/usr/share/gconf/defaults/99_CirrusOpen-gnomenu 
+/usr/share/gconf/defaults/99_EnterpriseLibre-gnomenu 
 /usr/lib/firefox-24.1.1esr/defaults/pref/firefox.js 
 /usr/local/share/applications/* 
-/usr/local/share/CirrusOpen/CirrusOpenDSPAMTrain 
-/usr/local/share/CirrusOpen/glade/CirrusOpenCloudManager.glade 
+/usr/local/share/EnterpriseLibre/EnterpriseLibreDSPAMTrain 
+/usr/local/share/EnterpriseLibre/glade/EnterpriseLibreCloudManager.glade 
 /var/lib/gconf/debian.defaults/%gconf-tree.xml 
 $SUPERUSER_HOME_FOLDER/.gconfxml 
 $SUPERUSER_HOME_FOLDER/.evolutionconf.xml 

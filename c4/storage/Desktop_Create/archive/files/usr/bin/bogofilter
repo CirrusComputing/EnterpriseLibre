@@ -4,7 +4,7 @@
 #
 # Created by Karoly Molnar <kmolnar@eseri.com>
 #
-# Copyright (c) 1996-2010 Eseri (Free Open Source Solutions Inc.)
+# Copyright (c) 1996-2010 Free Open Source Solutions Inc.
 # All Rights Reserved
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -37,7 +37,7 @@ DSPAM_SIGNATURE=$(echo "$EMAIL" | awk '!NF{exit 0};/^X-DSPAM-Signature:/ {print 
 # if length of string is non-zero
 if [ -n "$DSPAM_SIGNATURE" ]; then
 
-	echo "$EMAIL" | sudo /usr/local/share/CirrusOpen/CirrusOpenDSPAMTrain "$CLASS"
+	echo "$EMAIL" | sudo /usr/local/share/EnterpriseLibre/EnterpriseLibreDSPAMTrain "$CLASS"
 	WHAT="Dspam+Bogo"
 fi
 

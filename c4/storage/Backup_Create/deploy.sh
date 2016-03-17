@@ -1,10 +1,10 @@
 #!/bin/bash
 #
-# Backup deploy script - v2.2
+# Backup deploy script - v2.3
 #
 # Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Eseri (Free Open Source Solutions Inc.)
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -12,7 +12,7 @@
 # readable forms.
 #
 
-# Include cirrus functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 # Mark start point in log file
@@ -108,6 +108,7 @@ install -o backup -g backup -m 755 $TEMPLATE_FOLDER/$BACKUP_HOME_FOLDER/bin/run_
 install -o backup -g backup -m 755 $TEMPLATE_FOLDER/$BACKUP_HOME_FOLDER/bin/pre_backup.sh $BACKUP_HOME_FOLDER/bin/pre_backup.sh
 install -o backup -g backup -m 755 $TEMPLATE_FOLDER/$BACKUP_HOME_FOLDER/bin/restore_file_path.sh $BACKUP_HOME_FOLDER/bin/restore_file_path.sh
 install -o backup -g backup -m 755 $TEMPLATE_FOLDER/$BACKUP_HOME_FOLDER/bin/hardlinks.sh $BACKUP_HOME_FOLDER/bin/hardlinks.sh
+eseriReplaceValues $BACKUP_HOME_FOLDER/bin/common.sh
 sed -i -e "s|\[-DB_PASSWORD_MYSQL-\]|$DB_PASSWORD_MYSQL|g" -e "s|\[-CONTAINER_LIST-\]|$CONTAINER_LIST|g" $BACKUP_HOME_FOLDER/bin/pre_backup.sh
 
 # Configure duply

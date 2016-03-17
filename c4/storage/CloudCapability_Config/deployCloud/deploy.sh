@@ -1,10 +1,10 @@
 #!/bin/bash
 #
-# CloudCapability_Config deploy script - v2.8
+# CloudCapability_Config deploy script - v2.9
 #
 # Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved 
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -12,7 +12,7 @@
 # readable forms.
 #
 
-# Include eseri functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 # Get the system parameters
@@ -119,11 +119,11 @@ if [ $SHORT_NAME == 'chaos' ]; then
     done
 
     # Favorites menu
-    FAVORITES_MENU=' Start Here...::firefox http://wiki.cirrusopen.org/::EseriHelpAndSupport::1,'
-    if [ -f "/usr/local/bin/CirrusOpenSystemManager" ]; then
-	FAVORITES_MENU+='System Manager::sudo /usr/local/bin/CirrusOpenSystemManager::CirrusOpenSystemManager::1,'
+    FAVORITES_MENU=' Start Here...::firefox http://wiki.enterpriselibre.org/::EnterpriseLibreHelpAndSupport::1,'
+    if [ -f "/usr/local/bin/EnterpriseLibreSystemManager" ]; then
+	FAVORITES_MENU+='System Manager::sudo /usr/local/bin/EnterpriseLibreSystemManager::EnterpriseLibreSystemManager::1,'
     fi
-    FAVORITES_MENU+='Cloud Manager::sudo /usr/local/bin/CirrusOpenCloudManager::CirrusOpenCloudManager::1,Email \& Calendar::evolution::evolution::1,Shared Folder::file:///srv/shared::inode-directory::3,Browsing::firefox %u::firefox::1'
+    FAVORITES_MENU+='EnterpriseLibre Manager::sudo /usr/local/bin/EnterpriseLibreCloudManager::EnterpriseLibreCloudManager::1,Email \& Calendar::evolution::evolution::1,Shared Folder::file:///srv/shared::inode-directory::3,Browsing::firefox %u::firefox::1'
     CAPABILITIES=( LibreOffice Wiki )
     CAPABILITY_ITEMS=( ",Word Processing::libreoffice -writer %U::libreoffice-writer::1,Spreadsheets::libreoffice -calc %U::libreoffice-calc::1" ",Wiki::firefox http://wiki.$DOMAIN/::wiki::1" )
     for (( i=0; i<${#CAPABILITIES[@]}; i++ )); do
@@ -139,7 +139,7 @@ if [ $SHORT_NAME == 'chaos' ]; then
     done
   
     #Update favorites menu
-    sed -i "s|/apps/gnomenu/favorites.*|/apps/gnomenu/favorites [$FAVORITES_MENU]|" /usr/share/gconf/defaults/99_CirrusOpen-gnomenu
+    sed -i "s|/apps/gnomenu/favorites.*|/apps/gnomenu/favorites [$FAVORITES_MENU]|" /usr/share/gconf/defaults/99_EnterpriseLibre-gnomenu
     update-gconf-defaults
 fi
 

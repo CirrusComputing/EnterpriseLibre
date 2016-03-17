@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<content type="Menu">
+<ContentData Name="EnterpriseLibre" Author="kmolnar" Version="1.0" Copyright="Artwork by Whise, Oxigen icons"/>
+<theme color="All" color_lang="All" colorvalue="#FFFFFF">
+	<Background Image="start-menu.png"/>
+	<WindowDimensions Width="345" Height="500"/>
+	<SearchBarSettings  X="84" Y="34" Width="218" Height="22" Widget="Custom" WidgetName="SearchBar" InitialText="" TextColor="#000000" InsetX="20" InsetY="16" Background="search-frame.png"/>	
+	<ProgramListSettings X="16" Y="72" Width="314" Height="343"/>
+	<Capabilities HasSearch="1" HasIcon="0" HasFadeTransition="1"/>
+	<Button Name="EnterpriseLibre Help"	Markup="" TextX="0" TextY="0" TextAlignment="1" Image="EnterpriseLibre.png" ButtonIcon="EnterpriseLibre.png" ButtonIconSel="" ButtonX="18" ButtonY="10" SubMenu="0" Command="Help" CloseMenu="1" Icon=""/>
+	<Label Name="Username"	Markup="&lt;span foreground='#FFFFFF' font_desc='sans 9' stretch='semicondensed'&gt;[TEXT]&lt;/span&gt;" LabelX="85" LabelY="13" TextAlignment="0" Command="whoami"/>
+	<Button Name="Search for Files"	Markup="" TextX="0" TextY="0" TextAlignment="1" Image="system-search.png" ButtonIcon="system-search.png" ButtonIconSel="" ButtonX="307" ButtonY="34" SubMenu="0" Command="Search" CloseMenu="1" Icon=""/>
+	<Tab Name="Favorites"	Markup="&lt;span foreground='#000000' font_desc='sans 6' stretch='normal' weight='normal'&gt;Favorites&lt;/span&gt;"		TextX="4" TextY="56"  TextAlignment="1" InvertTextColorOnSel='1' Image="" ImageSel="m_tab.png" TabIconX="10" TabIconY="10" TabIcon="emblem-favorite.png" TabX="12" TabY="417" SubMenu="1" Command="7" CloseMenu="0" Icon="" AddBackButton='0'/>
+	<Tab Name="Applications"	Markup="&lt;span foreground='#000000' font_desc='sans 6' stretch='normal' weight='normal'&gt;Applications&lt;/span&gt;"		TextX="4" TextY="56" TextAlignment="1" InvertTextColorOnSel='1' Image="" ImageSel="m_tab.png" TabIconX="10" TabIconY="10" TabIcon="applications-accessories.png" TabX="76" TabY="417" SubMenu="1" Command="1" CloseMenu="0" Icon="" AddBackButton='0'/>
+	<Tab Name="Places"	Markup="&lt;span foreground='#000000' font_desc='sans 6' stretch='normal' weight='normal'&gt;Places&lt;/span&gt;"		TextX="4" TextY="56" TextAlignment="1" InvertTextColorOnSel='1' Image="" ImageSel="m_tab.png" TabIconX="10" TabIconY="10" TabIcon="folder-documents.png" TabX="140" TabY="417" SubMenu="1" Command="8" CloseMenu="0" Icon="" AddBackButton='0'/>
+	<Tab Name="Recent Files"	Markup="&lt;span foreground='#000000' font_desc='sans 6' stretch='normal' weight='normal'&gt;Recent Files&lt;/span&gt;"		TextX="4" TextY="56" TextAlignment="1" InvertTextColorOnSel='1' Image="" ImageSel="m_tab.png" TabIconX="10" TabIconY="10" TabIcon="folder-recent.png" TabX="204" TabY="417" SubMenu="1" Command="4" CloseMenu="0" Icon="" AddBackButton='0'/>
+	<Button Name="Logout"	Markup="" TextX="0" TextY="0" TextAlignment="1" Image="system-shutdown.png" ButtonIcon="system-shutdown.png" ButtonIconSel="" ButtonX="278" ButtonY="427" SubMenu="0" Command="Logout" CloseMenu="1" Icon=""/>
+	<Label Name="Logout2"	Markup="&lt;span foreground='#FFFFFF' font_desc='sans 6' stretch='normal' weight='normal'&gt;Logout&lt;/span&gt;" LabelX="288" LabelY="473" TextAlignment="0" Command=""/>
+</theme>
+</content>

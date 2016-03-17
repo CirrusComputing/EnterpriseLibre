@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=EnterpriseLibre Manager
+Comment=Change your password, manage desktops
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Exec=sudo /usr/local/bin/EnterpriseLibreCloudManager
+Terminal=false
+StartupNotify=true
+Category=GNOME;Application;Core;
+Icon=EnterpriseLibreCloudManager

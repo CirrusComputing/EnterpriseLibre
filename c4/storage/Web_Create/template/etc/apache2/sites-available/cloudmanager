@@ -1,0 +1,40 @@
+<VirtualHost [-IP_ADDRESS-]:80>
+    ServerAdmin webmaster@[-DOMAIN-]
+    ServerName cloudmanager
+    ServerAlias cloudmanager.[-DOMAIN-]
+
+    DocumentRoot /var/www/cloudmanager/root
+    Alias /static /var/www/cloudmanager/root/static
+
+    Alias / /var/www/cloudmanager/script/enterpriselibre_cloudmanager_cgi.pl
+
+    RewriteEngine On
+    RewriteLogLevel 9
+    RewriteLog /var/log/apache2/rewrite.log
+    RewriteCond %{REQUEST_URI} !^/?script/enterpriselibre_cloudmanager_cgi.pl
+    RewriteCond %{REQUEST_URI} !^/static/
+    RewriteRule ^/?(.*)$ /var/www/cloudmanager/script/enterpriselibre_cloudmanager_cgi.pl/$1
+
+    <Directory "/var/www/cloudmanager/script">
+        Options +ExecCGI
+        SetHandler cgi-script
+    </Directory>
+
+    <Location "/">
+        AuthType Kerberos
+        AuthName "Account Manager"
+        KrbAuthRealms [-REALM-]
+        Krb5Keytab /etc/apache2/apache2.keytab
+        KrbMethodNegotiate on
+        KrbMethodK5Passwd off
+        KrbSaveCredentials off
+        Require valid-user
+    </Location>
+
+    # Possible values include: debug, info, notice, warn, error, crit, alert, emerg.
+    LogLevel info
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log combined
+    ServerSignature Off
+</VirtualHost>
+

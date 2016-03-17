@@ -13,7 +13,7 @@
 # readable forms.
 #
 
-# Include cirrus functions
+# Include EnterpriseLibre functions
 . ${0%/*}/archive/eseriCommon
 
 SHORT_DOMAIN=$(getParameter short_domain)
