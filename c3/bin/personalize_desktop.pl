@@ -1,12 +1,12 @@
 #!/usr/bin/perl -w
 #
-# personalize_desktop.pl - v6.2
+# personalize_desktop.pl - v6.3
 #
 # This script creates the desktop account and configures it for use in different multi-user apps.
 #
 # Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved 
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -61,12 +61,14 @@ my $FROMEMAILADDRESS = $config{"fromemailaddress"};
 my $verbose = 0;
 my $dbuserid = '';
 my $db_log;
+my $x2gorun = "FALSE";
 my $nxrun = "FALSE";
 my $sshConn = '';
 my $stdout = '';
 my $stderr = '';
 my $exit = '';
 my $display = '';
+my $export_display = '';
 my $userid = '';
 my $nxsessions = '';
 my @sessions = ();
@@ -108,20 +110,22 @@ fail("Couldn't find accounts.xml in the cwd") if (! -r "./accounts.xml");
 
 fail("Couldn't find blist.xml in the cwd") if (! -r "./blist.xml");
 
-#We don't want any leftover NX sessions running, as our cleanup involves a nuking pass. So check n' warn n' die
-my $nxresult = `nxkill --list`;
-my @nxsessions = split(/\n/, $nxresult);
-foreach my $nxsession (@nxsessions) {
+if (&has_capability("NoMachine")){
+    #We don't want any leftover NX sessions running, as our cleanup involves a nuking pass. So check n' warn n' die
+    my $nxresult = `nxkill --list`;
+    my @nxsessions = split(/\n/, $nxresult);
+    foreach my $nxsession (@nxsessions) {
 	if ($nxsession =~ m/^Type.*/){
-		next;
+	    next;
 	}
 	if ($nxsession =~ m/^-.*/){
-		next;
+	    next;
 	}
 	chomp($nxsession);
 	if ($nxsession ne ''){
-		fail("There is an NX session currently running: " . @{[split(/\s+/, $nxsession)]}[1]);
+	    fail("There is an NX session currently running: " . @{[split(/\s+/, $nxsession)]}[1]);
 	}
+    }
 }
 
 # Username character check
@@ -363,6 +367,11 @@ sub createMenu{
 }
 
 sub makeNXConfFile{
+	if (&has_capability("X2Go")){
+		mylog("Skipping makeNXConfFile");
+		return;
+	}
+    
 	#Grab the DSA private key from the database
 	$db_st = $db_conn->prepare("SELECT nxkey FROM network.organization WHERE network_name=?");
 	$db_st->bind_param(1, "$network_name");
@@ -488,7 +497,7 @@ sub configureEvolution{
 	mylog("sogo_manage_sieve.py file is generated, chmodded and ready to be copied");
 	# copy script to chaos, run it and remove it
 	$scpe->scp("/home/c3/bin/sogo_manage_sieve.py", "/home/$username");
-	($stdout, $stderr, $exit) = $sshConn->cmd("export DISPLAY=0:$display; python /home/$username/sogo_manage_sieve.py");
+	($stdout, $stderr, $exit) = $sshConn->cmd("export DISPLAY=$export_display; python /home/$username/sogo_manage_sieve.py");
 	mylog("Result of trying to run was -\n$stdout");
 	if ($exit != 0){
 	    fail("Error initSieve, $stderr");
@@ -526,7 +535,7 @@ EOF\" postgres');
 
 	# Starting evolution, so that the next time the user opens evolution, the Sent folder will appear instead of it being replaced by "Loading..."
 	mylog("About to start evolution");
-	my $run_process = "export DISPLAY=0:$display; evolution";
+	my $run_process = "export DISPLAY=$export_display; evolution";
 	`./run_process.pl "$username" "$password" "$target_host" "$run_process" >&2 &`;
 
 	my $evolution_is_ready = 0;
@@ -550,7 +559,7 @@ sub configurePidgin{
 		return;
 	}
 	mylog("About to run pidgin");
-	my $run_process = "pidgin --display 0:$display";
+	my $run_process = "pidgin --display $export_display";
 	`./run_process.pl "$username" "$password" "$target_host" "$run_process" >&2 &`;
 	#Again, loop until we see a file we need then kill Pidgin
 	my $pidgin_is_ready = 0;
@@ -686,7 +695,7 @@ sub configureSyncthing{
 sub userInit{
 	#Run the client side user init script
 	mylog("userInit start");
-	($stdout, $stderr, $exit) = $sshConn->cmd("export DISPLAY=0:$display; if [ -x /usr/local/share/eseri/eseriUserInit ] ; then /usr/local/share/eseri/eseriUserInit \"$password\"; fi");
+	($stdout, $stderr, $exit) = $sshConn->cmd("export DISPLAY=$export_display; if [ -x /usr/local/share/eseri/eseriUserInit ] ; then /usr/local/share/eseri/eseriUserInit \"$password\"; fi");
 	mylog("userInit end");
 	if ($exit != 0) {fail ("Problem running the eseriUserInit script, $stdout, $stderr")};
 }
@@ -704,7 +713,7 @@ sub configureWiki{
     # Copy script to chaos, run it and remove it
     $scpe->scp("/home/c3/bin/edit_user_wiki.js", "/home/$username");
     for (my $i=0; $i<3; $i++){
-	($stdout, $stderr, $exit) = $sshConn->cmd("export DISPLAY=0:$display; mozmill -t /home/$username/edit_user_wiki.js -P \$((30000+\$(id -u)))");
+	($stdout, $stderr, $exit) = $sshConn->cmd("export DISPLAY=$export_display; mozmill -t /home/$username/edit_user_wiki.js -P \$((30000+\$(id -u)))");
 	mylog("Result of trying to run was -\n$stdout");
 	if ($exit != 0){
 	    `echo 'From: <$FROMEMAILADDRESS>\nSubject: Error in C3 creation - personalize_desktop.pl\nTo: <$ERROREMAILADDRESS>\n\nMozmill edit_user_wiki.js test #$i failed for $username at cloud $network_name.\n$stdout\n' | ssmtp -t`;
@@ -848,29 +857,67 @@ sub disableScreenSaver{
 }
 
 sub runNXFirstTime{
+    if (&has_capability("X2Go")){
+	for (my $i=0; $i<3; $i++){
+	    `pyhoca-cli --server=$target_host --username=$username --password=$password --command=GNOME >/dev/null 2>&1 &`;
+	    mylog("Started X2Go client");
+	    sleep(10);
+	    `pgrep pyhoca-cli 2>&1 > /dev/null`;
+	    if($? == 0) {
+		mylog("X2Go client started successfully");
+		last;
+	    }
+	    else{
+		($i<2) ? (mylog("X2Go session did not appear to stay alive")) : (fail("X2Go session did not appear to stay alive"));
+	    }
+	}	
+	$x2gorun='TRUE';
+	
+	#Challenge number one: Configuring Evolution!	    
+	$sshConn = Net::SSH::Perl->new("$target_host") || fail("Couldn't get SSH tunnel to target host");
+	$sshConn->login("$username", "$password") || fail("Couldn't use SSH to log in to target host");
+	
+	for (my $i=0;$i<3; $i++){
+	    sleep(15);
+	    ($stdout, $stderr, $exit) = $sshConn->cmd("x2golistsessions | awk -F '|' '{print \$3}'");
+	    $display=$stdout;
+	    if ($display ne '') {
+		chomp($display);
+		mylog("Most recent session is using display: $display");
+		last;
+	    }
+	    else{
+		($i<2) ? (mylog("Failed to determine target host DISPLAY setting, $stdout, $stderr")) : (fail("Failed to determine target host DISPLAY setting, $stdout, $stderr"));
+	    }
+	}
+
+	$export_display = ":$display";
+    }
+    else{
 	`nxclient --session $username.chaos &`;
 	mylog("Started NX client");
 	sleep(10);
 	`pidof nxssh 2>&1 > /dev/null`;
 	unless($? == 0) {fail ("NX session did not appear to stay alive")};
-	mylog("NX client started successfully");
-
+	mylog("NX client started successfully");	    
 	$nxrun="TRUE";
-	#Challenge number one: Configuring Evolution!
-
+ 
+	#Challenge number one: Configuring Evolution!	    
 	$sshConn = Net::SSH::Perl->new("$target_host") || fail("Couldn't get SSH tunnel to target host");
 	$sshConn->login("$username", "$password") || fail("Couldn't use SSH to log in to target host");
-
+	
 	($stdout, $stderr, $exit) = $sshConn->cmd("ls -rt /home/$username/.nx | grep \"^C-\" | tail -n 1");
 	mylog( "Finding most recent session, result: $stdout");
 	if ($stdout =~ m/^C-[^-]+-([0-9]*)-.*/){
-		$display=$1;
+	    $display=$1;
 	}
 	if ($display eq '') {fail("Failed to determine target host DISPLAY setting, $stdout, $stderr")};
 	chomp($display);
 	mylog( "Most recent session is using display: $display");
-
+	$export_display = "0:$display";
+    }
 }
+
 sub getUserID{
 	($stdout, $stderr, $exit) = $sshConn->cmd("id -u");
 	chomp($stdout);
@@ -929,47 +976,59 @@ sub setUserFailed{
 ######################################
 
 END{
-	#All I really care about at this point is making sure the NX client session is terminated if it's running
-	if (defined $nxrun && $nxrun eq "TRUE"){
-		my $nxsessions = `nxkill --list`;
-		print $nxsessions;
-		my @sessions = split(/\n/, $nxsessions);
-		foreach my $session (@sessions) {
-			#Header line, ignore ...
-			if ($session =~ m/^Type.*/){
-				next;
-			}
-			#Spacer line, ignore ...
-			if ($session =~ m/^-.*/){
-				next;
-			}
-			#This has to be the session we want - nuke it
-			my @session_info = split(/\s+/, $session);
-			my $session_id = $session_info[1];
-			my $session_dir = $ENV{'HOME'}."/.nx/".$session_info[0]."-".$session_info[3]."-".$session_info[2]."-".$session_info[1];
-			mylog ("Trying to kill NX Session: $session_id");
-			`nxkill --kill --id $session_id`;
-			mylog ("Trying to remove leftover session directory: $session_dir");
-			(-d "$session_dir") ? (`rm -r $session_dir`) : (mylog ("Session directory already removed cleanly"));
-			mylog ("Trying to issue remote kill command");
-			ssh( $target_host, "sudo ./bin/eseriKillNXSession '$username'", "eseriman");
-		}
-		#Now, clean up any leftovers
-		if (defined $sshConn){
-			($stdout, $stderr, $exit) = $sshConn->cmd("find /tmp -maxdepth 1 -user $username -exec rm -r {} \\;");
-			(defined $exit && $exit != 0) ? (mylog("Error cleaning up /tmp directories, $stderr")) : (mylog("Cleaned up /tmp directories"));
-			($stdout, $stderr, $exit) = $sshConn->cmd("rm /home/$username/some_tmp_file /home/$username/cal_disp_result /home/$username/core");
-			($stdout, $stderr, $exit) = $sshConn->cmd("rm /home/$username/evolution_addressbook.tmp /home/$username/evolution_after.tmp");
-			($stdout, $stderr, $exit) = $sshConn->cmd("sed -i -e 's/true/false/' /home/$username/.gconf/apps/evolution/calendar/notify/%gconf.xml");
-			undef $sshConn;
-			$? = 0;
-		}
-		$? = 0;
+    #All I really care about at this point is making sure the X2Go/NX client session is terminated if it's running.
+    if (defined $x2gorun && $x2gorun eq "TRUE"){
+	($stdout, $stderr, $exit) = $sshConn->cmd("x2golistsessions | awk -F '|' '{print \$2}'");
+	chomp($stdout);
+	my $session_dir = "/home/c3/.x2go/$stdout";
+	mylog ("Trying to remove leftover session directory: $session_dir");
+	(-d "$session_dir") ? (`rm -r $session_dir`) : (mylog ("Session directory already removed cleanly"));
+	mylog ("Trying to issue remote kill command");
+	ssh( $target_host, "sudo ./bin/eseriKillNXSession '$username'", "eseriman");
+	$? = 0;	    	    
+    }   
+    elsif (defined $nxrun && $nxrun eq "TRUE"){
+	my $nxsessions = `nxkill --list`;
+	print $nxsessions;
+	my @sessions = split(/\n/, $nxsessions);
+	foreach my $session (@sessions) {
+	    #Header line, ignore ...
+	    if ($session =~ m/^Type.*/){
+		next;
+	    }
+	    #Spacer line, ignore ...
+	    if ($session =~ m/^-.*/){
+		next;
+	    }
+	    #This has to be the session we want - nuke it
+	    my @session_info = split(/\s+/, $session);
+	    my $session_id = $session_info[1];
+	    my $session_dir = $ENV{'HOME'}."/.nx/".$session_info[0]."-".$session_info[3]."-".$session_info[2]."-".$session_info[1];
+	    mylog ("Trying to kill NX Session: $session_id");
+	    `nxkill --kill --id $session_id`;
+	    mylog ("Trying to remove leftover session directory: $session_dir");
+	    (-d "$session_dir") ? (`rm -r $session_dir`) : (mylog ("Session directory already removed cleanly"));
+	    mylog ("Trying to issue remote kill command");
+	    ssh( $target_host, "sudo ./bin/eseriKillNXSession '$username'", "eseriman");
 	}
-	$db_log->finish;
-	$db_conn->disconnect;
+	$? = 0
+    }
+
+    #Now, clean up any leftovers
+    if (defined $sshConn){
+	($stdout, $stderr, $exit) = $sshConn->cmd("find /tmp -maxdepth 1 -user $username -exec rm -r {} \\;");
+	(defined $exit && $exit != 0) ? (mylog("Error cleaning up /tmp directories, $stderr")) : (mylog("Cleaned up /tmp directories"));
+	($stdout, $stderr, $exit) = $sshConn->cmd("rm /home/$username/some_tmp_file /home/$username/cal_disp_result /home/$username/core");
+	($stdout, $stderr, $exit) = $sshConn->cmd("rm /home/$username/evolution_addressbook.tmp /home/$username/evolution_after.tmp");
+	($stdout, $stderr, $exit) = $sshConn->cmd("sed -i -e 's/true/false/' /home/$username/.gconf/apps/evolution/calendar/notify/%gconf.xml");
+	undef $sshConn;
 	$? = 0;
-	exit 0;
+    }
+
+    $db_log->finish;
+    $db_conn->disconnect;
+    $? = 0;
+    exit 0;
 }
 
 
