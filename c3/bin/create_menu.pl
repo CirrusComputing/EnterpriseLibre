@@ -1,12 +1,12 @@
 #!/usr/bin/perl -w
 #
-# create_menu.pl - v3.7
+# create_menu.pl - v3.8
 #
 # This script creates the user desktop menu
 #
 # Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved 
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -728,7 +728,7 @@ EOF
 	<Include>
 EOF
 	$applications_menu .= <<EOF;
-		<Filename>cirrusopen-cloudmanager.desktop</Filename>
+		<Filename>enterpriselibre-cloudmanager.desktop</Filename>
 		<Filename>gnomecc.desktop</Filename>
 	</Include>
 	<Layout>
@@ -810,7 +810,7 @@ EOF
 EOF
 	}
 	$applications_menu .= <<EOF;
-		<Filename>cirrusopen-cloudmanager.desktop</Filename>
+		<Filename>enterpriselibre-cloudmanager.desktop</Filename>
 		<Menuname>Accessories</Menuname>
 		<Menuname>Games</Menuname>
 		<Filename>gnomecc.desktop</Filename>

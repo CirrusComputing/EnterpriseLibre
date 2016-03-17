@@ -42,7 +42,8 @@ sub scp{
 	    foreach ($src, $dest){
 		my $full_hostname = `echo "$_" | sed 's|.*@\\(.*\\):.*|\\1|g'`;
 		chomp($full_hostname);
-		`host '$full_hostname'`;
+		# Don't interpret full hostname value as relative names.
+		`host -N 0 '$full_hostname'`;
 		if ($? == 0){
 		    ssh_key($full_hostname);
 		}

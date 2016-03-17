@@ -1,12 +1,12 @@
 #!/usr/bin/perl -w
 #
-# xml_rpc_service_sysman.pl - v1.0
+# xml_rpc_service_sysman.pl - v1.1
 #
 # XML RPC Service for system manager requests. Responsible for creation / modification / deletion of clouds, etc
 #
 # Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved 
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -314,7 +314,7 @@ sub cloudClean{
     my ($params) = @_;
     my $network_name = @$params[0];
     
-    mylog("Remote call to cleanup cloud with cirrus domain ".$network_name);
+    mylog("Remote call to cleanup cloud with domain ".$network_name);
     
     my @params_vars :shared;
     $params_vars[0] = "$network_name";
@@ -323,7 +323,7 @@ sub cloudClean{
     $cloud_clean_queue->enqueue($var_ref);
     my $resultRef = new RPC::XML::struct({
 	Success => new RPC::XML::boolean("true"),
-	Reason => new RPC::XML::string("Clean cloud with cirrus domain ".$network_name)});
+	Reason => new RPC::XML::string("Clean cloud with domain ".$network_name)});
     return $resultRef;
 }
 
@@ -332,7 +332,7 @@ sub cloudBoot{
     my $network_name = @$params[0];
     my $boot_action = @$params[1];
     
-    mylog("Remote call to *$boot_action* cloud with cirrus domain ".$network_name);
+    mylog("Remote call to *$boot_action* cloud with domain ".$network_name);
     
     my @params_vars :shared;
     $params_vars[0] = "$network_name";
@@ -342,7 +342,7 @@ sub cloudBoot{
     $cloud_boot_queue->enqueue($var_ref);
     my $resultRef = new RPC::XML::struct({
 	Success => new RPC::XML::boolean("true"),
-	Reason => new RPC::XML::string("Trigger $boot_action for cloud with cirrus domain ".$network_name)});
+	Reason => new RPC::XML::string("Trigger $boot_action for cloud with domain ".$network_name)});
     return $resultRef;
 }
 
