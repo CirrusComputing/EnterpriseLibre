@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+# NX and Kerberos V integration
+#
+# This script is responsible for deleting the Kerberos ticket and also sets the nagios total procs limit- v1.1
+#
+# Created by Karoly Molnar <kmolnar@eseri.com>
+# Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
+#
+# Copyright (c) 1996-2015 Free Open Source Solutions Inc.
+# All Rights Reserved
+#
+# Free Open Source Solutions Inc. owns and reserves all rights, title,
+# and interest in and to this software in both machine and human
+# readable forms.
+#
+
+/usr/local/share/eseri/EseriLog "$USER - Logout"
+
+# Find the Kerberos 5 ticket cache file that was used by the session that is being closed
+KRB5_TMP=$(grep KRB5CCNAME $HOME/.profile)
+KRB5_CURRENT=${KRB5_TMP#*=}
+
+# Find the most recent Kerberos 5 ticket cache file
+KRB5_MOST_RECENT=/tmp/`ls -t /tmp/ | grep krb5cc_${UID}_ | sed '2,$ d'`
+
+# If there's newer Kerberos 5 ticket cache file than the one is used by the active session then leave it there
+if [ "$KRB5_CURRENT" == "$KRB5_MOST_RECENT" ]; then
+	rm -f /tmp/krb5cc_${UID}_*
+else
+	for FILE in $(ls -t /tmp/ | grep krb5cc_${UID}_ | sed '1,1 d'); do
+		rm -f /tmp/$FILE
+	done
+fi
+
+# Remove Kerberos 5 environment variable export
+sed -i '/KRB5CCNAME/d' $HOME/.profile
+
+# Run process in background before the 'killall' command. If this was after the killall command, it would never get executed since the script would've died by then.
+sudo /var/lib/eseriman/bin/eseriConfigureNagiosProcsLimit &
+
+killall -u $USER
+
+exit 0
