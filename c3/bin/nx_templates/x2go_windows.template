@@ -2,7 +2,7 @@
 ::::: DO NOT EDIT! :::::
 ::::::::::::::::::::::::
 ::
-:: Open X2Go Client session - Windows - v1.0
+:: Open X2Go Client session - Windows - v1.1
 ::
 :: Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
 ::
@@ -42,7 +42,7 @@
 @set SESSION_CONF=!SESSION_CONF!!NL!iconvfrom=ISO8859-1
 @set SESSION_CONF=!SESSION_CONF!!NL!useiconv=false
 @set SESSION_CONF=!SESSION_CONF!!NL!fullscreen=%FULLSCREEN%
-@set SESSION_CONF=!SESSION_CONF!!NL!SESSION_CONFdisp=false
+@set SESSION_CONF=!SESSION_CONF!!NL!multidisp=false
 @set SESSION_CONF=!SESSION_CONF!!NL!display=1
 @set SESSION_CONF=!SESSION_CONF!!NL!maxdim=false
 @set SESSION_CONF=!SESSION_CONF!!NL!rdpclient=rdesktop
@@ -114,4 +114,4 @@ mkdir "%HOMEPATH%\.x2goclient" >nul 2>&1
 	@echo !SESSION_CONF! > "%SESSION_CONF_FILE%"
 )
 
-@start "" "%X2GOCLIENT_PATH%"\x2goclient.exe --portable --session-conf="%SESSION_CONF_FILE%" --sessionid="%SESSION_ID%"
+@start "" "%X2GOCLIENT_PATH%"\x2goclient.exe --thinclient --session-conf="%SESSION_CONF_FILE%" --sessionid="%SESSION_ID%" --add-to-known-hosts

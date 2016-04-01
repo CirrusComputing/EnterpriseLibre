@@ -3,7 +3,7 @@
 ##### DO NOT EDIT! #####
 ########################
 #
-# Open X2Go Client session - OS X - v1.0
+# Open X2Go Client session - OS X - v1.1
 #
 # Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
@@ -105,6 +105,6 @@ mkdir -p ~/.x2goclient
 
 [ ! -f $SESSION_CONF_FILE ] && echo "$SESSION_CONF" > $SESSION_CONF_FILE
 
-open -n -a "$X2GOCLIENT_PATH" --args --portable --session-conf="$SESSION_CONF_FILE" --sessionid="$SESSION_ID"
+open -n -a "$X2GOCLIENT_PATH" --args --thinclient --session-conf="$SESSION_CONF_FILE" --sessionid="$SESSION_ID" --add-to-known-hosts
 
 exit 0

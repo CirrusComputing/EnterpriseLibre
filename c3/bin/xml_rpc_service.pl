@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-# xml_rpc_service.pl - v9.2
+# xml_rpc_service.pl - v9.3
 #
 # XML RPC Service for C3 host. Responsible for creation of new users, Changing user passwords, deleting old users, etc
 #
@@ -830,10 +830,10 @@ sub processNewUsers{
 			    `mkdir -p /tmp/$session_name`;
 			    `cat $ENV{'HOME'}/bin/nx_templates/x2go_windows.template | sed -e "s|\\[-SESSION_ID-\\]|$session_id|;s|\\[-SESSION_NAME-\\]|$session_name|;s|\\[-USERNAME-\\]|$username|;s|\\[-SERVER_HOST-\\]|$server_host|;s|\\[-SERVER_PORT-\\]|$server_port|;s|\\[-PROXY_ENABLED-\\]|$proxy_enabled|;s|\\[-PROXY_HOST-\\]|$proxy_host|;s|\\[-PROXY_PORT-\\]|$proxy_port|;s|\\[-RESOLUTION_WIDTH-\\]|$resolution_width|;s|\\[-RESOLUTION_HEIGHT-\\]|$resolution_height|;s|\\[-FULLSCREEN-\\]|$fullscreen|;s|\\[-CONNECTION_SPEED-\\]|$connection_speed|" > /tmp/$session_name/$session_name-windows.bat`;
 			    `cat $ENV{'HOME'}/bin/nx_templates/x2go_linux.template | sed -e "s|\\[-SESSION_ID-\\]|$session_id|;s|\\[-SESSION_NAME-\\]|$session_name|;s|\\[-USERNAME-\\]|$username|;s|\\[-SERVER_HOST-\\]|$server_host|;s|\\[-SERVER_PORT-\\]|$server_port|;s|\\[-PROXY_ENABLED-\\]|$proxy_enabled|;s|\\[-PROXY_HOST-\\]|$proxy_host|;s|\\[-PROXY_PORT-\\]|$proxy_port|;s|\\[-RESOLUTION_WIDTH-\\]|$resolution_width|;s|\\[-RESOLUTION_HEIGHT-\\]|$resolution_height|;s|\\[-FULLSCREEN-\\]|$fullscreen|;s|\\[-CONNECTION_SPEED-\\]|$connection_speed|" > /tmp/$session_name/$session_name-linux.sh`;
-			    `cat $ENV{'HOME'}/bin/nx_templates/x2go_osx.template | sed -e "s|\\[-SESSION_ID-\\]|$session_id|;s|\\[-SESSION_NAME-\\]|$session_name|;s|\\[-USERNAME-\\]|$username|;s|\\[-SERVER_HOST-\\]|$server_host|;s|\\[-SERVER_PORT-\\]|$server_port|;s|\\[-PROXY_ENABLED-\\]|$proxy_enabled|;s|\\[-PROXY_HOST-\\]|$proxy_host|;s|\\[-PROXY_PORT-\\]|$proxy_port|;s|\\[-RESOLUTION_WIDTH-\\]|$resolution_width|;s|\\[-RESOLUTION_HEIGHT-\\]|$resolution_height|;s|\\[-FULLSCREEN-\\]|$fullscreen|;s|\\[-CONNECTION_SPEED-\\]|$connection_speed|" > /tmp/$session_name/$session_name-mac.command`;
-			    `chmod a+x /tmp/$session_name/*`;
-			    `zip -r -j /tmp/$session_name.zip /tmp/$session_name/`;
-
+			    `mkdir -p /tmp/$session_name/$session_name-mac.app/Contents/MacOS`;
+			    `cat $ENV{'HOME'}/bin/nx_templates/x2go_osx.template | sed -e "s|\\[-SESSION_ID-\\]|$session_id|;s|\\[-SESSION_NAME-\\]|$session_name|;s|\\[-USERNAME-\\]|$username|;s|\\[-SERVER_HOST-\\]|$server_host|;s|\\[-SERVER_PORT-\\]|$server_port|;s|\\[-PROXY_ENABLED-\\]|$proxy_enabled|;s|\\[-PROXY_HOST-\\]|$proxy_host|;s|\\[-PROXY_PORT-\\]|$proxy_port|;s|\\[-RESOLUTION_WIDTH-\\]|$resolution_width|;s|\\[-RESOLUTION_HEIGHT-\\]|$resolution_height|;s|\\[-FULLSCREEN-\\]|$fullscreen|;s|\\[-CONNECTION_SPEED-\\]|$connection_speed|" > /tmp/$session_name/$session_name-mac.app/Contents/MacOS/$session_name-mac`;
+			    `chmod -R a+x /tmp/$session_name/*`;
+			    `cd /tmp/$session_name; zip -r ../$session_name.zip *`;
 
 			    sendEmailAttachment($userrealm,
 				      $FROMEMAILADDRESS,

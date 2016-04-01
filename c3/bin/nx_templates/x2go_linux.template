@@ -3,7 +3,7 @@
 ##### DO NOT EDIT! #####
 ########################
 #
-# Open X2Go Client session - Linux - v1.0
+# Open X2Go Client session - Linux - v1.1
 #
 # Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
@@ -99,6 +99,6 @@ mkdir -p ~/.x2goclient
 
 [ ! -f $SESSION_CONF_FILE ] && echo "$SESSION_CONF" > $SESSION_CONF_FILE
 
-x2goclient --portable --session-conf="$SESSION_CONF_FILE" --sessionid="$SESSION_ID" >/dev/null 2>&1 &
+x2goclient --thinclient --session-conf="$SESSION_CONF_FILE" --sessionid="$SESSION_ID" --add-to-known-hosts >/dev/null 2>&1 &
 
 exit 0
