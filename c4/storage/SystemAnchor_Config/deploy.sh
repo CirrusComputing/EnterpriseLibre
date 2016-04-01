@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# System Anchor Config Deploy Script - v1.2
+# System Anchor Config Deploy Script - v1.3
 #
 # Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
@@ -202,6 +202,7 @@ if [ $SHORT_NAME == 'apollo' ]; then
 /etc/nagios3/clouds/* 
 /var/www/loginsite/enterpriselibre_loginsite.conf"
     replace_short_domain "/etc/nagios3/clouds/$(to_lower $OLD_SHORT_DOMAIN).cfg"
+    replace_anchor_ip "/etc/nagios3/clouds/$(to_lower $OLD_SHORT_DOMAIN).cfg"
 
     mv /etc/nagios3/clouds/$(to_lower $OLD_SHORT_DOMAIN).cfg /etc/nagios3/clouds/$(to_lower $NEW_SHORT_DOMAIN).cfg
     rm -f /etc/nagios3/conf.d/ngraph/serviceext/$(to_lower $OLD_SHORT_DOMAIN)_*.cfg
