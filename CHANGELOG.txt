@@ -4,6 +4,12 @@ ENTERPRISELIBRE SYSTEM MANAGER - CHANGELOG
 
 THIS VERSION MIGHT BE OLD! Get the latest at: http://wiki.enterpriselibre.org/index.php/Development
 
+VERSION 1.21 - 2016-04-01
+-------------------------
+
+Important updates to EnterpriseLibre including creation of Amazon EC2 Image (US-East Region)
+Refer to https://wiki.enterpriselibre.org/index.php/Amazon_EC2 for more information.
+
 VERSION 1.20 - 2016-03-16
 -------------------------
 

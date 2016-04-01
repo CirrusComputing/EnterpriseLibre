@@ -12,4 +12,4 @@ FIRST CHECK IF THERE IS A NEWER VERSION and find other documentation and resourc
 VERSION
 -------
 
-1.20 - 2016-03-16
+1.21 - 2016-04-01
