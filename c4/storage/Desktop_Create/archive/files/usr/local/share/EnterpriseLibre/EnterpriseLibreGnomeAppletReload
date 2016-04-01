@@ -1,10 +1,10 @@
 #!/bin/bash
 #
-# Gnome Applet Reload v1.2
+# Gnome Applet Reload v1.3
 #
 # Created by Nimesh Jethwa <njethwa@cirruscomputing.com>
 #
-# Copyright (c) 1996-2014 (Free Open Source Solutions Inc.)
+# Copyright (c) 1996-2016 Free Open Source Solutions Inc.
 # All Rights Reserved
 #
 # Free Open Source Solutions Inc. owns and reserves all rights, title,
@@ -14,6 +14,8 @@
 
 ITER=0
 FAIL=0
+TIME=0
+TIMEOUT=30
 
 GCONF_PANEL_FOLDER=~/.gconf/apps/panel
 APPLET_IIDS=('GNOME_WindowListApplet' 'GNOME_ClockApplet' 'GNOME_IndicatorApplet' 'GNOME_Panel_TrashApplet' 'GNOME_NotificationAreaApplet')
@@ -21,10 +23,19 @@ APPLET_PROCESSES=('wnck-applet' 'clock-applet' 'indicator-applet' 'trashapplet' 
 
 while [ $ITER -lt 3 ]; do
     ITER=$(($ITER+1))
-    sleep 3
-    PID_GNOME_PANEL=$(ps -C gnome-panel -o pid= -o ruser= | grep $USER | awk '{print $1}')
-    while [ ! -d /proc/$PID_GNOME_PANEL ] ; do
-	sleep 1
+    while (true); do
+	PID_GNOME_PANEL=$(ps -C gnome-panel -o pid= -o ruser= | grep $USER | awk '{print $1}')
+	if [ ! -z $PID_GNOME_PANEL ] && [ -d /proc/$PID_GNOME_PANEL ]; then
+	    break
+	else
+	    sleep 1
+	    TIME=$(expr $TIME + 1)
+	    echo "Waited $TIME"
+	    if [ $TIME -ge $TIMEOUT ]; then
+		gnome-panel &
+		exit 1
+	    fi
+	fi
     done
     sleep 2
     
