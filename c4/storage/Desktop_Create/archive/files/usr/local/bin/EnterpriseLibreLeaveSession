@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Leave the running session wrapper script - v1.1
+# Leave the running session wrapper script - v1.2
 #
 # Created by Karoly Molnar <kmolnar@cirruscomputing.com>
 # Modified by Nimesh Jethwa <njethwa@cirruscomputing.com>
@@ -21,7 +21,12 @@ SESSION=$(x2golistsessions_root  | grep "|$SUDO_USER|" |  awk -F '|' '{print $2}
 case "$?" in
     # Logout
     255)
-        su - -c "/usr/bin/gnome-session-save --logout" $SUDO_USER
+        # If X2Go is installed, terminate X2Go Session.
+        if pgrep -n -f x2gocleansessions > /dev/null; then
+            su - -c "x2goterminate-session $SESSION" $SUDO_USER
+        else
+            su - -c "/usr/bin/gnome-session-save --logout" $SUDO_USER
+        fi
 	;;
 
     # Disconnect
