@@ -1,0 +1,11 @@
+    package { "nagios-plugins-disk": ensure => latest, require => Yumrepo["epel"]    }
+    package { "nagios-plugins-load": ensure => latest, require => Yumrepo["epel"]    }
+    package { "nagios-plugins-users": ensure => latest, require => Yumrepo["epel"]    }
+    package { "nagios-plugins-procs": ensure => latest, require => Yumrepo["epel"]    }
+    yumrepo { "epel":
+        baseurl  => "http://download.fedoraproject.org/pub/epel/6/x86_64/",
+        descr    => "Extra Packages for Enterprise Linux 6",
+        enabled  => 1,
+        priority => 1,
+        gpgcheck => 0
+    }          

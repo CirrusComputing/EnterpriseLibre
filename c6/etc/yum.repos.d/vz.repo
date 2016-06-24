@@ -1,0 +1,9 @@
+[vz-base]
+name=vz-base
+mirrorlist=http://vzdownload.swsoft.com/download/mirrors/centos-6
+gpgcheck=0
+
+[vz-updates]
+name=vz-updates
+mirrorlist=http://vzdownload.swsoft.com/download/mirrors/updates-released-ce6
+gpgcheck=0

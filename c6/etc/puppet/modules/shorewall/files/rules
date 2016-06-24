@@ -1,0 +1,65 @@
+#
+# Shorewall version 4 - Rules File
+#
+# For information on the settings in this file, type "man shorewall-rules"
+#
+# The manpage is also online at
+# http://www.shorewall.net/manpages/shorewall-rules.html
+#
+####################################################################################################################################################################
+#ACTION		SOURCE		DEST		PROTO	DEST	SOURCE		ORIGINAL	RATE		USER/	MARK	CONNLIMIT	TIME         HEADERS
+#							PORT	PORT(S)		DEST		LIMIT		GROUP
+
+#	Accept connections from the Internet to the Firewall
+Ping/ACCEPT	net		$FW
+ACCEPT		net:209.44.123.242	$FW	icmp
+ACCEPT		net:209.217.120.77	$FW	icmp
+ACCEPT		net:209.87.243.66	$FW	icmp
+ACCEPT		net		$FW	tcp	22	-	209.87.243.90
+
+
+#	Accepted connections from the Firewall to the Internet
+ACCEPT		$FW		net	icmp
+DNS/ACCEPT	$FW		net
+DNS/ACCEPT	$FW		net	udp
+HTTP/ACCEPT	$FW		net
+SSH/ACCEPT	$FW		net
+NTP/ACCEPT	$FW		net
+
+#	Accepted connections from sst to the Firewall
+ACCEPT		sst		$FW	icmp
+SSH/ACCEPT	sst		$FW
+DNS/ACCEPT	sst		$FW
+DNS/ACCEPT	sst		$FW	udp
+
+#	Accepted connections form the Firewall to sst
+ACCEPT		$FW		sst	icmp
+SSH/ACCEPT	$FW		sst
+DNS/ACCEPT	$FW		sst
+HTTP/ACCEPT	$FW		sst
+DNS/ACCEPT	$FW		sst	udp
+
+# puppet connections to Borvo
+ACCEPT          $FW             sst:10.100.2.200 tcp 8140
+
+#	Accepted connections from the Internet to sst
+#This is for charon, to proxy NX client connections
+#DNAT		all		sst:10.100.2.73		tcp	80	-	209.87.243.88
+
+############
+# Nagios client
+ACCEPT		sst:10.100.0.50	$FW		tcp	5666
+
+#	Accepted connections from the Firewall to the Service @ ServerNorth
+NTP/ACCEPT	$FW		sst:10.100.0.1
+
+#	Accepted connections from the Service @ ServerNorth to the Firewall
+NTP/ACCEPT	sst:10.100.0.50	$FW
+
+
+#############################################################################################
+#LOCAL ORGS BEGIN
+
+
+#LOCAL ORGS END
+#############################################################################################

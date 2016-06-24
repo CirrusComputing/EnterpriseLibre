@@ -1,0 +1,50 @@
+#  Copyright (C) 2000-2011, Parallels, Inc. All rights reserved.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
+# This config is valid for VSwap-enabled kernel (which currently means
+# any RHEL6-based kernel, i.e. 042test* or 042stab*).
+
+# UBC parameters (in form of barrier:limit)
+PHYSPAGES="0:256M"
+SWAPPAGES="0:512M"
+KMEMSIZE="116M:128M"
+LOCKEDPAGES="128M"
+PRIVVMPAGES="unlimited"
+SHMPAGES="unlimited"
+NUMPROC="unlimited"
+VMGUARPAGES="0:unlimited"
+OOMGUARPAGES="0:unlimited"
+NUMTCPSOCK="unlimited"
+NUMFLOCK="unlimited"
+NUMPTY="unlimited"
+NUMSIGINFO="unlimited"
+TCPSNDBUF="unlimited"
+TCPRCVBUF="unlimited"
+OTHERSOCKBUF="unlimited"
+DGRAMRCVBUF="unlimited"
+NUMOTHERSOCK="unlimited"
+DCACHESIZE="unlimited"
+NUMFILE="unlimited"
+NUMIPTENT="unlimited"
+
+# Disk quota parameters (in form of softlimit:hardlimit)
+DISKSPACE="2G:2.2G"
+DISKINODES="200000:220000"
+QUOTATIME="0"
+
+# CPU fair scheduler parameter
+CPUUNITS="1000"

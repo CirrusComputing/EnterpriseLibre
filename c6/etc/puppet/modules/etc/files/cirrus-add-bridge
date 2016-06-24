@@ -1,0 +1,49 @@
+#!/usr/bin/perl -w
+
+#Adds a new bridge to the system and brings it up, if and only if it's safe to do so
+
+if ( $#ARGV != 1 ){
+   print "Usage: cirrus-add-bridge brNAME 10.101.x.1\n";
+   exit 1;
+}
+
+$BRIDGENAME=$ARGV[0];
+$IPADDRESS=$ARGV[1];
+#print "Bridge: $BRIDGENAME, IP: $IPADDRESS\n";
+unless ( $BRIDGENAME =~ m/^br[A-Z0-9]+$/ ){
+       print "Bridge name must be in form brNAME\n";
+       exit 1;
+}
+
+unless ( $IPADDRESS =~ m/^10\.101\.[0-2]?[0-9]?[0-9]\.1$/ ){
+       print "IP address must match 10.101.x.1\n";
+       exit 1;
+}
+
+if ( -e "/etc/sysconfig/network-scripts/ifcfg-$BRIDGENAME" ){
+   print "Error: Bridge name already in use\n";
+   exit 1;
+}
+
+$RES=`grep -l "IPADDR=$IPADDRESS" /etc/sysconfig/network-scripts/ifcfg-br*`;
+if ( $? == 0 ) {
+   print "Error: Bridge IP appears to be in use by $RES already\n";
+   exit 1;
+}
+
+open(F,">/etc/sysconfig/network-scripts/ifcfg-$BRIDGENAME");
+print F <<EOF;
+DEVICE=$BRIDGENAME
+TYPE=Bridge
+BOOTPROTO=static
+IPADDR=$IPADDRESS
+NETMASK=255.255.255.0
+ONBOOT=yes
+EOF
+close(F);
+`ifup $BRIDGENAME`;
+if ( $? != 0 ) {
+   print "Failed to bring up bridge properly\n";
+   exit 1;
+}
+exit 0;

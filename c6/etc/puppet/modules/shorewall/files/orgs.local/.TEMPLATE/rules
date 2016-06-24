@@ -1,0 +1,126 @@
+#############################################################################################################
+# Internet
+#############################################################################################################
+#ACTION		SOURCE		DEST			PROTO	DEST	SOURCE		ORIGINAL	RATE		USER/	MARK
+#								PORT	PORT(S)		DEST		LIMIT		GROUP
+
+#	Accepted connections from the Internet to FULLNAME					net -> cNAME
+#	(DNAT)
+DNAT		all		cNAME:PRIVATEIP.50:22	tcp	80	-	PUBLICIP
+DNAT		all		cNAME:PRIVATEIP.34	tcp	443	-	PUBLICIP
+DNAT		all		cNAME:PRIVATEIP.36	tcp	8080	-	PUBLICIP
+DNAT		all		cNAME:PRIVATEIP.31	tcp	993	-	PUBLICIP
+DNAT		all		cNAME:PRIVATEIP.31	tcp	465	-	PUBLICIP
+
+#############################################################################################################
+# Firewall
+#############################################################################################################
+#ACTION		SOURCE		DEST		PROTO	DEST	SOURCE		ORIGINAL	RATE		USER/	MARK
+#							PORT	PORT(S)		DEST		LIMIT		GROUP
+
+#	Accepted connections from the Firewall to the FULLNAME				$FW -> cNAME
+#
+Ping/ACCEPT	$FW		cNAME
+
+
+#############################################################################################################
+# Service @ ServerNorth
+#############################################################################################################
+#ACTION		SOURCE			DEST		PROTO	DEST	SOURCE		ORIGINAL	RATE		USER/	MARK
+#							PORT	PORT(S)		DEST		LIMIT		GROUP
+
+#	Accepted connections from the Service @ ServerNorth to the FULLNAME			sst -> cNAME
+#
+Ping/ACCEPT	sst			cNAME
+DNS/ACCEPT	sst:10.100.0.10		cNAME:PRIVATEIP.2
+SMTP/ACCEPT	sst:10.100.0.20		cNAME:PRIVATEIP.31
+SSH/ACCEPT      sst:10.100.0.46         cNAME:PRIVATEIP.30
+SSH/ACCEPT	sst:10.100.0.46		cNAME:PRIVATEIP.32
+SSH/ACCEPT	sst:10.100.0.46		cNAME:PRIVATEIP.36
+SSH/ACCEPT      sst:10.100.0.46         cNAME:PRIVATEIP.39
+SSH/ACCEPT	sst:10.100.0.46		cNAME:PRIVATEIP.50
+SSH/ACCEPT	sst:10.100.2.73		cNAME:PRIVATEIP.50
+SSH/ACCEPT	sst:10.100.0.41		cNAME
+SSH/ACCEPT	sst:10.100.0.42		cNAME
+SSH/ACCEPT	sst:10.100.0.45		cNAME
+ACCEPT		sst:10.100.0.50		cNAME
+
+
+#############################################################################################################
+# Service @ Storm
+#############################################################################################################
+#ACTION		SOURCE			DEST		PROTO	DEST	SOURCE		ORIGINAL	RATE		USER/	MARK
+#							PORT	PORT(S)		DEST		LIMIT		GROUP
+
+#	Accepted connections from the Service @ Storm to the FULLNAME				sst -> cNAME
+#
+Ping/ACCEPT	sst		cNAME
+DNS/ACCEPT	sst:10.100.2.12	cNAME:PRIVATEIP.2
+SMTP/ACCEPT	sst:10.100.2.22	cNAME:PRIVATEIP.31
+HTTP8080/ACCEPT	sst:10.100.2.71 cNAME:PRIVATEIP.32
+HTTP8081/ACCEPT sst:10.100.2.71 cNAME:PRIVATEIP.32
+HTTP/ACCEPT	sst:10.100.2.71	cNAME:PRIVATEIP.37
+SSH/ACCEPT	sst:10.100.2.72 cNAME
+SSH/ACCEPT	sst:10.101.4.50	cNAME
+SSH/ACCEPT	sst:10.100.0.46 cNAME:PRIVATEIP.50
+HTTP/ACCEPT	sst:10.100.0.46 cNAME:PRIVATEIP.50
+
+#############################################################################################################
+# Service @ WStewart
+#############################################################################################################
+#ACTION		SOURCE			DEST		PROTO	DEST	SOURCE		ORIGINAL	RATE		USER/	MARK
+#							PORT	PORT(S)		DEST		LIMIT		GROUP
+
+#	Accepted connections from the Service @ Storm to the FULLNAME				sst -> cNAME
+#
+Ping/ACCEPT	sst		cNAME
+DNS/ACCEPT	sst:10.100.1.11	cNAME:PRIVATEIP.2
+SMTP/ACCEPT	sst:10.100.1.21	cNAME:PRIVATEIP.31
+
+#       Accepted connections from the Amanda service @ Nanook to the FULLNAME                   sst -> cNAME
+#
+ACCEPT          sst             cNAME                   tcp     10080
+ACCEPT          sst             cNAME                   udp     10080
+
+#############################################################################################################
+# FULLNAME
+#############################################################################################################
+#ACTION			SOURCE		DEST		PROTO	DEST	SOURCE		ORIGINAL	RATE		USER/	MARK
+#							PORT	PORT(S)		DEST		LIMIT		GROUP
+
+#	Rejected connections from the FULLNAME to the Internet				cNAME -> net
+#
+SMTP/REJECT:info	cNAME	net
+
+#	Accepted connections from the FULLNAME to the Firewall				cNAME -> $FW
+#
+Ping/ACCEPT		cNAME	$FW
+
+#	Accepted connections from the FULLNAME to the Service @ ServerNorth			cNAME -> sst
+#
+DNS/ACCEPT		cNAME:PRIVATEIP.2	sst:10.100.0.10
+PostgreSQL/ACCEPT	cNAME:PRIVATEIP.32	sst:10.100.0.32
+ACCEPT			cNAME:PRIVATEIP.32	sst:10.100.0.46	tcp	8081
+SMTP/ACCEPT		cNAME:PRIVATEIP.31	sst:10.100.0.20
+HTTP/ACCEPT		cNAME:PRIVATEIP.50	sst:10.100.0.36
+HTTP/ACCEPT		cNAME			sst:10.100.0.61
+
+#	Accepted connections from the FULLNAME to the Service @ Storm				cNAME -> sst
+#
+DNS/ACCEPT		cNAME:PRIVATEIP.2	sst:10.100.2.12
+SMTP/ACCEPT		cNAME:PRIVATEIP.31	sst:10.100.2.22
+
+#	Accepted connections from the FULLNAME to the Service @ WStewart			cNAME -> sst
+#
+DNS/ACCEPT		cNAME:PRIVATEIP.2	sst:10.100.1.11
+SMTP/ACCEPT		cNAME:PRIVATEIP.31	sst:10.100.1.21
+
+#       Accepted connections from the Amanda recover at Service @ Storm to Nanook               cNAME -> sst
+#
+ACCEPT                  cNAME                   sst               tcp     10080
+ACCEPT                  cNAME                   sst               udp     10080
+
+#	Accepted connections from the FULLNAME to the collision subnet
+HTTP/ACCEPT		cNAME			sst:10.100.2.63
+HTTP/ACCEPT             cNAME                   sst:10.100.2.64
+

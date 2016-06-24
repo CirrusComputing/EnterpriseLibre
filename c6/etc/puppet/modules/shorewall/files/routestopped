@@ -1,0 +1,23 @@
+#
+# Shorewall version 4 - Routestopped File
+#
+# For information about entries in this file, type "man shorewall-routestopped"
+#
+# The manpage is also online at
+# http://www.shorewall.net/manpages/shorewall-routestopped.html
+#
+# See http://shorewall.net/starting_and_stopping_shorewall.htm for additional
+# information.
+#
+###############################################################################
+#INTERFACE	HOST(S)			OPTIONS		PROTO	DEST	SOURCE
+#								PORT(S)	PORT(S)
+vlan100		209.217.120.77,209.217.120.78,209.44.123.242,209.87.243.66
+
+
+###############################################################################
+#LOCAL ORGS BEGIN
+
+
+#LOCAL ORGS END
+###############################################################################

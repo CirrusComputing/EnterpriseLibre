@@ -1,0 +1,72 @@
+#!/usr/bin/perl -w
+
+#Adds a new IP alias to the system
+use Regexp::Common qw(net);
+
+use Data::Dumper;
+
+if ( $#ARGV != 1 ){
+   print "Usage: cirrus-add-ip 1.2.3.4 255.255.255.0\n";
+   exit 1;
+}
+
+my $IPADDRESS=$ARGV[0];
+my $NETMASK=$ARGV[1];
+unless ( $IPADDRESS =~ m/$RE{net}{IPv4}/ ){
+       print "IP address must be IPv4 address in dotted quad form\n";
+       exit 1;
+}
+
+my @elements = split(/\./, $IPADDRESS);
+for (my $i = 0; $i < 4; $i++){
+    if ($elements[$i] > 255){
+       print "IP address contains quad out of range\n";
+       	     exit 1;
+	     }
+};
+if ($elements[0] == 10){
+   print "IP address in private range\n";
+   exit 1;
+}
+if ($elements[0] == 192 && $elements[1] == 168){
+   print "IP address in private range\n";
+   exit 1;
+}
+
+my $ifconfig_out=`ifconfig`;
+if ($ifconfig_out =~ m/inet addr:$IPADDRESS/){
+   print "IP address appears to be in active use already\n";
+   exit 1;
+}
+#`ping -qc 3 $IPADDRESS > /dev/null 2>&1`;
+`ping -qc 3 $IPADDRESS`;
+if ($? == 0){
+   print "IP address responded to ping\n";
+   exit 1;
+}
+
+my $alias_tag = 0;
+my $i = 1;
+do {
+   if (! -e "/etc/sysconfig/network-scripts/ifcfg-vlan100:$i"){
+      $alias_tag = $i;
+      }
+      $i++;
+} while ($alias_tag == 0);
+
+my $cfg_file = "/etc/sysconfig/network-scripts/ifcfg-vlan100:$alias_tag";
+open (F, ">$cfg_file");
+print F <<EOF;
+ONBOOT=yes
+DEVICE=vlan100:$alias_tag
+IPADDR=$IPADDRESS
+NETMASK=$NETMASK
+EOF
+
+close(F);
+`ifup vlan100:$alias_tag`;
+if ($? != 0){
+   print "Failed to run ifup on new interface\n";
+   exit 1;
+}
+exit 0;

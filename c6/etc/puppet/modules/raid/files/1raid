@@ -1,0 +1,4 @@
+#!/bin/bash
+/opt/compaq/hpacucli/bld/hpacucli ctrl all show config \
+| egrep -i "(fail|error|offline|rebuild|ignoring|degraded|skipping|nok)"
+

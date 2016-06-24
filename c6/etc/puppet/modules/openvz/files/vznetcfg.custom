@@ -1,0 +1,126 @@
+#!/bin/bash
+# a script to bring up bridged network interfaces (veth's) in a container
+
+GLOBALCONFIGFILE=/etc/vz/vz.conf
+. $GLOBALCONFIGFILE
+
+CTCONFIGFILE=/etc/vz/conf/$VEID.conf
+. $CTCONFIGFILE
+
+vzctl=/usr/sbin/vzctl
+brctl=/usr/sbin/brctl
+ip=/sbin/ip
+ifconfig=/sbin/ifconfig
+route=/sbin/route
+
+# Are we beeing called to initialize an interface?
+[ "$1" != "init" ] && exit 1
+[ "$2" != "veth" ] && exit 1
+
+# Parsing the VETH interfaces
+NETIF_OPTIONS=`echo $NETIF | sed -e 's/,/\n/g' -e 's/;/\n/g'`
+ifnum=0
+ifparsestate=0
+for str in $NETIF_OPTIONS; do \
+  case $ifparsestate in
+    0)
+      # getting 'ifname' parameter value
+      if [[ "$str" =~ ^ifname= ]]; then
+        # remove the parameter name from the string (along with '=')
+        eval CTIFNAME${ifnum}=${str#*=};
+
+        # Next statement should be 'host_ifname='
+        ifparsestate=1
+      else
+        if [[ "$str" =~ ^host_ifname= ]]; then
+          echo "Corrupted $CONFIGFILE: There should be an 'ifname' definition before a 'host_ifname' definition"
+          exit 1
+        fi
+      fi
+    ;;
+
+    1)
+      # getting 'host_ifname' parameter value
+      if [[ "$str" =~ ^host_ifname= ]]; then
+        # remove the parameter name from the string (along with '=')
+        eval VZHOSTIF${ifnum}=${str#*=};
+
+        ifnum=$((ifnum+1))
+
+        # Next statement should be 'ifname='
+        ifparsestate=0
+      else
+        if [[ "$str" =~ ^ifname= ]]; then
+          echo "Corrupted $CONFIGFILE: There should be a 'host_ifname' definition between two 'ifname' definitions"
+          exit 1
+        fi
+      fi
+    ;;
+  esac
+done
+
+if [ $ifparsestate = 1 ]; then
+  echo "Corrupted $CONFIGFILE: There should be a 'host_ifname' definition after an 'ifname' definition"
+  exit 1
+fi
+
+# Checking wheter everything is definied correctly for the device that is beeing brought up
+n=0
+while [ $n -lt $ifnum ]; do
+  eval VZHOSTIF=\$VZHOSTIF$n
+  if [ "$VZHOSTIF" = "$3" ]; then
+    # This is the interface that is being brought up
+    eval CTIFNAME=\$CTIFNAME$n
+    eval VETH_IP_ADDRESS=\$VETH_IP_ADDRESS_$CTIFNAME
+    eval BRIDGEDEV=\$BRIDGEDEV_$CTIFNAME
+
+    if [ ! -n "$VETH_IP_ADDRESS" ]; then
+      echo "According to $CONFIGFILE CT$VEID has no IP configured for $CTIFNAME."
+      exit 1
+    fi
+
+    if [ ! -n "$BRIDGEDEV" ]; then
+      echo "According to $CTCONFIGFILE CT$VEID has no bridge device configured for $CTIFNAME."
+      exit 1
+    fi
+  fi
+
+  n=$((n + 1))
+done
+
+# Configuration parameters are present -> Start setup
+n=0
+while [ $n -lt $ifnum ]; do
+  eval VZHOSTIF=\$VZHOSTIF$n
+  if [ "$VZHOSTIF" = "$3" ]; then
+    # This is the interface that is being brought up
+    eval CTIFNAME=\$CTIFNAME$n
+    eval VZHOSTIF=\$VZHOSTIF$n
+    eval VETH_IP_ADDRESS=\$VETH_IP_ADDRESS_$CTIFNAME
+    eval BRIDGEDEV=\$BRIDGEDEV_$CTIFNAME
+    eval VE_DEFAULT_GATEWAY=\$VE_DEFAULT_GATEWAY_$CTIFNAME
+
+    echo "Initializing interface $VZHOSTIF for CT$VEID."
+    $ip link set $VZHOSTIF up
+
+    echo "Adding interface $VZHOSTIF to the bridge $BRIDGEDEV."
+    $brctl addif $BRIDGEDEV $VZHOSTIF
+
+    echo "Initializing interface $CTIFNAME for CT$VEID."
+    $vzctl exec $VEID $ifconfig $CTIFNAME up
+
+    for IP in $VETH_IP_ADDRESS; do
+      echo "Adding an IP $IP to the $CTIFNAME for CT$VEID."
+      $vzctl exec $VEID $ip address add $IP dev $CTIFNAME
+    done
+
+    if [ -n "$VE_DEFAULT_GATEWAY" ]; then
+      echo "Setting $VE_DEFAULT_GATEWAY as a default gateway for CT$VEID."
+      $vzctl exec $VEID $route add default gateway $VE_DEFAULT_GATEWAY
+    fi
+  fi
+
+  n=$((n + 1))
+done
+
+exit 0

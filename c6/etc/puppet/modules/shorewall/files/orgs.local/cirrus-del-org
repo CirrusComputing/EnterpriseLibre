@@ -1,0 +1,60 @@
+#!/usr/bin/perl
+use Git;
+use Tie::File;
+use Regexp::Common qw(net);
+
+if ($#ARGV != 2){
+	print "Usage: cirrus-del-org orgname publicip bridgename\n";
+	print "E.g: ./cirrus-del-org test 1.2.3.4 brTEST\n";
+	exit 1;
+}
+
+my $ORGNAME = $ARGV[0];
+my $PUBLICIP = $ARGV[1];
+my $BRNAME = $ARGV[2];
+
+#debug print "del org $ORGNAME $PUBLICIP $BRNAME\n";
+
+unless ($PUBLICIP =~ m/^$RE{net}{IPv4}$/){
+	print "Public IP must be an IPv4 address\n";
+#	exit 1; let's continue anyhow -- RWL 2013-12
+}
+unless ($BRNAME =~ m/^br[A-Z0-9]+$/){
+	print "Bridge name must be in form brNAME\n";
+#	exit 1; let's continue anyhow -- RWL 2013-12
+}
+unless (-e "/etc/sysconfig/network-scripts/ifcfg-$BRNAME"){
+	print "Bridge does not appear to exist\n";
+#	exit 1; let's continue anyhow -- RWL 2013-12
+}
+my $iplist = `ip addr list`;
+unless ($iplist =~ m/$PUBLICIP/){
+	print "IP does not appear to be currently configured\n";
+#	exit 1; let's continue anyhow -- RWL 2013-09
+}
+
+system("/etc/sysconfig/network-scripts/cirrus-del-bridge", "$BRNAME");
+
+system("/etc/sysconfig/network-scripts/cirrus-del-ip", "$PUBLICIP");
+
+my $git = Git->repository("/etc/shorewall");
+foreach my $file ("interfaces", "masq", "policy", "routestopped", "rules", "zones"){
+	tie my @contents, 'Tie::File', "/etc/shorewall/$file";
+	@contents = grep { ! /^INCLUDE \/etc\/shorewall\/orgs.local\/$ORGNAME\// } @contents;
+	untie @contents;
+	$git->command("add", "/etc/shorewall/$file");
+}
+$git->command("rm", "-rf", "/etc/shorewall/orgs.local/$ORGNAME");
+system("service", "shorewall", "restart");
+if ($? != 0){
+	#Huh ... not sure what the best thing to do here is, so do a commit with a warning message
+	$git->command("commit", "-m", "Invalid config after removing $ORGNAME");
+	exit 1;
+}
+else{
+	$git->command("commit", "-m", "$ORGNAME removed, networking nominal");
+	# in case there are files remaining such as rules.bak 
+	# that prevent the directory from being deleted
+	system("rm -rf /etc/shorewall/orgs.local/$ORGNAME");
+	exit 0;
+}

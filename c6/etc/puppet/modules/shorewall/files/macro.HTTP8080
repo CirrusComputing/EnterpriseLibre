@@ -1,0 +1,11 @@
+#
+# Shorewall version 4 - HTTP Macro
+#
+# /usr/share/shorewall/macro.HTTP
+#
+#	This macro handles plaintext HTTP (WWW) traffic.
+#
+###############################################################################
+#ACTION	SOURCE	DEST	PROTO	DEST	SOURCE	RATE	USER/
+#				PORT(S)	PORT(S)	LIMIT	GROUP
+PARAM				-	-	tcp	8080

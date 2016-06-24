@@ -1,0 +1,34 @@
+#!/usr/bin/perl -w
+
+# del a bridge 
+
+if ( $#ARGV != 0 ){
+    print "Usage: cirrus-del-bridge brNAME";
+    exit 1;
+}
+
+$BRIDGENAME=$ARGV[0];
+#print "Bridge: $BRIDGENAME, IP: $IPADDRESS\n";
+unless ( $BRIDGENAME =~ m/^br[A-Z0-9]+$/ ){
+    print "Bridge name must be in form brNAME $BRIDGENAME\n";
+#   exit 1; let's continue anyhow -- RWL 2013-12
+}
+
+unless ( -e "/etc/sysconfig/network-scripts/ifcfg-$BRIDGENAME" ){
+    print "Error: Bridge control file does not exist $BRIDGENAME \n";
+#   exit 1; let's continue anyhow -- RWL 2013-12
+}
+
+`ifdown $BRIDGENAME`;
+if ( $? != 0 ) {
+    print "Failed to bring down bridge properly $BRIDGENAME\n";
+    exit 1;
+}
+
+`brctl delbr $BRIDGENAME`;
+if ( $? != 0 ) {
+    print "Failed to delete bridge entry properly $BRIDGENAME\n";
+    exit 1;
+}
+unlink "/etc/sysconfig/network-scripts/ifcfg-$BRIDGENAME";
+exit 0;

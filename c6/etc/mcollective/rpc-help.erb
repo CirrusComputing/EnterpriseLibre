@@ -1,0 +1,33 @@
+<%= metastring %>
+ACTIONS:
+========
+   <%= entities.keys.sort.join(", ") %>
+
+% entities.keys.sort.each do |action|
+   <%= action %> action:
+   <% (action.size + 8).times do %>-<% end %>
+       <%= entities[action][:description] %>
+
+       INPUT:
+%    entities[action][:input].keys.sort.each do |input|
+           <%= input %>:
+              Description: <%= entities[action][:input][input][:description] %>
+                   Prompt: <%= entities[action][:input][input][:prompt] %>
+                     Type: <%= entities[action][:input][input][:type] %>
+%        if entities[action][:input][input][:type] == :string
+               Validation: <%= entities[action][:input][input][:validation] %>
+                   Length: <%= entities[action][:input][input][:maxlength] %>
+%        elsif entities[action][:input][input][:type] == :list
+             Valid Values: <%= entities[action][:input][input][:list].join(", ") %>
+%        end
+
+%    end
+
+       OUTPUT:
+%    entities[action][:output].keys.sort.each do |output|
+           <%= output %>:
+              Description: <%= entities[action][:output][output][:description] %>
+               Display As: <%= entities[action][:output][output][:display_as] %>
+
+%    end
+% end

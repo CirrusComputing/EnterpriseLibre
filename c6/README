@@ -1,0 +1,3 @@
+Server install automation
+
+The automated server installation system, uses Cobbler and Puppet to configure a new pyhsical server.

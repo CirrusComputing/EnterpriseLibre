@@ -1,0 +1,3 @@
+###############################################################################
+#ZONE	INTERFACE	BROADCAST	OPTIONS
+cNAME	brNAME		detect		tcpflags,nosmurfs,bridge,routefilter=0
